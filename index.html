@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>업체관리 - 그룹별 통합 대시보드 (Supabase 테스트)</title>
+    <title>Rhea TechOps</title>
     <!-- 엑셀 처리(SheetJS) 라이브러리 CDN 추가 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- 디자인 유지 엑셀 내보내기용 ExcelJS + FileSaver -->
@@ -735,6 +735,12 @@
         }
         .login-box button.login-password-toggle:hover { color: var(--amber); background: rgba(255,255,255,0.08); }
         .login-password-toggle svg { width: 17px; height: 17px; pointer-events: none; }
+        .login-remember-label {
+            display: flex; align-items: center; gap: 7px; color: #9fb0c2; font-size: 11px; font-weight: 600;
+            letter-spacing: 1px; margin-bottom: 4px; cursor: pointer; user-select: none;
+        }
+        .login-remember-label:hover { color: #C3D6E6; }
+        .login-remember-label input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; accent-color: var(--amber); }
         .login-box button { width: 100%; padding: 11px; border: none; border-radius: 7px; background: var(--amber); color: var(--ink); font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 6px; letter-spacing: 2px; }
         .login-box button:hover { background: #e2bb42; }
         .login-box button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -784,18 +790,19 @@
             <div class="line1">REAVISION KIOSK MANAGEMENT INTEGRATED DASHBOARD.</div>
             <div class="line2">LOG IN WITH A COMMON ACCOUNT TO VIEW THE SAME DATA FROM ANYWHERE.</div>
         </div>
-        <div class="login-box">
-            <input type="email" id="loginEmail" placeholder="Email" onkeydown="if(event.key==='Enter') document.getElementById('loginPassword').focus()">
+        <form class="login-box" id="loginForm" onsubmit="handleLogin(event); return false;" autocomplete="on">
+            <input type="email" id="loginEmail" name="email" autocomplete="username" placeholder="Email" onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('loginPassword').focus(); }">
             <div class="login-password-wrap">
-                <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter') handleLogin()">
+                <input type="password" id="loginPassword" name="password" autocomplete="current-password" placeholder="Password">
                 <button type="button" class="login-password-toggle" id="loginPasswordToggle" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="비밀번호 표시/숨기기">
                     <svg id="eyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                     <svg id="eyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.32 21.32 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.4 21.4 0 0 1-3.22 4.53M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
             </div>
-            <button type="button" id="loginBtn" onclick="handleLogin()">LOG IN</button>
+            <label class="login-remember-label"><input type="checkbox" id="rememberEmailCheck"> REMEMBER ME</label>
+            <button type="submit" id="loginBtn">LOG IN</button>
             <div id="loginError"></div>
-        </div>
+        </form>
     </div>
     <div id="syncStatus"></div>
 
@@ -1359,6 +1366,17 @@
             if (src && navLogo) navLogo.setAttribute('src', src);
         })();
 
+        // "아이디 저장" 체크박스 - 비밀번호는 절대 저장 안 하고, 이메일 주소만 이 브라우저에 기억해둠
+        // (비밀번호 저장/자동완성은 브라우저 자체 비밀번호 관리자가 담당)
+        const REMEMBER_EMAIL_KEY = 'kiosk_remembered_email';
+        (function restoreRememberedEmail() {
+            const saved = localStorage.getItem(REMEMBER_EMAIL_KEY);
+            if (saved) {
+                document.getElementById('loginEmail').value = saved;
+                document.getElementById('rememberEmailCheck').checked = true;
+            }
+        })();
+
         /* ===================== ① Supabase 연결 설정 =====================
            ⚠️ SUPABASE_URL 부분만 대장님이 직접 채워주셔야 해요!
            Supabase 대시보드 → 프로젝트 → Project Settings → Data API 페이지에서
@@ -1388,7 +1406,8 @@
             closedIcon.style.display = showing ? 'none' : '';
         }
 
-        async function handleLogin() {
+        async function handleLogin(event) {
+            if (event) event.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const btn = document.getElementById('loginBtn');
@@ -1405,6 +1424,11 @@
                 if (error) {
                     errEl.textContent = 'Login failed: please check your email or password.';
                     return;
+                }
+                if (document.getElementById('rememberEmailCheck').checked) {
+                    localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+                } else {
+                    localStorage.removeItem(REMEMBER_EMAIL_KEY);
                 }
                 await onLoginSuccess();
             } catch (err) {
