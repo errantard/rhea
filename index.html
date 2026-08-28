@@ -206,13 +206,19 @@
         .division-toggle-group { display: flex; gap: 16px; align-items: center; padding: 6px 0; }
         .division-toggle-group label { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }
 
-        /* 항목/그룹 이름 - 클릭하면 바로 이름을 바꿀 수 있다는 힌트 */
-        [data-field-label], [data-group-label] { cursor: pointer; }
-        th[data-field-label]:hover, th .group-pill[data-group-label]:hover,
-        label [data-group-label]:hover, .section-tab[data-group-label]:hover,
-        .reg-modal-body [data-field-label]:hover {
+        /* 항목/그룹 이름 - 등록/수정 팝업 안에서만(관리자 한정) 클릭해서 이름을 바꿀 수 있음 */
+        /* (테이블 헤더/항목그룹 표시 토글 라벨은 label-inert가 붙어 클릭 힌트가 제거되고, 정렬(sortable-th)에 자리를 내줌) */
+        .reg-modal-body [data-field-label]:not(.label-inert), .reg-modal-body [data-group-label]:not(.label-inert) { cursor: pointer; }
+        [data-field-label].label-inert, [data-group-label].label-inert { cursor: default; }
+        .reg-modal-body [data-field-label]:not(.label-inert):hover,
+        .reg-modal-body [data-group-label]:not(.label-inert):hover {
             text-decoration: underline dotted;
         }
+
+        /* 테이블 헤더 클릭 정렬 */
+        th.sortable-th { cursor: pointer; user-select: none; }
+        th.sortable-th:hover { text-decoration: underline dotted; }
+        .sort-arrow { font-size: 10px; margin-left: 3px; opacity: 0.75; }
 
         .filter-box { background: rgba(255,255,255,0.04); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border-warm); }
         .filter-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -481,6 +487,13 @@
             color: rgba(255,255,255,0.6); font-size: 22px; cursor: pointer; line-height: 1;
         }
         .detail-close:hover { color: #ffffff; }
+        /* 이 업체가 속한 그룹명 - 헤로 영역 우측 상단 여백에 은은하게 배치 (너무 튀지 않게, 배지/제목보다 뒤로) */
+        .detail-group-tag {
+            position: absolute; top: 42px; right: 20px; z-index: 1;
+            font-size: 12.5px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+            color: rgba(247, 216, 116, 0.5);
+            text-align: right; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
         .detail-drag-hint { position: relative; font-size: 10.5px; color: #6b7685; margin-top: 2px; }
         .detail-badges { position: relative; display: flex; gap: 6px; margin-bottom: 10px; }
         .detail-place-name {
@@ -1026,27 +1039,27 @@
                             <th class="sticky-col-1" style="text-align: center;">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" title="전체 선택/해제">
                             </th>
-                            <th class="sticky-col-2 region-group">시/도</th>
-                            <th class="sticky-col-3 region-group" data-field-label="placeName">장소명</th>
-                            <th class="address-group" data-field-label="installAddress">설치주소</th>
-                            <th class="address-group" data-field-label="installLocation">설치위치</th>
-                            <th class="org-group" data-field-label="orgDept">소속부서</th>
-                            <th class="org-group" data-field-label="orgName">소속성명</th>
-                            <th class="org-group" data-field-label="orgTitle">소속직책</th>
-                            <th class="org-group" data-field-label="orgContact">소속연락처</th>
-                            <th class="org-group org-email-cell" data-field-label="orgEmail">소속이메일</th>
-                            <th class="manager-group" data-field-label="managerContact">담당자연락처</th>
-                            <th class="manager-group manager-email-cell" data-field-label="managerEmail">담당자이메일</th>
-                            <th class="device-group" data-field-label="deviceModel">모델명</th>
-                            <th class="device-group" data-field-label="deviceType">유형</th>
-                            <th class="device-group" data-field-label="deviceOption">옵션</th>
-                            <th class="sys-group" data-field-label="kioId">키오에듀번호</th>
-                            <th class="sys-group" data-field-label="kioAdminId">키오드민번호</th>
-                            <th class="sys-group" data-field-label="reaCode">레아코드</th>
+                            <th class="sticky-col-2 region-group sortable-th" data-sort-key="regionSi">시/도</th>
+                            <th class="sticky-col-3 region-group sortable-th" data-field-label="placeName" data-sort-key="placeName">장소명</th>
+                            <th class="address-group sortable-th" data-field-label="installAddress" data-sort-key="installAddress">설치주소</th>
+                            <th class="address-group sortable-th" data-field-label="installLocation" data-sort-key="installLocation">설치위치</th>
+                            <th class="org-group sortable-th" data-field-label="orgDept" data-sort-key="orgDept">소속부서</th>
+                            <th class="org-group sortable-th" data-field-label="orgName" data-sort-key="orgName">소속성명</th>
+                            <th class="org-group sortable-th" data-field-label="orgTitle" data-sort-key="orgTitle">소속직책</th>
+                            <th class="org-group sortable-th" data-field-label="orgContact" data-sort-key="orgContact">소속연락처</th>
+                            <th class="org-group org-email-cell sortable-th" data-field-label="orgEmail" data-sort-key="orgEmail">소속이메일</th>
+                            <th class="manager-group sortable-th" data-field-label="managerContact" data-sort-key="managerContact">담당자연락처</th>
+                            <th class="manager-group manager-email-cell sortable-th" data-field-label="managerEmail" data-sort-key="managerEmail">담당자이메일</th>
+                            <th class="device-group sortable-th" data-field-label="deviceModel" data-sort-key="deviceModel">모델명</th>
+                            <th class="device-group sortable-th" data-field-label="deviceType" data-sort-key="deviceType">유형</th>
+                            <th class="device-group sortable-th" data-field-label="deviceOption" data-sort-key="deviceOption">옵션</th>
+                            <th class="sys-group sortable-th" data-field-label="kioId" data-sort-key="kioId">키오에듀번호</th>
+                            <th class="sys-group sortable-th" data-field-label="kioAdminId" data-sort-key="kioAdminId">키오드민번호</th>
+                            <th class="sys-group sortable-th" data-field-label="reaCode" data-sort-key="reaCode">레아코드</th>
                             <th class="rental-group">구분</th>
                             <th class="rental-group">임대만료일</th>
-                            <th data-field-label="memo">메모</th>
-                            <th style="width: 8%;" data-field-label="status">상태</th>
+                            <th class="sortable-th" data-field-label="memo" data-sort-key="memo">메모</th>
+                            <th style="width: 8%;" class="sortable-th" data-field-label="status" data-sort-key="status">상태</th>
                             <th style="width: 5%; text-align: center;">수정</th>
                         </tr>
                     </thead>
@@ -1212,6 +1225,7 @@
         <div class="modal-content detail-modal-content">
             <div class="detail-hero" id="detailHeroDragHandle">
                 <span class="detail-close" onclick="closeDetailModal()">&times;</span>
+                <div class="detail-group-tag" id="detailGroupTag">-</div>
                 <div class="detail-badges">
                     <span class="division-badge" id="detailDivisionBadge">판매</span>
                     <span id="detailStatusBadge"></span>
@@ -1490,6 +1504,7 @@
         let dashboardSettings = null;
         let lastBackupAtIso = null;
         let rentalFilter = null; // null | 'all' | 'upcoming' | 'expiring' | 'expired'
+        let columnSort = { key: null, dir: 'asc' }; // 테이블 헤더 클릭 정렬 상태
 
         /* ----- 관리자/일반 사용자 역할(role) 판별 -----
            2026-08-29부터 개인별 계정 체계로 전환: 관리자는 rv@rv.com 하나, 직원들은 01@rv.com/02@rv.com/03@rv.com처럼
@@ -1594,9 +1609,14 @@
         function applyFieldLabels() {
             document.querySelectorAll('[data-field-label]').forEach(el => {
                 const key = el.dataset.fieldLabel;
+                // 정렬 클릭으로 텍스트가 바뀌어 있을 수 있으니, 이름표시만 갱신하고 화살표는 건드리지 않음
+                const arrow = el.querySelector('.sort-arrow');
                 el.textContent = getLabel(key);
-                el.title = '클릭하여 이름 변경';
-                el.onclick = (e) => renameFieldLabel(key, e);
+                if (arrow) el.appendChild(arrow);
+                const clickable = isAdminUser() && !!el.closest('.reg-modal-body');
+                el.classList.toggle('label-inert', !clickable);
+                el.title = clickable ? '클릭하여 이름 변경' : '';
+                el.onclick = clickable ? (e) => renameFieldLabel(key, e) : null;
             });
         }
 
@@ -1609,8 +1629,10 @@
             document.querySelectorAll('[data-group-label]').forEach(el => {
                 const key = el.dataset.groupLabel;
                 el.textContent = getGroupLabel(key);
-                el.title = '클릭하여 이름 변경';
-                el.onclick = (e) => renameGroupLabel(key, e);
+                const clickable = isAdminUser() && !!el.closest('.reg-modal-body');
+                el.classList.toggle('label-inert', !clickable);
+                el.title = clickable ? '클릭하여 이름 변경' : '';
+                el.onclick = clickable ? (e) => renameGroupLabel(key, e) : null;
             });
         }
 
@@ -1810,6 +1832,7 @@
                 applyFieldLabels();
                 applyGroupLabels();
                 applyRolePermissions();
+                initSortableHeaders();
                 document.getElementById('filterStatus').value = ''; // 기본 화면은 "전체"부터 보이도록 시작
                 renderTable();
                 updateStats();
@@ -1817,7 +1840,10 @@
                 document.getElementById('searchInput').addEventListener('input', renderTable);
                 document.getElementById('filterRegion').addEventListener('change', renderTable);
                 document.getElementById('filterStatus').addEventListener('change', renderTable);
-                document.getElementById('sortSelect').addEventListener('change', renderTable);
+                document.getElementById('sortSelect').addEventListener('change', () => {
+                    columnSort = { key: null, dir: 'asc' }; // 드롭다운으로 정렬을 바꾸면 헤더 클릭 정렬은 해제
+                    renderTable();
+                });
             } catch (err) {
                 console.error(err);
                 alert('데이터를 불러오는 중 오류가 발생했습니다. SUPABASE_URL 설정 및 인터넷 연결을 확인해주세요.\n\n' + (err.message || err));
@@ -2019,6 +2045,44 @@
         }
 
         /* ===================== ⑦ 메인 테이블 렌더링 (검색/필터/정렬 포함) ===================== */
+        function getColumnSortValue(item, key) {
+            if (key === 'memo') {
+                const list = item.memoList || [];
+                return list.length ? (list[list.length - 1].date || '') : '';
+            }
+            return (item[key] || '').toString();
+        }
+
+        function sortByColumn(key) {
+            if (columnSort.key === key) {
+                columnSort.dir = columnSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                columnSort.key = key;
+                columnSort.dir = 'asc';
+            }
+            renderTable();
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('#customerTable thead th.sortable-th').forEach(el => {
+                const key = el.dataset.sortKey;
+                const base = el.dataset.fieldLabel ? getLabel(el.dataset.fieldLabel) : el.textContent.replace(/[▲▼]$/, '').trim();
+                if (columnSort.key === key) {
+                    el.innerHTML = `${escapeHtml(base)} <span class="sort-arrow">${columnSort.dir === 'asc' ? '▲' : '▼'}</span>`;
+                } else if (el.dataset.fieldLabel) {
+                    el.textContent = base;
+                }
+            });
+        }
+
+        function initSortableHeaders() {
+            document.querySelectorAll('#customerTable thead th.sortable-th').forEach(el => {
+                if (el.dataset.sortBound) return;
+                el.dataset.sortBound = '1';
+                el.addEventListener('click', () => sortByColumn(el.dataset.sortKey));
+            });
+        }
+
         function renderTable() {
             const tableBody = document.getElementById('tableBody');
             const searchInput = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -2058,19 +2122,27 @@
                 return searchMatch && regionMatch && statusMatch && rentalMatch;
             });
 
-            filteredData.sort((a, b) => {
-                if (sortType === 'name') {
-                    return (a.placeName || '').localeCompare(b.placeName || '');
-                } else if (sortType === 'latest') {
-                    return currentData.findIndex(d => d.id === b.id) - currentData.findIndex(d => d.id === a.id);
-                } else if (sortType === 'first') {
-                    return currentData.findIndex(d => d.id === a.id) - currentData.findIndex(d => d.id === b.id);
-                } else {
-                    const regionA = `${a.regionSi || ''} ${a.regionGu || ''}`;
-                    const regionB = `${b.regionSi || ''} ${b.regionGu || ''}`;
-                    return regionA.localeCompare(regionB);
-                }
-            });
+            if (columnSort.key) {
+                // 테이블 헤더를 클릭해서 정렬 중이면 상단 "정렬:" 드롭다운보다 우선 적용
+                const dir = columnSort.dir === 'desc' ? -1 : 1;
+                filteredData.sort((a, b) => getColumnSortValue(a, columnSort.key).localeCompare(getColumnSortValue(b, columnSort.key), 'ko') * dir);
+            } else {
+                filteredData.sort((a, b) => {
+                    if (sortType === 'name') {
+                        return (a.placeName || '').localeCompare(b.placeName || '');
+                    } else if (sortType === 'latest') {
+                        return currentData.findIndex(d => d.id === b.id) - currentData.findIndex(d => d.id === a.id);
+                    } else if (sortType === 'first') {
+                        return currentData.findIndex(d => d.id === a.id) - currentData.findIndex(d => d.id === b.id);
+                    } else {
+                        const regionA = `${a.regionSi || ''} ${a.regionGu || ''}`;
+                        const regionB = `${b.regionSi || ''} ${b.regionGu || ''}`;
+                        return regionA.localeCompare(regionB);
+                    }
+                });
+            }
+
+            updateSortIndicators();
 
             filteredData.forEach((item, index) => {
                 const tr = document.createElement('tr');
@@ -2717,6 +2789,7 @@
             if (!item) return;
 
             document.getElementById('detailPlaceName').textContent = item.placeName || '-';
+            document.getElementById('detailGroupTag').textContent = getGroupLabel(currentGroup) || '-';
             const divisionEl = document.getElementById('detailDivisionBadge');
             divisionEl.className = 'division-badge ' + (item.division === '임대' ? 'division-rental' : 'division-sale');
             divisionEl.textContent = item.division === '임대' ? '임대' : '판매';
