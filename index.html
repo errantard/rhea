@@ -93,7 +93,9 @@
         .group-add-btn:hover { background: var(--ink2); color: #fff; border-color: var(--amber); }
 
         .navbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-        .user-profile { font-size: 12.5px; font-weight: 700; color: var(--ink); background: var(--amber); padding: 6px 14px; border-radius: 20px; }
+        .user-profile { font-size: 12.5px; font-weight: 700; color: var(--ink); background: var(--amber); padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: filter 0.15s, transform 0.1s; user-select: none; }
+        .user-profile:hover { filter: brightness(0.94); }
+        .user-profile:active { transform: scale(0.97); }
 
         .action-btn {
             display: flex;
@@ -144,6 +146,20 @@
         .card:first-child { padding-left: 0; }
         .card-title { font-size: 11px; color: var(--muted-light); font-weight: 700; white-space: nowrap; }
         .card-value { font-size: 17px; font-weight: 700; color: var(--ink); font-family: 'IBM Plex Mono', monospace; }
+
+        /* 상단 요약카드(그룹전체/정상/지원) — 클릭하면 상태필터와 연동되는 버튼. 임대 미니스탯과 동일한 골드 하이라이트로 "지금 선택된 것" 구분감을 줌 */
+        .status-filter-card {
+            cursor: pointer; background: none; font-family: inherit; font-size: inherit; color: inherit;
+            border-radius: 6px; transition: 0.15s; border: none; border-right: 1px solid #E1DCCB;
+            margin: 0; box-sizing: border-box; appearance: none; -webkit-appearance: none;
+            text-align: left; vertical-align: baseline; outline: none;
+            padding: 5px 16px; line-height: normal;
+        }
+        /* .card:first-child이 padding-left:0을 강제해서 "전체" 카드만 좌우 여백이 안 맞았던 것 보정 */
+        .card.status-filter-card:first-child { padding-left: 16px; }
+        .status-filter-card:hover { background: rgba(255,255,255,0.08); }
+        .status-filter-card.active { background: rgba(242,201,76,0.20); border-right-color: transparent; }
+        .status-filter-card.active .card-title, .status-filter-card.active .card-value { color: #F7D874 !important; }
 
         .backup-card { flex-direction: column; align-items: flex-start; gap: 2px; padding: 0 20px; border-right: 1px solid #E1DCCB; }
         .backup-card-top, .backup-card-bottom { display: flex; align-items: baseline; gap: 6px; }
@@ -353,19 +369,18 @@
             line-height: 1.35;
             color: #7f8a99;
         }
-        td.copy-cell.clamp-cell {
+        /* 카이오ID/카이오드민/레아코드 — 상세보기로 안 가는 순수 읽기전용 칸 (2026-08-29: 상세보기 진입은 장소명 하나로 통일) */
+        td.clamp-cell {
             max-height: 46px;
             overflow: hidden;
-            cursor: pointer;
         }
-        td.copy-cell.clamp-cell .clamp-inner {
+        td.clamp-cell .clamp-inner {
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        td.copy-cell.clamp-cell:hover { color: var(--teal); background-color: #E1F0EA; }
 
         td.org-email-cell, th.org-email-cell,
         td.manager-email-cell, th.manager-email-cell {
@@ -552,6 +567,9 @@
         .memo-item { display: flex; flex-direction: column; gap: 6px; background: #fff; padding: 12px 15px; border-radius: 6px; border: 1px solid #e9ecef; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .memo-header-inputs { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
         .memo-date-input { width: 140px; padding: 4px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 11px; font-weight: bold; color: #495057; }
+        .memo-header-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .memo-author-tag { font-size: 11px; color: #5a6b8c; background: #eef1f8; padding: 3px 9px; border-radius: 10px; white-space: nowrap; font-weight: bold; }
+        .memo-author-tag.unknown { color: #b2bec3; background: #f1f2f4; font-weight: normal; }
         .memo-text-input { width: 100%; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; color: #2d3436; resize: vertical; min-height: 65px; }
         .memo-btn-group { display: flex; gap: 4px; }
         .btn-memo-action { background: #edf2f7; border: 1px solid #cbd5e0; color: #4a5568; cursor: pointer; font-size: 11px; padding: 3px 8px; border-radius: 4px; transition: 0.2s; font-weight: bold; }
@@ -817,19 +835,19 @@
                     <button class="group-add-btn" id="groupAddBtn" onclick="addNewGroup()" title="새 그룹 추가">+</button>
                 </div>
                 <div class="navbar-line-stats">
-                    <div class="cards">
-                        <div class="card">
-                            <div class="card-title">그룹 전체</div>
+                    <div class="cards" title="클릭하면 해당 상태로 목록이 필터링됩니다">
+                        <button type="button" class="card status-filter-card" data-status-key="" onclick="filterStatusStat('')">
+                            <div class="card-title">전체</div>
                             <div id="totalCount" class="card-value">0개</div>
-                        </div>
-                        <div class="card">
+                        </button>
+                        <button type="button" class="card status-filter-card" data-status-key="정상" onclick="filterStatusStat('정상')">
                             <div class="card-title" style="color: #7BEBC4;">정상</div>
                             <div id="successCount" class="card-value" style="color: #7BEBC4;">0개</div>
-                        </div>
-                        <div class="card">
-                            <div class="card-title" style="color: #FF9E76;">지원</div>
+                        </button>
+                        <button type="button" class="card status-filter-card" data-status-key="요청" onclick="filterStatusStat('요청')">
+                            <div class="card-title" style="color: #FF9E76;">요청</div>
                             <div id="dangerCount" class="card-value" style="color: #FF9E76;">0개</div>
-                        </div>
+                        </button>
                         <div class="card backup-card">
                             <div class="backup-card-top">
                                 <span class="card-title">저장소</span>
@@ -914,7 +932,7 @@
                     <span>로그아웃</span>
                 </button>
 
-                <div class="user-profile" id="userProfileBadge">관리자</div>
+                <div class="user-profile" id="userProfileBadge" onclick="handleEditNickname()" title="클릭하면 닉네임(실명)을 설정/수정할 수 있어요">관리자</div>
             </div>
         </div>
     </div>
@@ -947,7 +965,7 @@
                     <select id="filterStatus">
                         <option value="">상태 필터: 전체</option>
                         <option value="정상">정상</option>
-                        <option value="지원필요">지원필요</option>
+                        <option value="요청">요청</option>
                         <option value="미지원">미지원</option>
                     </select>
                     <select id="sortSelect">
@@ -1170,7 +1188,7 @@
                             <label><span data-field-label="status">상태</span></label>
                             <select id="status" required>
                                 <option value="정상">정상</option>
-                                <option value="지원필요">지원필요</option>
+                                <option value="요청">요청</option>
                                 <option value="미지원">미지원</option>
                             </select>
                         </div>
@@ -1450,6 +1468,7 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             const { data } = await sb.auth.getSession();
             currentUserEmail = (data && data.session && data.session.user && data.session.user.email) || null;
+            currentUserNickname = (data && data.session && data.session.user && data.session.user.user_metadata && data.session.user.user_metadata.nickname) || null;
             await initApp();
         }
 
@@ -1473,23 +1492,51 @@
         let rentalFilter = null; // null | 'all' | 'upcoming' | 'expiring' | 'expired'
 
         /* ----- 관리자/일반 사용자 역할(role) 판별 -----
-           개인별 계정 시스템이 아니라, 이메일 주소로 "관리자 계정인지"만 구분하는 간단한 2단계 구조.
-           ADMIN_EMAILS에 없는 계정(=guest@admin.com 등)은 전부 "일반 사용자"로 취급됨.
+           2026-08-29부터 개인별 계정 체계로 전환: 관리자는 rv@rv.com 하나, 직원들은 01@rv.com/02@rv.com/03@rv.com처럼
+           번호 계정을 개인별로 사용. ADMIN_EMAILS에 없는 계정은 전부 자동으로 "일반사용자"로 취급되므로,
+           직원이 늘어나도 Supabase Auth에 계정만 새로 만들면 되고 이 코드는 안 건드려도 됨.
            ⚠️ 이건 화면(버튼 숨김/비활성화) 수준의 편의 기능이고, 진짜 방어선은 Supabase RLS 정책 쪽임
            (그룹 추가/삭제/이름변경, 업체 삭제는 DB에서도 admin 계정만 되도록 막아둬야 완전히 안전함) */
         let currentUserEmail = null;
-        const ADMIN_EMAILS = ['admin@admin.com'];
+        let currentUserNickname = null; // 사용자가 프로필뱃지 클릭해서 직접 설정하는 닉네임(실명). Supabase Auth user_metadata에 저장됨
+        const ADMIN_EMAILS = ['rv@rv.com'];
         function isAdminUser() {
             return ADMIN_EMAILS.includes((currentUserEmail || '').toLowerCase());
         }
 
+        // 뱃지/AS메모 등에서 "이 사람이 누군지" 표시할 때 쓰는 표시용 이름. 닉네임 설정 안 했으면 이메일로 대체.
+        function currentUserDisplayName() {
+            return currentUserNickname || currentUserEmail || '사용자';
+        }
+
+        // 우측 상단 프로필 뱃지 클릭 시: 닉네임(실명)을 입력/수정해서 Supabase Auth 계정에 저장.
+        // 이후 새로 작성하는 AS메모부터 이 닉네임으로 자동 기록됨 (이미 작성된 과거 메모는 그대로 유지 — 안 바뀜).
+        async function handleEditNickname() {
+            const newName = prompt('내 닉네임(실명)을 입력하세요.\n앞으로 새로 남기는 AS 이력에 이 이름으로 자동 기록됩니다.\n(이미 작성된 과거 이력은 그대로 유지되고 바뀌지 않아요)', currentUserNickname || '');
+            if (newName === null) return; // 취소
+            const trimmed = newName.trim();
+            try {
+                const { error } = await sb.auth.updateUser({ data: { nickname: trimmed } });
+                if (error) throw error;
+                currentUserNickname = trimmed || null;
+                applyRolePermissions();
+                alert(trimmed ? `닉네임이 "${trimmed}"(으)로 저장되었습니다.` : '닉네임이 초기화되어 이메일로 표시됩니다.');
+            } catch (err) {
+                console.error(err);
+                alert('닉네임 저장에 실패했습니다: ' + (err.message || err));
+            }
+        }
+
         // 로그인 직후(initApp)에 한번 호출해서 관리자 전용 버튼들을 일반 사용자 화면에서 숨기고,
-        // 우측 상단 뱃지도 실제 로그인한 역할에 맞게 바꿔줌. (화면단 편의처리 — DB단 방어는 RLS 정책이 담당)
+        // 우측 상단 뱃지도 실제 로그인한 역할/이름에 맞게 바꿔줌. (화면단 편의처리 — DB단 방어는 RLS 정책이 담당)
         function applyRolePermissions() {
             const admin = isAdminUser();
 
             const badge = document.getElementById('userProfileBadge');
-            if (badge) badge.textContent = admin ? '관리자' : '일반 사용자';
+            if (badge) {
+                badge.textContent = `${currentUserDisplayName()} · ${admin ? '관리자' : '일반사용자'}`;
+                badge.title = '클릭하면 닉네임(실명)을 설정/수정할 수 있어요';
+            }
 
             const groupAddBtn = document.getElementById('groupAddBtn');
             if (groupAddBtn) groupAddBtn.style.display = admin ? '' : 'none';
@@ -1567,11 +1614,11 @@
             });
         }
 
-        async function persistAppSettings(partial) {
+        async function persistAppSettings(partial, toastMsg) {
             try {
                 const { error } = await sb.from('app_settings').update(partial).eq('id', 1);
                 if (error) throw error;
-                showSyncStatus('☁️ 저장 완료');
+                showSyncStatus(toastMsg || '☁️ 저장 완료');
             } catch (err) {
                 console.error(err);
                 showSyncStatus('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)', true);
@@ -1763,6 +1810,7 @@
                 applyFieldLabels();
                 applyGroupLabels();
                 applyRolePermissions();
+                document.getElementById('filterStatus').value = ''; // 기본 화면은 "전체"부터 보이도록 시작
                 renderTable();
                 updateStats();
                 updateBackupNotice();
@@ -1888,7 +1936,7 @@
             element.classList.add('active');
             document.getElementById('searchInput').value = '';
             document.getElementById('filterRegion').value = '';
-            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterStatus').value = ''; // 그룹 바뀌어도 기본은 "전체"부터 보이게 통일
             document.getElementById('sortSelect').value = 'region';
             rentalFilter = null;
             renderTable();
@@ -2029,7 +2077,7 @@
                 if (item.checked) tr.classList.add('checked-row');
 
                 let badgeClass = 'badge-success';
-                if (item.status === '지원필요') {
+                if (item.status === '요청') {
                     badgeClass = 'badge-danger';
                 } else if (item.status === '미지원') {
                     badgeClass = 'badge-dark';
@@ -2074,9 +2122,9 @@
                     <td class="device-group">${escapeHtml(item.deviceModel || '-')}</td>
                     <td class="device-group">${escapeHtml(item.deviceType || '-')}</td>
                     <td class="device-group">${escapeHtml(item.deviceOption || '-')}</td>
-                    <td class="sys-group copy-cell clamp-cell" onclick="openDetailModal('${item.id}')" title="클릭하여 상세정보 보기"><span class="clamp-inner">${escapeHtml(item.kioId || '-')}</span></td>
-                    <td class="sys-group copy-cell clamp-cell" onclick="openDetailModal('${item.id}')" title="클릭하여 상세정보 보기"><span class="clamp-inner">${escapeHtml(item.kioAdminId || '-')}</span></td>
-                    <td class="sys-group copy-cell clamp-cell" onclick="openDetailModal('${item.id}')" title="클릭하여 상세정보 보기"><span class="clamp-inner">${escapeHtml(item.reaCode || '-')}</span></td>
+                    <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.kioId || '-')}</span></td>
+                    <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.kioAdminId || '-')}</span></td>
+                    <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.reaCode || '-')}</span></td>
                     <td class="rental-group">${renderDivisionBadge(item)}</td>
                     <td class="rental-group rental-expiry-cell">${renderRentalExpiry(item)}</td>
                     <td>
@@ -2416,8 +2464,22 @@
             const currentData = allGroupsData[currentGroup] || [];
             document.getElementById('totalCount').innerText = currentData.length + "개";
             document.getElementById('successCount').innerText = currentData.filter(i => i.status === '정상').length + "개";
-            document.getElementById('dangerCount').innerText = currentData.filter(i => i.status === '지원필요').length + "개";
+            document.getElementById('dangerCount').innerText = currentData.filter(i => i.status === '요청').length + "개";
             updateRentalStats();
+            updateStatusFilterCards();
+        }
+
+        // 그룹전체/정상/지원 카드 클릭 시 상태필터(filterStatus)와 연동. 지금 어떤 카드가 선택돼있는지 골드색으로 구분감을 줌
+        function filterStatusStat(key) {
+            document.getElementById('filterStatus').value = key;
+            renderTable();
+        }
+
+        function updateStatusFilterCards() {
+            const current = document.getElementById('filterStatus').value;
+            document.querySelectorAll('.status-filter-card').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.statusKey === current);
+            });
         }
 
         function updateRentalStats() {
@@ -2517,9 +2579,15 @@
                 const memoId = memo.id;
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'memo-item';
+                const authorLabel = memo.author
+                    ? `<span class="memo-author-tag">✍ ${escapeHtml(memo.author)}</span>`
+                    : `<span class="memo-author-tag unknown">작성자 미기록</span>`;
                 itemDiv.innerHTML = `
                     <div class="memo-header-inputs">
-                        <input type="text" class="memo-date-input" id="memoDate_${memoId}" value="${escapeHtml(memo.date)}">
+                        <div class="memo-header-left">
+                            <input type="text" class="memo-date-input" id="memoDate_${memoId}" value="${escapeHtml(memo.date)}">
+                            ${authorLabel}
+                        </div>
                         <div class="memo-btn-group">
                             <button type="button" class="btn-memo-action" onclick="updateMemoItem('${memoId}')">수정</button>
                             <button type="button" class="btn-memo-del" onclick="deleteMemoItem('${memoId}')">삭제</button>
@@ -2583,7 +2651,7 @@
             const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
             if (!item.memoList) item.memoList = [];
-            item.memoList.push({ id: generateUniqueId(), date: dateStr, text: textVal });
+            item.memoList.push({ id: generateUniqueId(), date: dateStr, text: textVal, author: currentUserDisplayName() });
 
             try {
                 await persistMemoList(item);
@@ -2653,7 +2721,7 @@
             divisionEl.className = 'division-badge ' + (item.division === '임대' ? 'division-rental' : 'division-sale');
             divisionEl.textContent = item.division === '임대' ? '임대' : '판매';
 
-            const statusClass = item.status === '지원필요' ? 'badge badge-danger' : (item.status === '미지원' ? 'badge badge-dark' : 'badge badge-success');
+            const statusClass = item.status === '요청' ? 'badge badge-danger' : (item.status === '미지원' ? 'badge badge-dark' : 'badge badge-success');
             const statusEl = document.getElementById('detailStatusBadge');
             statusEl.className = statusClass;
             statusEl.textContent = item.status || '정상';
@@ -2695,7 +2763,7 @@
             const memoListEl = document.getElementById('detailMemoList');
             const memos = (item.memoList || []).slice().reverse();
             memoListEl.innerHTML = memos.length
-                ? memos.map(m => `<div class="detail-memo-box"><span class="memo-date">${escapeHtml(m.date || '')}</span>${escapeHtml(m.text || '')}</div>`).join('')
+                ? memos.map(m => `<div class="detail-memo-box"><span class="memo-date">${escapeHtml(m.date || '')}${m.author ? ' · ✍ ' + escapeHtml(m.author) : ''}</span>${escapeHtml(m.text || '')}</div>`).join('')
                 : '<div class="detail-memo-empty">등록된 메모가 없습니다.</div>';
             document.getElementById('detailMemoCount').textContent = memos.length ? `(${memos.length}건)` : '';
 
@@ -2705,6 +2773,14 @@
             };
 
             document.getElementById('detailModal').style.display = 'flex';
+
+            // 2026-08-29: 팝업을 안 옮긴 상태(가운데 고정)에서도 배경(반투명 오버레이)이 클릭을 다 막고 있어서
+            // 다른 행의 장소명을 눌러도 반응이 없던 문제 수정. 배경은 클릭이 그대로 통과하게 하고,
+            // 팝업 내용(흰 박스)만 정상적으로 클릭되게 해서, 드래그로 옮기지 않아도 바로 다른 업체로 전환 가능하게 함.
+            const modalEl = document.getElementById('detailModal');
+            const contentEl = document.querySelector('#detailModal .detail-modal-content');
+            modalEl.style.pointerEvents = 'none';
+            if (contentEl) contentEl.style.pointerEvents = 'auto';
         }
 
         function closeDetailModal() {
@@ -2972,7 +3048,9 @@
                 unsupported: document.getElementById('toggleUnsupported').checked
             };
             dashboardSettings = settings;
-            persistAppSettings({ dashboard_settings: settings });
+            // "미지원 업체 표시" 체크박스도 이 화면설정 그룹에 같이 묶여있어서, 여기 바뀔 때마다
+            // 항목표시(컬럼) 설정이랑 똑같이 Supabase에 저장돼서 다음 로그인/다른 기기에서도 유지됨. (정상 동작 — 어디 저장되는지 헷갈리지 않게 메시지만 명확히)
+            persistAppSettings({ dashboard_settings: settings }, '☁️ 화면 설정 저장 완료');
         }
 
         function loadSettings() {
@@ -3130,7 +3208,7 @@
 
             try {
                 const badgeClassOf = (status) => {
-                    if (status === '지원필요') return 'print-badge-danger';
+                    if (status === '요청') return 'print-badge-danger';
                     if (status === '미지원') return 'print-badge-dark';
                     return 'print-badge-success';
                 };
@@ -3316,7 +3394,7 @@
 
             const statusColor = {
                 '정상':     { fill: 'FFD4EFDF', font: 'FF1E8449' },
-                '지원필요': { fill: 'FFFADBD8', font: 'FFC0392B' },
+                '요청':     { fill: 'FFFADBD8', font: 'FFC0392B' },
                 '미지원':   { fill: 'FFE5E8E8', font: 'FF2C3E50' }
             };
             const hasStatusCol = columns.some(col => col.key === 'status');
@@ -3365,7 +3443,7 @@
 
             const statusColor = {
                 '정상':     { fill: 'FFD4EFDF', font: 'FF1E8449' },
-                '지원필요': { fill: 'FFFADBD8', font: 'FFC0392B' },
+                '요청':     { fill: 'FFFADBD8', font: 'FFC0392B' },
                 '미지원':   { fill: 'FFE5E8E8', font: 'FF2C3E50' }
             };
             const hasStatusCol = columns.some(col => col.key === 'status');
