@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rhea TechOps</title>
     <!-- 엑셀 처리(SheetJS) 라이브러리 CDN 추가 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -806,6 +807,120 @@
         .filter-controls select option { background: #14283F; color: #EAF1F8; }
         .btn-primary { background: #F2C94C; color: #12312A; }
         .btn-primary:hover { background: #E5BB39; color: #12312A; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           [PART 1-부록] 모바일 반응형 오버라이드 (2026-08-29 추가)
+           ───────────────────────────────────────────────────────────────
+           위의 PC용 스타일은 하나도 수정하지 않았습니다. 아래 @media 블록 "안"에서만
+           재정의되기 때문에, 화면 폭이 880px보다 넓은 PC/노트북 화면에는 전혀 영향이
+           없습니다 (지금 이 파일을 그대로 PC 브라우저로 열면 이전과 100% 동일합니다).
+           .mobile-card-list 는 기본값이 display:none 이라 PC에서는 아예 보이지 않고,
+           JS(renderMobileCards)가 내용을 채워 넣어도 화면에 그려지지 않습니다.
+           ═══════════════════════════════════════════════════════════════ */
+        .mobile-card-list { display: none; }
+
+        @media (max-width: 880px) {
+            /* ---------- 뷰포트/스크롤 기본 ---------- */
+            body { height: 100vh; height: 100dvh; }
+            .side-accent { width: 6px; }
+            .container { padding: 10px 12px 24px; }
+            .container::before { height: 230px; }
+
+            /* ---------- 네브바: 세로로 쌓기 + 불필요한 요소 숨김 ---------- */
+            .navbar { flex-direction: column; align-items: stretch; min-height: auto; padding: 12px 12px 10px; gap: 10px; border-bottom-left-radius: 0; }
+            /* 좁은 화면에서 flex 자식이 내용 크기 때문에 안 줄어들고 옆으로 삐져나가는 걸 막는 안전장치
+               (flex item의 기본 min-width:auto를 0으로 풀어줘야 진짜로 화면 폭에 맞춰 줄어들거나 스크롤됨) */
+            .navbar, .navbar-left, .navbar-left-stack, .navbar-line-top, .navbar-line-stats,
+            .navbar-right-stack, .navbar-right { min-width: 0; }
+            .navbar-left { gap: 10px; min-width: 0; flex-wrap: wrap; }
+            .brand-logo { width: 40px; height: 40px; }
+            .brand-name { font-size: 16.5px; }
+            .navbar-left-stack { width: 100%; gap: 8px; }
+            .navbar-line-top { flex-wrap: wrap; row-gap: 8px; }
+            .top-menu { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: thin; min-width: 0; }
+            .top-menu li { flex-shrink: 0; }
+            .navbar-line-stats { width: 100%; }
+            .navbar-line-stats .cards { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
+            /* 임대 상세 미니스탯/백업 카드는 관리용 정보라 현장 폰 사용에선 접어둠 (PC에는 그대로 다 나옴) */
+            .rental-panel, .backup-card { display: none; }
+            .navbar-right-stack { width: 100%; padding-top: 0; align-items: stretch; }
+            .navbar-right { width: 100%; justify-content: space-between; }
+            /* 엑셀/PDF/업로드 등 관리자용 일괄 작업 버튼은 현장 폰 화면에서 숨김 (로그아웃·프로필은 유지) */
+            .desktop-only-action { display: none; }
+            .user-profile { margin-left: auto; }
+
+            /* ---------- 검색/필터 바 ---------- */
+            .filter-box { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px; }
+            .filter-controls { width: 100%; }
+            .filter-controls input, .filter-controls select { flex: 1 1 140px; width: auto; min-width: 0; }
+            .btn-group { width: 100%; }
+            .btn-group .btn { flex: 1; }
+
+            /* ---------- PC 표는 숨기고, 카드 리스트로 전환 ---------- */
+            .toggles { display: none; }
+            .table-container { display: none; }
+            .mobile-card-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 30px; position: relative; z-index: 1; }
+            .mc-empty { text-align: center; color: var(--muted-light); padding: 40px 12px; font-size: 13px; background: #fff; border: 1px solid var(--border-warm); border-radius: 12px; }
+            .mc-card { background: #fff; border: 1px solid var(--border-warm); border-radius: 14px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+            .mc-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+            .mc-card-titlewrap { min-width: 0; }
+            .mc-place-name { display: block; font-size: 15.5px; font-weight: 800; color: var(--ink); line-height: 1.3; }
+            .mc-place-name:active { color: var(--coral); }
+            .mc-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; word-break: break-word; }
+            .mc-badges { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+            .mc-row { display: flex; gap: 8px; font-size: 12.5px; padding: 4px 0; border-top: 1px solid #F5F2EA; }
+            .mc-row:first-of-type { border-top: none; }
+            .mc-row-label { color: var(--muted-light); flex-shrink: 0; width: 54px; font-weight: 600; }
+            .mc-row-value { color: #3a362c; word-break: break-word; }
+            .mc-memo-box { margin-top: 10px; background: var(--paper2); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+            .mc-memo-head { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--teal-dark); margin-bottom: 3px; }
+            .mc-memo-date { font-size: 10.5px; color: var(--muted-light); font-weight: 600; }
+            .mc-memo-text { font-size: 12.5px; color: #4a4638; line-height: 1.42; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+            .mc-actions { display: flex; gap: 8px; margin-top: 12px; }
+            .mc-btn { flex: 1; border: none; border-radius: 9px; padding: 11px 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+            .mc-btn-memo { background: var(--teal); color: #fff; }
+            .mc-btn-detail { background: var(--paper2); color: var(--ink); border: 1px solid var(--border-warm); }
+            .mc-btn-edit { flex: 0 0 44px; background: #fff; color: var(--ink); border: 1px solid var(--border-warm); font-size: 15px; }
+
+            /* ---------- 팝업(모달) 공통: 화면 폭을 넘지 않도록 캡 ---------- */
+            .modal-content { width: auto; max-width: 92vw; padding: 20px 16px; }
+
+            /* ---------- 등록/수정 팝업: 전체화면 + 세로 스택 폼 ---------- */
+            .reg-modal-content { width: 100%; max-width: 100vw; height: 100%; max-height: 100vh; border-radius: 0; }
+            .reg-modal-top { padding: 16px 16px 0; }
+            .reg-modal-body { padding: 14px 16px 40px; }
+            .modal-header { flex-wrap: wrap; row-gap: 10px; }
+            .form-section { flex-direction: column; border-radius: 10px; }
+            .section-tab { writing-mode: horizontal-tb; text-orientation: initial; width: 100%; padding: 7px 14px; text-align: left; letter-spacing: 1px; font-size: 11.5px; }
+            .section-fields { grid-template-columns: 1fr; padding: 12px 14px; }
+            .form-group.full-width, .form-group.span-2 { grid-column: span 1; }
+            .modal-footer { flex-wrap: wrap; row-gap: 10px; }
+
+            /* ---------- 업체 상세정보 팝업: 전체화면 + AS메모를 위로 (현장 사용 우선순위) ---------- */
+            .detail-modal-content { width: 100%; max-width: 100vw; height: 100%; max-height: 100vh; border-radius: 0; }
+            .detail-hero { padding: 18px 16px 16px; cursor: default; }
+            .detail-drag-hint { display: none; }
+            .detail-group-tag { display: none; }
+            .detail-place-name { font-size: 19px; }
+            .detail-body { flex-direction: column; overflow-y: auto; }
+            .detail-main { flex: none; border-right: none; border-top: 1px solid #eef0f3; padding: 16px; order: 2; overflow-y: visible; }
+            .detail-side { flex: none; padding: 16px; order: 1; overflow-y: visible; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .detail-item.full { grid-column: span 1; }
+            .detail-footer { padding: 12px 16px; }
+
+            /* ---------- AS 메모 이력 팝업: 위아래로 쌓기 (확인/등록 둘 다 스크롤로 바로 접근) ---------- */
+            .memo-modal-content { width: 100%; max-width: 100vw; height: 100%; max-height: 100vh; border-radius: 0; }
+            .memo-split-container { flex-direction: column; gap: 18px; }
+            .memo-left-panel, .memo-right-panel { width: 100%; border-right: none; padding-right: 0; }
+            .memo-timeline { max-height: 46vh; }
+            #newMemoInput { min-height: 130px !important; }
+            .memo-header-inputs { flex-wrap: wrap; row-gap: 6px; }
+            .memo-date-input { width: 118px; }
+
+            /* ---------- 로그인 화면 ---------- */
+            .login-box { width: min(320px, 88vw); padding: 22px 20px; }
+        }
     </style>
 </head>
 <body>
@@ -906,35 +1021,35 @@
             <div class="navbar-right">
                 <input type="file" id="excelUploadInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
 
-                <button class="action-btn" onclick="exportAllGroupsToExcel()" title="선택 여부와 상관없이 전체 그룹의 모든 업체를 엑셀로 다운로드">
+                <button class="action-btn desktop-only-action" onclick="exportAllGroupsToExcel()" title="선택 여부와 상관없이 전체 그룹의 모든 업체를 엑셀로 다운로드">
                     <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
                         <path fill="currentColor" d="M4 4h16v4H4V4zm0 6h16v4H4v-4zm0 6h16v4H4v-4z"/>
                     </svg>
                     <span>전체 다운로드</span>
                 </button>
 
-                <button class="action-btn" onclick="exportSelectedToPDF(event)" title="선택된 업체 리스트를 디자인 그대로 PDF로 저장">
+                <button class="action-btn desktop-only-action" onclick="exportSelectedToPDF(event)" title="선택된 업체 리스트를 디자인 그대로 PDF로 저장">
                     <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
                         <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9.5 12.5c0 .83-.67 1.5-1.5 1.5H7v2H5.5V9H8c.83 0 1.5.67 1.5 1.5v2zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V9H13c.83 0 1.5.67 1.5 1.5v4zm4-3H17v1h1.5V13H17v2h-1.5V9h3v1.5z"/>
                     </svg>
                     <span>PDF</span>
                 </button>
 
-                <button class="action-btn" onclick="exportSelectedToExcel()" title="선택된 업체 리스트를 서식 포함 엑셀로 저장">
+                <button class="action-btn desktop-only-action" onclick="exportSelectedToExcel()" title="선택된 업체 리스트를 서식 포함 엑셀로 저장">
                     <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
                         <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
                     </svg>
                     <span>엑셀</span>
                 </button>
 
-                <button class="action-btn" onclick="triggerExcelUpload()" title="엑셀 파일로 대량 업체 등록">
+                <button class="action-btn desktop-only-action" onclick="triggerExcelUpload()" title="엑셀 파일로 대량 업체 등록">
                     <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
                         <path fill="currentColor" d="M5 15h4v6h6v-6h4l-7-7-7 7zm0-8h14V5H5v2z"/>
                     </svg>
                     <span>업로드</span>
                 </button>
 
-                <button class="action-btn" onclick="downloadTemplateExcel()" title="대량 등록용 엑셀 양식 다운로드">
+                <button class="action-btn desktop-only-action" onclick="downloadTemplateExcel()" title="대량 등록용 엑셀 양식 다운로드">
                     <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
                         <path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                     </svg>
@@ -1067,6 +1182,9 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- 모바일 전용 카드 리스트 (880px 이하에서만 보임, PC에서는 항상 display:none) -->
+            <div class="mobile-card-list" id="mobileCardList"></div>
         </div>
     </div>
 
@@ -2215,6 +2333,74 @@
             updateSelectAllState();
             applyColumnVisibilities();
             updateStats();
+
+            // 모바일 카드 리스트도 같이 갱신 (PC 표 로직은 위에서 이미 끝났고, 이 아래는 순수 추가 기능이라
+            // 여기서 에러가 나도 try/catch로 막아서 PC 화면(표)에는 절대 영향이 없게 함)
+            try { renderMobileCards(filteredData); } catch (e) { console.error('모바일 카드 렌더링 실패:', e); }
+        }
+
+        /* ===================== 모바일 카드 리스트 (2026-08-29 추가, 880px 이하에서만 화면에 보임) =====================
+           renderTable()이 이미 계산해둔 필터링/정렬 결과(filteredData)를 그대로 받아서 카드로 그려주기만 함.
+           업체 데이터를 다시 읽거나 다시 필터링하지 않으므로, PC 표와 모바일 카드는 항상 100% 같은 목록을 보여줌.
+           클릭 동작(상세보기/AS메모/수정)은 전부 기존 함수(openDetailModal/openMemoModal/openModalForEdit)를
+           그대로 재사용 — 모바일 전용으로 새로 만든 로직이 아니라서 동작 방식이 PC와 항상 동일하게 유지됨. */
+        function renderMobileCards(filteredData) {
+            const wrap = document.getElementById('mobileCardList');
+            if (!wrap) return;
+
+            if (!filteredData || filteredData.length === 0) {
+                wrap.innerHTML = `<div class="mc-empty">표시할 업체가 없습니다.</div>`;
+                return;
+            }
+
+            wrap.innerHTML = filteredData.map((item) => {
+                let badgeClass = 'badge-success';
+                if (item.status === '요청') badgeClass = 'badge-danger';
+                else if (item.status === '미지원') badgeClass = 'badge-dark';
+
+                const memoList = item.memoList || [];
+                let latestMemoText = '등록된 AS 이력이 없습니다.';
+                let memoDateBadge = '';
+                if (memoList.length > 0) {
+                    const latest = memoList[memoList.length - 1];
+                    latestMemoText = latest.text || '';
+                    const shortDate = formatMemoDateShort(latest.date);
+                    if (shortDate) memoDateBadge = `<span class="mc-memo-date">${shortDate}</span>`;
+                }
+
+                const region = `${item.regionSi || ''} ${item.regionGu || ''}`.trim();
+                const subLine = [region, item.installLocation].filter(Boolean).join(' · ');
+                const orgLine = [item.orgDept, item.orgName].filter(Boolean).join(' · ');
+                const rentalRow = item.division === '임대'
+                    ? `<div class="mc-row"><span class="mc-row-label">임대만료</span><span class="mc-row-value rental-expiry-cell">${renderRentalExpiry(item)}</span></div>`
+                    : '';
+
+                return `
+                <div class="mc-card">
+                    <div class="mc-card-top">
+                        <div class="mc-card-titlewrap">
+                            <b class="mc-place-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}</b>
+                            <div class="mc-sub">${escapeHtml(subLine || '-')}</div>
+                        </div>
+                        <div class="mc-badges">
+                            ${renderDivisionBadge(item)}
+                            <span class="badge ${badgeClass}">${item.status || '정상'}</span>
+                        </div>
+                    </div>
+                    ${rentalRow}
+                    <div class="mc-row"><span class="mc-row-label">소속</span><span class="mc-row-value">${escapeHtml(orgLine || '-')}</span></div>
+                    <div class="mc-row"><span class="mc-row-label">담당자</span><span class="mc-row-value">${escapeHtml(item.managerContact || item.orgContact || '-')}</span></div>
+                    <div class="mc-memo-box" onclick="openMemoModal('${item.id}')">
+                        <div class="mc-memo-head"><span>📋 AS 메모</span>${memoDateBadge}</div>
+                        <div class="mc-memo-text">${escapeHtml(latestMemoText)}</div>
+                    </div>
+                    <div class="mc-actions">
+                        <button type="button" class="mc-btn mc-btn-memo" onclick="openMemoModal('${item.id}')">메모 확인/등록</button>
+                        <button type="button" class="mc-btn mc-btn-detail" onclick="openDetailModal('${item.id}')">상세보기</button>
+                        <button type="button" class="mc-btn mc-btn-edit" onclick="openModalForEdit('${item.id}')" title="수정">✏️</button>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function escapeHtml(str) {
