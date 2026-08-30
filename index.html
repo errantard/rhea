@@ -802,17 +802,38 @@
             height: 92%; width: 58%;
             object-fit: contain; object-position: center;
             filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5));
+            opacity: 0; /* 2026-08-30: 영상 인트로 폐기 → 아래 login-emblem-materialize로 직접 등장 */
+        }
+        #loginOverlay.reveal-card .login-emblem-img {
+            animation: login-emblem-materialize 1.05s cubic-bezier(0.33, 1, 0.68, 1) 0.45s forwards;
+        }
+        @keyframes login-emblem-materialize {
+            0%   { opacity: 0; transform: translateY(-50%) scale(0.86); filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5)) brightness(2.4); }
+            55%  { opacity: 1; transform: translateY(-50%) scale(1.02); filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5)) brightness(1.5); }
+            100% { opacity: 1; transform: translateY(-50%) scale(1);    filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5)) brightness(1); }
         }
         /* 2026-08-30: 가만히 있을 때(로그인 안 하고 대기 중일 때) 너무 정적으로 느껴지지 않도록,
            엠블럼 뒤에서 은은한 골드 글로우가 아주 천천히 커졌다 작아졌다 하는 "심장박동" 같은
            앰비언트 효과를 추가. 무한 반복이라 movement가 있는 걸 불편해하는 분들을 위해
-           prefers-reduced-motion이면 애니메이션을 꺼서 고정된 은은한 글로우만 남김. */
+           prefers-reduced-motion이면 애니메이션을 꺼서 고정된 은은한 글로우만 남김.
+           2026-08-30 추가: 영상 인트로를 폐기하면서, 등장 직후 곧바로 무한 pulse가 시작되던 것을
+           독수리가 빛으로 맺히는 순간(login-emblem-glow-in)까지 기다렸다가 그 뒤부터 pulse가
+           이어지도록 두 애니메이션을 체이닝함(콤마로 구분된 두 번째 애니메이션의 delay가 첫 번째의
+           재생시간과 맞물림). */
         .login-emblem-glow {
             position: absolute; top: 50%; right: 3%; transform: translateY(-50%);
             height: 92%; width: 58%;
             background: radial-gradient(ellipse 55% 55% at 55% 48%, rgba(242,201,76,0.22) 0%, rgba(242,201,76,0.06) 45%, transparent 72%);
             pointer-events: none;
-            animation: login-emblem-pulse 9s ease-in-out infinite;
+            opacity: 0;
+        }
+        #loginOverlay.reveal-card .login-emblem-glow {
+            animation: login-emblem-glow-in 1.05s ease-out 0.45s forwards,
+                       login-emblem-pulse 9s ease-in-out 1.5s infinite;
+        }
+        @keyframes login-emblem-glow-in {
+            0%   { opacity: 0;    transform: translateY(-50%) scale(0.75); }
+            100% { opacity: 0.55; transform: translateY(-50%) scale(1); }
         }
         @keyframes login-emblem-pulse {
             0%, 100% { opacity: 0.55; transform: translateY(-50%) scale(1); }
@@ -860,6 +881,42 @@
         }
         @media (prefers-reduced-motion: reduce) {
             .login-ring-sweep.active i { animation: none; opacity: 0; }
+        }
+
+        /* ===================== 로그인 인트로: 빛 입자 조립 효과 (2026-08-30 영상 폐기 후 신규) =====================
+           예전엔 제미나이 영상이 "빛줄기가 모여 독수리 엠블럼을 그리는" 오프닝을 담당했는데, 화질/
+           동기화 문제로 영상을 완전히 걷어내고 그 역할을 순수 CSS 애니메이션으로 대체함.
+           작은 금빛 입자 14개가 사방(각자 다른 --px/--py 오프셋)에서 엠블럼 링 중심(가로 50%,
+           세로 37% — .login-ring-sweep i와 동일 좌표)을 향해 날아들며 사라지고, 그 직후(0.45초
+           지연) 독수리 이미지가 빛과 함께 맺힘(login-emblem-materialize) → 이어서 링 한 바퀴가
+           그려지고(.login-ring-sweep.active, JS에서 한 번 트리거) → 유리카드가 슬라이드(기존
+           login-card-materialize, 그대로 재사용). 전부 %/px 기반 CSS라 창 크기가 어떻게
+           바뀌든 항상 같은 자리에서 재생되므로, 영상 시절 겪었던 "화면 비율에 따라 어긋나는"
+           문제 자체가 원천적으로 없음. 모바일(폭 880px 이하)은 엠블럼 배치가 아예 다른 레이아웃이라
+           아래 모바일 미디어쿼리에서 입자 효과만 끄고 나머지(엠블럼/텍스트/카드 등장)는 그대로 둠. */
+        .login-particles {
+            position: absolute; top: 50%; right: 3%; transform: translateY(-50%);
+            height: 92%; width: 58%;
+            pointer-events: none; z-index: 1;
+        }
+        .login-particles span {
+            position: absolute; left: 50%; top: 37%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #FFF6DC 0%, #F7D874 55%, transparent 75%);
+            box-shadow: 0 0 8px 1px rgba(247,216,116,0.9);
+            opacity: 0;
+        }
+        #loginOverlay.reveal-card .login-particles span {
+            animation: login-particle-fly 0.95s cubic-bezier(0.25,0.8,0.4,1) forwards;
+            animation-delay: var(--pd, 0s);
+        }
+        @keyframes login-particle-fly {
+            0%   { opacity: 0; transform: translate(var(--px, 0px), var(--py, 0px)) scale(0.5); }
+            45%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(0, 0) scale(0.2); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .login-particles { display: none; }
         }
         .login-bg-shade {
             position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -924,6 +981,24 @@
             #loginOverlay.reveal-card .login-glass-card,
             #loginOverlay.reveal-card .login-glass-card::after { animation: none !important; }
             .login-glass-card::after { display: none; }
+            .login-title-sub, .login-brand-title, .login-tagline, .login-tagline-kr, .login-divider {
+                opacity: 1 !important; transform: none !important; animation: none !important;
+            }
+        }
+        /* 2026-08-30: 카드가 자리 잡는 동안 그 안의 문구들도 한 줄씩 순서대로 살짝 떠오르며 나타나게 함
+           (카드 자체는 login-card-materialize로 통째로 페이드/슬라이드하지만, 그 위에 문구들만 별도로
+           약간의 시차(stagger)를 두어 더 정성스럽게 등장하는 느낌을 더함). 폼/도움말/푸터는 손대지
+           않고 카드의 기본 페이드를 그대로 따라가도록 둠. */
+        .login-title-sub, .login-brand-title, .login-tagline, .login-tagline-kr, .login-divider {
+            opacity: 0; transform: translateY(10px);
+        }
+        #loginOverlay.reveal-card .login-title-sub    { animation: login-text-rise 0.6s ease-out 0.55s forwards; }
+        #loginOverlay.reveal-card .login-brand-title  { animation: login-text-rise 0.6s ease-out 0.65s forwards; }
+        #loginOverlay.reveal-card .login-tagline      { animation: login-text-rise 0.6s ease-out 0.75s forwards; }
+        #loginOverlay.reveal-card .login-tagline-kr   { animation: login-text-rise 0.6s ease-out 0.82s forwards; }
+        #loginOverlay.reveal-card .login-divider      { animation: login-text-rise 0.6s ease-out 0.88s forwards; }
+        @keyframes login-text-rise {
+            to { opacity: 1; transform: translateY(0); }
         }
         .login-title-sub {
             color: var(--amber); font-size: 11.5px; font-weight: 800; letter-spacing: 3px; margin-bottom: 14px;
@@ -980,44 +1055,15 @@
         #syncStatus.show { display: block; }
         #syncStatus.error { background: rgba(193,85,44,0.95); }
 
-        /* ===================== 로그인 인트로 애니메이션 (2026-08-30 최종: 영상 기반) =====================
-           제미나이로 생성한 "빛줄기가 독수리 엠블럼을 그리고, 이어서 왼쪽에 유리질감 카드가
-           떠오르는" 6.3초짜리 영상(assets/intro.mp4)을 그대로 재생. 영상이 끝나면(ended 이벤트)
-           아래 #loginOverlay(z-index 9999)로 크로스페이드 — 로그인/자동로그인 로직은 전혀 손대지
-           않고 그 위에 그냥 "덮었다 걷어내는" 방식은 이전과 동일함.
-           영상 자체가 브랜드(RHEAVISION CORP. 링 문구)를 이미 드라마틱하게 보여주기 때문에,
-           예전처럼 별도의 큰 타이틀 텍스트를 다시 띄우지 않고 "Kiosk Management System" 라벨 +
-           진행률 바만 하단에 남겨서 실제 로딩 진행 상황을 겸하도록 함(진행률은 영상 재생 시간에
-           맞춰 JS가 계산 — 아래 playIntroSplash 참고). */
-        #introSplash {
-            position: fixed; inset: 0; z-index: 10000; background: #000;
-            opacity: 1; transition: opacity 0.3s ease;
-            display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 9%;
-        }
-        #introSplash.hide { opacity: 0; pointer-events: none; }
-        .intro-video-wrap { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #000; }
-        .intro-video-wrap video {
-            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        }
-        .intro-bottom-shade { position: absolute; inset: 0; z-index: 2; pointer-events: none;
-            background: linear-gradient(to bottom, transparent 55%, rgba(0,0,0,0.55) 82%, rgba(0,0,0,0.86) 100%);
-        }
-        .intro-bar-wrap { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(380px,46vw); margin: 0 auto; opacity: 0; }
-        #introSplash.playing .intro-bar-wrap { animation: intro-fade-simple 0.5s 0.3s ease forwards; }
-        @keyframes intro-fade-simple { to { opacity: 1; } }
-        .intro-bar-label { font-size: 10.5px; font-weight: 700; letter-spacing: 3px; color: #8b9bad; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; }
-        .intro-bar-row { display: flex; align-items: center; gap: 10px; width: 100%; }
-        .intro-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.16); border-radius: 2px; overflow: hidden; }
-        .intro-bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,var(--amber),#F7D874); border-radius: 2px; }
-        .intro-pct { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--amber); font-weight: 700; min-width: 30px; text-align: right; }
-        /* 좁은 화면에서는 영상의 가로 구도(카드+독수리)가 너무 잘려 보일 수 있어 object-fit을
-           contain으로 바꿔 레터박스(위아래 여백)가 생기더라도 전체 장면이 다 보이게 함 */
-        @media (max-width: 880px) {
-            .intro-video-wrap video { object-fit: contain; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .intro-bar-wrap { animation: none !important; opacity: 1; }
-        }
+        /* ===================== (2026-08-30) 영상 기반 인트로(#introSplash) 완전 폐기 =====================
+           화질이 구리고, 화면 비율에 따라 영상 속 카드 위치와 실제 로그인 카드가 어긋나는 문제가
+           구조적으로 있었음(object-fit:cover가 창 비율에 따라 다르게 크롭하기 때문). 실시간 좌표
+           동기화까지 구현해서 수학적으로는 완벽히 맞춰봤지만, 애초에 "영상 위에 실제 카드가 다시
+           한 번 나타나는" 이중 연출 자체가 불필요하다는 판단하에 영상을 통째로 걷어내고, 아래
+          `#loginOverlay` 위에서 바로 재생되는 순수 CSS 애니메이션(빛 입자 조립 + 엠블럼 등장 +
+           텍스트 시차 등장 + 기존 카드 슬라이드)으로 대체함. 자세한 내용은 .login-particles,
+           login-emblem-materialize, playLoginIntro() 참고. 검은 화면으로 전환되는 순간 자체가
+           없어져서 "영상과 로그인 화면이 따로 논다"는 문제도 원천적으로 사라짐. */
 
         /* ===================== 통계 스트립 + 검색/필터바 + 항목그룹표시 토글바를 네브바와 같은 다크 네이비 톤으로 통일 =====================
            (업체 리스트 표는 기존 밝은 디자인 그대로 유지) */
@@ -1091,9 +1137,21 @@
                 mask-image: linear-gradient(to bottom, #000 60%, transparent 96%);
                 z-index: 1;
             }
+            /* 데스크톱용 login-emblem-materialize는 translateY(-50%)가 섞여있어서(가운데 정렬용),
+               transform:none인 모바일 배치에 그대로 쓰면 이미지가 엉뚱한 위치로 밀림 → 모바일 전용
+               버전(스케일/밝기만, translateY 없음)으로 애니메이션 이름만 갈아끼움 */
+            #loginOverlay.reveal-card .login-emblem-img {
+                animation-name: login-emblem-materialize-mobile;
+            }
+            @keyframes login-emblem-materialize-mobile {
+                0%   { opacity: 0; transform: scale(0.86); filter: drop-shadow(0 0 30px rgba(242,201,76,0.25)) brightness(2.4); }
+                55%  { opacity: 1; transform: scale(1.02); filter: drop-shadow(0 0 30px rgba(242,201,76,0.25)) brightness(1.5); }
+                100% { opacity: 1; transform: scale(1);    filter: drop-shadow(0 0 30px rgba(242,201,76,0.25)) brightness(1); }
+            }
             .login-bg-shade { display: none; }
             .login-emblem-glow { display: none; }
             .login-ring-sweep { display: none; }
+            .login-particles { display: none; }
             .login-content { position: relative; z-index: 2; height: auto; width: 100%; max-width: 100%; padding: 0 18px; align-items: center; text-align: center; }
             .login-glass-card { max-width: 400px; padding: 42px 20px 16px; }
             .login-title-sub { font-size: 10px; letter-spacing: 2px; margin-bottom: 8px; }
@@ -1214,26 +1272,30 @@
          [PART 2] MARKUP — 화면에 보이는 HTML 구조 (로그인/네브바/테이블/각종 모달)
          ═══════════════════════════════════════════════════════════════ -->
 
-    <!-- ===================== 로그인 인트로 애니메이션 (#loginOverlay보다 위 레이어) ===================== -->
-    <div id="introSplash">
-        <div class="intro-video-wrap">
-            <video id="introVideo" muted playsinline preload="auto" poster="assets/intro-poster.jpg" src="assets/intro.mp4"></video>
-        </div>
-        <div class="intro-bottom-shade"></div>
-        <div class="intro-bar-wrap">
-            <div class="intro-bar-label">Kiosk Management System</div>
-            <div class="intro-bar-row">
-                <div class="intro-bar"><i id="introBarFill"></i></div>
-                <div class="intro-pct" id="introPct">0%</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== Supabase 로그인 오버레이 ===================== -->
+    <!-- ===================== Supabase 로그인 오버레이 =====================
+         2026-08-30: 영상 기반 인트로(#introSplash)를 완전히 폐기하고, 이 화면 위에서 바로 재생되는
+         빛 입자 조립 효과(.login-particles)로 대체함. 검은 인트로 화면 → 크로스페이드하던 단계가
+         아예 없어져서 처음부터 끝까지 "한 화면" 위에서만 연출이 이어짐. -->
     <div id="loginOverlay">
         <div class="login-emblem-glow"></div>
         <img class="login-emblem-img" src="assets/eagle-medallion.webp" alt="RHEAVISION CORP">
         <div class="login-ring-sweep" id="loginRingSweep"><i></i></div>
+        <div class="login-particles" aria-hidden="true">
+            <span style="--px:-80px;  --py:-140px; --pd:0.00s;"></span>
+            <span style="--px:120px;  --py:-110px; --pd:0.05s;"></span>
+            <span style="--px:-150px; --py:-40px;  --pd:0.03s;"></span>
+            <span style="--px:160px;  --py:30px;   --pd:0.08s;"></span>
+            <span style="--px:-60px;  --py:130px;  --pd:0.10s;"></span>
+            <span style="--px:90px;   --py:150px;  --pd:0.06s;"></span>
+            <span style="--px:-170px; --py:90px;   --pd:0.14s;"></span>
+            <span style="--px:40px;   --py:-170px; --pd:0.12s;"></span>
+            <span style="--px:-30px;  --py:-180px; --pd:0.18s;"></span>
+            <span style="--px:180px;  --py:-60px;  --pd:0.16s;"></span>
+            <span style="--px:-120px; --py:160px;  --pd:0.22s;"></span>
+            <span style="--px:10px;   --py:190px;  --pd:0.20s;"></span>
+            <span style="--px:-190px; --py:-100px; --pd:0.26s;"></span>
+            <span style="--px:130px;  --py:100px;  --pd:0.24s;"></span>
+        </div>
         <div class="login-bg-shade"></div>
         <div class="login-content">
             <div class="login-glass-card">
@@ -1851,51 +1913,22 @@
            ⚠️ GitHub Pages 등에 배포할 때는 index.html과 assets 폴더를 항상 같은 위치에
            함께 올려야 이미지가 정상적으로 보임(폴더 구조 그대로 업로드). */
 
-        /* ===================== 로그인 인트로 애니메이션 재생 (2026-08-30 최종: 영상 기반) =====================
-           페이지가 열리면 항상 한 번 재생됨 (로그인 화면이든, 자동로그인으로 바로 대시보드로
-           넘어가는 경우든 상관없이 영상이 다 재생될 때까지 위에 떠 있다가 아래 화면으로 크로스페이드).
-           영상의 실제 재생 시간에 맞춰 진행률 바가 채워지고, 영상이 끝나면(ended) 곧바로 넘어감.
-           혹시라도 영상을 못 불러오거나 자동재생이 막히는 경우를 대비해, 일정 시간이 지나면
-           무조건 넘어가는 안전장치(safety net)도 같이 둠 — 어떤 경우에도 화면이 영구히 멈춰있지 않도록. */
-        (function playIntroSplash() {
-            const splash = document.getElementById('introSplash');
-            if (!splash) return;
-            const video = document.getElementById('introVideo');
-            const pctEl = document.getElementById('introPct');
-            const barFill = document.getElementById('introBarFill');
-
-            let swapped = false;
-            function swapToMain() {
-                if (swapped) return;
-                swapped = true;
-                if (pctEl) pctEl.textContent = '100%';
-                if (barFill) barFill.style.width = '100%';
-                splash.classList.remove('playing');
-                splash.classList.add('hide');
-                // 2026-08-30: 영상이 끝나는 바로 그 순간, 로그인 유리카드가 왼쪽에서 빛나며
-                // 슬라이드해 들어와 자리잡는 연출을 시작(login-card-materialize, CSS 참고) +
-                // 대기화면 링 반짝임 유휴타이머 시작
-                const loginOverlay = document.getElementById('loginOverlay');
-                if (loginOverlay) loginOverlay.classList.add('reveal-card');
-                startLoginRingIdle();
-            }
-
-            splash.classList.add('playing');
-
-            if (video) {
-                video.addEventListener('timeupdate', function () {
-                    if (!video.duration) return;
-                    const frac = Math.min(1, video.currentTime / video.duration);
-                    if (pctEl) pctEl.textContent = Math.round(frac * 100) + '%';
-                    if (barFill) barFill.style.width = (frac * 100) + '%';
-                });
-                video.addEventListener('ended', swapToMain);
-                video.addEventListener('error', swapToMain);
-                video.play().catch(swapToMain); // 자동재생이 막히면 바로 넘어감
-                setTimeout(swapToMain, 8000); // 안전장치: 8초 안에 못 끝나면 강제로 넘어감
-            } else {
-                setTimeout(swapToMain, 3000);
-            }
+        /* ===================== 로그인 인트로 애니메이션 재생 (2026-08-30: 영상 폐기 → 순수 CSS 연출) =====================
+           예전에는 영상이 다 재생된 뒤(ended 이벤트)에야 카드를 등장시켰지만, 이제는 영상이 없으므로
+           페이지가 열리자마자 바로 #loginOverlay에 reveal-card 클래스를 붙여서 CSS로 짜둔 전체
+           시퀀스(빛 입자 조립 → 엠블럼 등장 → 텍스트 시차 등장 → 카드 슬라이드, 각 애니메이션의
+           animation-delay로 순서가 정해짐)를 한 번에 트리거함. 링이 한 바퀴 그려지는 연출
+           (.login-ring-sweep)만 별도 트리거가 필요해서 살짝 지연 후 .active를 붙여줌 — 평소 10초
+           유휴 감지 때 재생되는 것과 똑같은 애니메이션을 "오프닝 연출"로도 재사용하는 것. */
+        (function playLoginIntro() {
+            const overlay = document.getElementById('loginOverlay');
+            if (!overlay) return;
+            overlay.classList.add('reveal-card');
+            const sweep = document.getElementById('loginRingSweep');
+            setTimeout(function () {
+                if (sweep) sweep.classList.add('active');
+            }, 500);
+            startLoginRingIdle();
         })();
 
         /* 2026-08-30: 로그인 화면에서 10초 정도 마우스/키보드/터치 조작이 없으면, 인트로 영상
