@@ -1485,7 +1485,7 @@
                         <option value="">상태 필터: 전체</option>
                         <option value="정상">정상</option>
                         <option value="요청">요청</option>
-                        <option value="미지원">미지원</option>
+                        <option value="종료">종료</option>
                     </select>
                     <select id="sortSelect">
                         <option value="region">정렬: 지역순</option>
@@ -1524,7 +1524,7 @@
                     <div id="groupMoveMenu" class="group-move-menu"></div>
                 </div>
                 <span class="toggle-divider">|</span>
-                <label style="color: #EAF1F8; font-weight: bold;"><input type="checkbox" id="toggleUnsupported" checked onchange="handleUnsupportedToggle(this.checked)"> 미지원 업체 표시</label>
+                <label style="color: #EAF1F8; font-weight: bold;"><input type="checkbox" id="toggleUnsupported" onchange="handleUnsupportedToggle(this.checked)"> 종료 업체 표시</label>
                 <span class="toggle-divider">|</span>
                 <div class="density-switch" id="densitySwitch" role="group" aria-label="표 행간격 설정">
                     <span class="density-label">행간격:</span>
@@ -1718,7 +1718,7 @@
                             <select id="status" required>
                                 <option value="정상">정상</option>
                                 <option value="요청">요청</option>
-                                <option value="미지원">미지원</option>
+                                <option value="종료">종료</option>
                             </select>
                         </div>
                     </div>
@@ -2437,6 +2437,31 @@
             }
         }
 
+        /* 2026-08-31 추가: 임대 만료일이 지난 업체는 "상태"를 자동으로 "종료"로 동기화.
+           - 만료(expired) 카테고리인데 status가 아직 '종료'가 아닌 항목만 대상으로 함(수동으로 이미 다른 상태로
+             바꿔놓은 것도 만료되면 종료로 덮어씀 — 임대가 끝났으면 상태는 종료가 맞다는 게 요청 취지).
+           - 화면에는 먼저 즉시 반영(item.status = '종료')해서 사용자가 기다릴 필요 없게 하고,
+             DB 반영은 뒤에서 in() 절로 한 번에 묶어서 보냄. 실패해도 alert로 흐름을 막지 않고 조용히 재시도는
+             다음 새로고침 때 다시 일어남(멱등 처리라 여러 번 실행돼도 안전함). */
+        async function syncExpiredRentalStatuses() {
+            const idsToUpdate = [];
+            Object.keys(allGroupsData).forEach(groupId => {
+                (allGroupsData[groupId] || []).forEach(item => {
+                    if (item.division === '임대' && getRentalCategory(item) === 'expired' && item.status !== '종료') {
+                        item.status = '종료';
+                        idsToUpdate.push(item.id);
+                    }
+                });
+            });
+            if (idsToUpdate.length === 0) return;
+            try {
+                const { error } = await sb.from('companies').update({ status: '종료' }).in('id', idsToUpdate);
+                if (error) throw error;
+            } catch (err) {
+                console.error('임대만료 자동 종료 상태 동기화 실패:', err);
+            }
+        }
+
         // 로그인 화면을 거치지 않고 이미 로그인돼 있던 세션이 복구되는 경우와, 방금 로그인 버튼을 눌러 성공한 경우가
         // 거의 동시에 겹치면 초기화(initApp)가 두 번 실행돼서 기본 그룹이 중복 생성될 수 있었음 - 이를 막는 안전장치
         let appInitStarted = false;
@@ -2446,6 +2471,7 @@
             appInitStarted = true;
             try {
                 await loadAllDataFromSupabase();
+                await syncExpiredRentalStatuses();
                 renderGroupTabs();
                 loadSettings();
                 applyFieldLabels();
@@ -2717,7 +2743,7 @@
             const currentData = [...(allGroupsData[currentGroup] || [])];
 
             let filteredData = currentData.filter((item) => {
-                if (!showUnsupported && item.status === '미지원') return false;
+                if (!showUnsupported && item.status === '종료') return false;
 
                 const searchFields = [
                     item.regionSi, item.regionGu, item.placeName, item.installAddress,
@@ -2737,6 +2763,11 @@
                 let rentalMatch = true;
                 if (rentalFilter === 'all') {
                     rentalMatch = item.division === '임대';
+                } else if (rentalFilter === 'ongoing') {
+                    // "사용중" 카드 클릭 시: 상단 카운트가 진행중+종료예정을 합쳐서 보여주는 것과 동일하게,
+                    // 진행중(ongoing)뿐 아니라 종료예정(expiring, D-7 이내)도 아직 사용중이므로 같이 포함해서 필터링
+                    const cat = getRentalCategory(item);
+                    rentalMatch = item.division === '임대' && (cat === 'ongoing' || cat === 'expiring');
                 } else if (rentalFilter) {
                     rentalMatch = item.division === '임대' && getRentalCategory(item) === rentalFilter;
                 }
@@ -2773,7 +2804,7 @@
                 let badgeClass = 'badge-success';
                 if (item.status === '요청') {
                     badgeClass = 'badge-danger';
-                } else if (item.status === '미지원') {
+                } else if (item.status === '종료') {
                     badgeClass = 'badge-dark';
                 }
 
@@ -2860,7 +2891,7 @@
             wrap.innerHTML = filteredData.map((item) => {
                 let badgeClass = 'badge-success';
                 if (item.status === '요청') badgeClass = 'badge-danger';
-                else if (item.status === '미지원') badgeClass = 'badge-dark';
+                else if (item.status === '종료') badgeClass = 'badge-dark';
 
                 const memoList = item.memoList || [];
                 let latestMemoText = '등록된 AS 이력이 없습니다.';
@@ -3257,7 +3288,10 @@
             });
             document.getElementById('rentalAllCount').innerText = rentalItems.length;
             document.getElementById('rentalUpcomingCount').innerText = upcoming;
-            document.getElementById('rentalOngoingCount').innerText = ongoing;
+            // "사용중" 카운트는 진짜 진행중(ongoing) + 종료예정(expiring, D-7 이내)까지 합산해서 보여줌.
+            // 종료예정도 아직 만료 전이라 실사용 중인 상태이기 때문 (2026-08-31 요청 반영). 필터 클릭 동작은 기존처럼
+            // ongoing/expiring 각자 그대로 유지되고, 이건 상단 숫자 표시만 합쳐서 보여주는 것.
+            document.getElementById('rentalOngoingCount').innerText = ongoing + expiring;
             document.getElementById('rentalExpiringCount').innerText = expiring;
             document.getElementById('rentalExpiredCount').innerText = expired;
 
@@ -3488,7 +3522,7 @@
             divisionEl.className = 'division-badge ' + (item.division === '임대' ? 'division-rental' : 'division-sale');
             divisionEl.textContent = item.division === '임대' ? '임대' : '판매';
 
-            const statusClass = item.status === '요청' ? 'badge badge-danger' : (item.status === '미지원' ? 'badge badge-dark' : 'badge badge-success');
+            const statusClass = item.status === '요청' ? 'badge badge-danger' : (item.status === '종료' ? 'badge badge-dark' : 'badge badge-success');
             const statusEl = document.getElementById('detailStatusBadge');
             statusEl.className = statusClass;
             statusEl.textContent = item.status || '정상';
@@ -3747,8 +3781,14 @@
             const id = document.getElementById('editTargetId').value;
             if (id && confirm("정말 이 업체를 삭제하시겠습니까?")) {
                 try {
-                    const { error } = await sb.from('companies').delete().eq('id', id);
+                    // .select()를 붙여서 "실제로 몇 건이 지워졌는지"를 응답으로 받음.
+                    // RLS 정책에 막히면 Supabase는 에러 없이 0건 삭제로 조용히 "성공" 처리하기 때문에,
+                    // error만 확인해서는 이 경우를 못 잡아냄 → data.length로 직접 확인해야 함.
+                    const { data, error } = await sb.from('companies').delete().eq('id', id).select();
                     if (error) throw error;
+                    if (!data || data.length === 0) {
+                        throw new Error('삭제 권한이 없거나(RLS 정책 차단), 이미 삭제된 항목입니다. Supabase의 companies 테이블 DELETE 정책을 확인해주세요.');
+                    }
                     const index = allGroupsData[currentGroup].findIndex(d => d.id === id);
                     if (index !== -1) allGroupsData[currentGroup].splice(index, 1);
                     closeModal();
@@ -3815,7 +3855,7 @@
                 unsupported: document.getElementById('toggleUnsupported').checked
             };
             dashboardSettings = settings;
-            // "미지원 업체 표시" 체크박스도 이 화면설정 그룹에 같이 묶여있어서, 여기 바뀔 때마다
+            // "종료 업체 표시" 체크박스도 이 화면설정 그룹에 같이 묶여있어서, 여기 바뀔 때마다
             // 항목표시(컬럼) 설정이랑 똑같이 Supabase에 저장돼서 다음 로그인/다른 기기에서도 유지됨. (정상 동작 — 어디 저장되는지 헷갈리지 않게 메시지만 명확히)
             persistAppSettings({ dashboard_settings: settings }, '☁️ 화면 설정 저장 완료');
         }
@@ -3976,7 +4016,7 @@
             try {
                 const badgeClassOf = (status) => {
                     if (status === '요청') return 'print-badge-danger';
-                    if (status === '미지원') return 'print-badge-dark';
+                    if (status === '종료') return 'print-badge-dark';
                     return 'print-badge-success';
                 };
 
@@ -4162,7 +4202,7 @@
             const statusColor = {
                 '정상':     { fill: 'FFD4EFDF', font: 'FF1E8449' },
                 '요청':     { fill: 'FFFADBD8', font: 'FFC0392B' },
-                '미지원':   { fill: 'FFE5E8E8', font: 'FF2C3E50' }
+                '종료':     { fill: 'FFE5E8E8', font: 'FF2C3E50' }
             };
             const hasStatusCol = columns.some(col => col.key === 'status');
 
@@ -4211,7 +4251,7 @@
             const statusColor = {
                 '정상':     { fill: 'FFD4EFDF', font: 'FF1E8449' },
                 '요청':     { fill: 'FFFADBD8', font: 'FFC0392B' },
-                '미지원':   { fill: 'FFE5E8E8', font: 'FF2C3E50' }
+                '종료':     { fill: 'FFE5E8E8', font: 'FF2C3E50' }
             };
             const hasStatusCol = columns.some(col => col.key === 'status');
             const usedSheetNames = new Set();
