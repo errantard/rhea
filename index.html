@@ -50,16 +50,11 @@
                 repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 46px),
                 repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 46px),
                 linear-gradient(160deg, #0D2036 0%, #17293F 55%, #0D2036 100%);
-            /* 2026-08-31: 로그인 카드 전용 로즈골드 팔레트 (참고 시안 그대로 이식).
-               나머지 화면 전체가 쓰는 --amber(밝은 옐로골드)와는 톤이 달라서, 로그인 화면
-               밖으로 새어나가지 않도록 전용 변수로 분리해둠 — 로그인 카드 관련 CSS에서만 사용. */
-            --login-gold-1: #D1A763;
+            /* 2026-09-06 5차: 로그인 화면이 "핫스팟 좌표매핑"(원화 자체가 카드) 방식으로 완전히
+               바뀌면서, 예전 CSS로 그리던 로그인 카드 팔레트 변수들(로즈골드 1번/글로우/패널
+               배경/테두리/잉크 톤, 룬석벽 리스킨용 파란 악센트 등)이 전부 미사용 상태가 되어
+               제거함. 실제 쓰이는 건 눈 아이콘 hover 색상 하나(--login-gold-2)뿐이라 그것만 남김. */
             --login-gold-2: #E5C384;
-            --login-gold-glow: rgba(229,195,132,0.55);
-            --login-panel-bg: rgba(20,24,32,0.7);
-            --login-panel-border: rgba(229,195,132,0.18);
-            --login-ink-dim: rgba(243,244,247,0.62);
-            --login-ink-faint: rgba(243,244,247,0.38);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Public Sans', 'Malgun Gothic', 'Segoe UI', sans-serif; }
         .mono-num { font-family: 'IBM Plex Mono', 'Malgun Gothic', monospace; font-variant-numeric: tabular-nums; }
@@ -765,20 +760,420 @@
         .print-badge-danger { background: #fadbd8; color: #c0392b; }
         .print-badge-dark { background: #e5e8e8; color: #2c3e50; }
 
-        /* ===================== Supabase 로그인 오버레이 (테스트 버전 전용 추가) ===================== */
-        /* 2026-08-29 로그인 화면 리디자인: 가운데 정렬된 작은 배지 형태에서, 엠블럼 이미지가 오른쪽으로
-           크게 번지는(bleed) 시네마틱 스플릿 레이아웃으로 변경. 이미지는 기존 .login-emblem-img 그대로
-           재사용(같은 이미지 파일, 중복 저장 없음) — 위치/크기만 CSS로 재배치. */
+        /* ===================== Supabase 로그인 오버레이 ===================== */
+        /* 2026-09-05: 대장님 지시로 배경 구성 전면 리셋 — 벽 사진 + 카드 이미지 + 엠블럼 이미지 +
+           횃불 + 비네트 + 그레인처럼 여러 레이어를 따로 합성하던 방식을 전부 걷어내고, 이미 하나의
+           그림으로 완성된 원화(벽+원형 독수리 엠블럼+횃불이 전부 한 장에 담긴 단일 이미지,
+           assets/login-bg-scene.webp)를 배경으로 그대로 사용. 로그인 카드는 그 위에 순수 CSS로
+           그리는 작고 반투명한 룬석판 패널 하나뿐이라 이미지 좌표에 맞출 필요가 전혀 없고,
+           화면 비율이 달라져도 항상 자연스럽게 동작함. */
+        /* 2026-09-06 4차 추가 버그수정: CSS `background-size:cover`는 브라우저 창이 원본 이미지
+           비율(2754:1536≈1.79:1)보다 훨씬 "가로로 넓고 세로로 짧은" 상태가 되면(예: 와이드 모니터에
+           브라우저 주소창/북마크바까지 켜져서 실제 보이는 세로 공간이 확 줄어드는 흔한 상황) 이미지를
+           과도하게 확대해서 로그인 패널(특히 ENTER 버튼)이 화면 아래로 넘쳐 안 보이는 문제가 있었음.
+           그래서 CSS `cover` 대신 JS(syncLoginHotspots)가 매번 직접 계산한 배율/위치를
+           background-size/background-position으로 지정하는 방식으로 바꿈 — 입력창 좌표와 배경
+           이미지가 항상 같은 수식으로 움직이므로 절대 어긋나지 않고, 화면이 극단적으로 가로로
+           넓고 짧을 땐 배율을 살짝 줄여서(=좌우로 살짝 여백이 생기더라도) 패널이 항상 화면 안에
+           보이도록 보정함. 그 여백은 이미지 가장자리와 거의 같은 어두운 색(background-color)으로
+           채워서 티가 안 나게 함. */
+        /* 2026-09-06 6차-3: 대장님이 실사용 중 "사이트 처음 들어가면 로그인 후에나 보이는 업체관리
+           시스템 화면(대시보드)이 살짝 비쳤다가 로그인 화면으로 넘어온다"고 지적. 원인은 #loginOverlay
+           가 opacity:0에서 시작해 0.6초에 걸쳐 1로 페이드인하는데, opacity가 낮은 그 짧은 구간 동안
+           뒤에 항상 렌더링되어 있는 대시보드 본문이 살짝 비쳐 보였던 것(배경 이미지 로딩 속도에 따라
+           체감 시간이 늘어날 수도 있음). → #loginOverlay 자체는 처음부터 항상 불투명한 단색
+           배경(#09080d)으로 즉시 대시보드를 완전히 가리도록 바꾸고, "스르륵 나타나는" 페이드 연출은
+           그 안의 배경 이미지(.login-bg-image, 새로 분리한 자식 요소)와 입력 요소(.login-content)
+           에만 걸어서 시각적으로는 기존과 동일하게 부드럽게 나타나 보이되, 대시보드가 비치는 순간은
+           원천적으로 없앰. */
         #loginOverlay {
             position: fixed; inset: 0; z-index: 9999;
-            background:
-                radial-gradient(ellipse 900px 600px at 50% 38%, rgba(242,201,76,0.10) 0%, rgba(15,110,92,0.10) 35%, rgba(5,10,20,0) 70%),
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 46px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 46px),
-                linear-gradient(160deg, #060B14 0%, #0A1729 55%, #060B14 100%);
+            background-color: #09080d;
             overflow: hidden;
         }
+        .login-bg-image {
+            position: absolute; inset: 0; z-index: 0; pointer-events: none;
+            background-repeat: no-repeat;
+            opacity: 0; transition: opacity 0.6s ease;
+        }
+        #loginOverlay.reveal-card .login-bg-image { opacity: 1; }
+        #loginOverlay::before {
+            content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+            background: linear-gradient(180deg, rgba(4,6,10,0.10) 0%, rgba(4,6,10,0.02) 32%, rgba(4,6,10,0.30) 76%, rgba(4,6,10,0.58) 100%);
+        }
         #loginOverlay.hidden { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .login-bg-image, .login-content { transition: none; }
+        }
+
+        /* ===================== 로그인 화면 이펙트 레이어 (2026-09-06 6차, 입장연출+대기펄스) =====================
+           대장님이 구글독스로 공유해준 제미나이 의견 + 대장님 아이디어를 합쳐서 만든 연출.
+           원화(login-bg-scene.webp)에 횃불/엠블럼이 이미 다 그려져 있어서 그 자체를 애니메이션할 수는
+           없으므로(패널·벽·엠블럼이 전부 한 장의 평면 이미지), 그 위에 "빛만 더해주는" 반투명
+           radial-gradient 레이어를 겹쳐서 mix-blend-mode:screen으로 빛만 얹음 — 원화 수정도 새
+           이미지 생성도 전혀 필요 없음.
+           입장 시: 횃불 두 개가 순서대로 확 타오르듯 점화(fxTorchIgnite) → 살짝 뒤이어 엠블럼 원형
+           테두리 안쪽의 룬 글자 4개가 왼쪽→오른쪽으로 순서대로 하나씩 반짝 켜짐 → 각각 대기 상태로
+           자연스럽게 이어받음(같은 엘리먼트에 두 애니메이션을 콤마로 같이 걸고, 뒤쪽 무한반복
+           애니메이션의 delay를 앞쪽 1회성 애니메이션 길이에 맞춰서 끊김 없이 바통터치되게 함).
+           대기 중: 횃불은 미세하게 일렁이는 불규칙한 flicker를 무한 반복(왼쪽/오른쪽에 서로 다른
+           주기를 줘서 기계적으로 똑같이 안 보이게 함), 룬 글자들은 제미나이 제안대로 10초마다 한 번씩
+           1.5초간 은은한 푸른 파동이 맥동(fxRunePulse).
+           2026-09-06 6차-수정: 처음엔 엠블럼 전체를 하나의 큰 원으로 덮는 fxEmblemFlash/fxEmblemPulse
+           방식으로 만들었는데, 대장님이 실제로 보고 "독수리 얼굴 전체가 뿌옇게 흐려지고 좌표도
+           어색하다"고 피드백 주심 → 원화를 다시 자세히 뜯어봤더니 엠블럼 테두리 안쪽에 실제로 빛나는
+           룬 글자가 4개(좌/우/좌하단/우상단, 정확한 픽셀 위치는 스크립트의 LOGIN_FX_ANCHORS 참고 —
+           맨 위/우하단 지점은 그리드로 확대해봐도 빛나지 않는 민무늬 별 꼭짓점이라 제외) 박혀 있는
+           걸 확인. 그래서 얼굴 전체를 덮는 큰 원 1개 대신, 그 4개 룬 글자 각각에만 딱 맞는 작은
+           점광원을 따로 배치하는 방식으로 교체 — 훨씬 정교하고 원화와 자연스럽게 맞물림.
+           추가로 대장님이 제안한 "처음엔 RHEAVISION CORP. 글자처럼 그냥 음각(민무늬)이었다가
+           등장 때 빛나면서 지금 이미지처럼 되는" 연출도 같이 구현: 원화 자체는 항상 룬이 파랗게
+           빛나는 상태로 고정되어 있어서 "안 빛나는 버전" 이미지가 따로 없지만, 룬 위에 주변 배경과
+           비슷한 톤의 반투명 어두운 "가리개"(fx-rune-mask)를 얹어뒀다가 점화 타이밍에 그 가리개를
+           투명하게 걷어내면서 동시에 파란 점광원(fx-rune-glow)을 반짝 띄우면, "원래 안 빛나던 게
+           지금 막 켜지는" 것처럼 보임 — 새 이미지 없이 순수 CSS 마스킹으로 구현.
+           좌표(LOGIN_FX_ANCHORS, 스크립트 영역)는 다른 핫스팟과 동일하게 원화를 그리드 오버레이로
+           확대해서 실측한 값 — 배치는 syncLoginHotspots() 안의 placeFx()가 동일한 scale/offset
+           수식으로 계산해서 리사이즈해도 항상 그림 속 정확한 자리에 맞음. */
+        .login-fx-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+        .fx-glow {
+            position: absolute; border-radius: 50%; pointer-events: none;
+            mix-blend-mode: screen; opacity: 0; transform: scale(1);
+        }
+        .fx-torch {
+            background: radial-gradient(circle, rgba(255,214,120,0.95) 0%, rgba(255,150,45,0.55) 35%, rgba(255,90,20,0.16) 65%, rgba(255,90,20,0) 100%);
+        }
+        /* 2026-09-06 6차-2: 대장님이 챗지피티 의견도 참고해서 횃불 연출 업그레이드 요청.
+           챗지피티 제안 중 "처음엔 완전히 꺼진 것처럼 있다가 점화", "평소엔 티 안 나는 미세한
+           일렁임 + 8~12초마다 랜덤하게 한번씩 더 크게 출렁", "불꽃 세질 때 주변 벽에도 미세하게
+           온기가 도는 반사광(단, 로그인 패널 쪽엔 영향 없음)" 아이디어는 채택하되, 구현 수단으로
+           제안한 "투명 배경 불꽃 이미지"는 채택 안 함 — 원화에 이미 정교한 불꽃이 그려져 있어서
+           새 이미지를 얹으면 화풍이 안 맞아 오히려 붙여넣은 티가 남. 대신 엠블럼 룬에 썼던 것과
+           같은 "가리개로 덮어뒀다가 걷어내는" 방식 + 벽 반사광용 큰 반경 저채도 글로우 레이어를
+           추가로 얹어서 순수 CSS만으로 구현. 랜덤 flare-up은 CSS keyframe이 아니라 스크립트에서
+           Web Animations API(element.animate())로 8~12초 랜덤 간격마다 살짝 얹어줌(기존 무한
+           flicker CSS 애니메이션과 같은 속성이라도 서로 다른 애니메이션 소스라 자연스럽게 합성되고,
+           끝나면 원래 flicker로 매끄럽게 복귀함). */
+        /* 2026-09-06 6차-3: 대장님이 이 벽 반사광 원의 테두리가 "동그란 선"처럼 티 나게 보인다고
+           지적 — 기존엔 45%에서 100%까지 꽤 급하게 확 죽는 그라디언트라 경계가 뚜렷하게 보였음.
+           중간 정지점을 훨씬 많이 추가해서 아주 서서히/길게 퍼지도록 바꾸고, blur까지 살짝 얹어서
+           경계선 자체가 안 보이고 그냥 "은은하게 번지는 빛"처럼 보이도록 함. */
+        .fx-torch-bounce {
+            background: radial-gradient(circle, rgba(255,175,95,0.48) 0%, rgba(255,155,75,0.3) 22%, rgba(255,145,65,0.16) 42%, rgba(255,135,58,0.08) 62%, rgba(255,125,52,0.03) 80%, rgba(255,120,50,0) 100%);
+            filter: blur(5px);
+        }
+        /* 2026-09-06 6차-6: 대장님이 "화면 처음 들어갈 때 동그랗게 자국이 너무 심하게 생긴다"고
+           지적 — 새 원화는 이전 원화보다 횃불/눈가 디테일이 훨씬 진하고 대비가 강해서, 예전처럼
+           거의 새까만 고정 색(rgba(22,15,11,..))의 가리개를 3단 그라디언트로만 얹으면 그 원 경계가
+           "인장 자국"처럼 도드라져 보임. (1) 가리개 색을 새 원화에서 실측한 그 위치 실제 평균
+           색상에 가깝게(완전 검정이 아니라 그 주변 벽돌/청동 톤을 어둡게 누른 색으로) 바꾸고,
+           (2) 중간 정지점을 훨씬 촘촘히 추가해 경계가 서서히 녹아들게 하고, (3) blur를 얹어 원
+           윤곽선 자체를 흐려서 "동그란 선"으로 안 보이게 함. */
+        .fx-torch-mask {
+            position: absolute; border-radius: 50%; pointer-events: none;
+            background: radial-gradient(circle, rgba(45,26,15,0.88) 0%, rgba(45,26,15,0.82) 30%, rgba(45,26,15,0.62) 50%, rgba(45,26,15,0.36) 66%, rgba(45,26,15,0.16) 80%, rgba(45,26,15,0.05) 92%, rgba(45,26,15,0) 100%);
+            opacity: 0.88;
+            filter: blur(3px);
+        }
+        /* 룬 점광원(파란빛, screen 블렌드로 빛만 더함) */
+        .fx-rune-glow {
+            background: radial-gradient(circle, rgba(160,220,255,0.95) 0%, rgba(100,180,255,0.5) 40%, rgba(70,140,255,0.16) 70%, rgba(70,140,255,0) 100%);
+        }
+        /* 룬 가리개(주변 청동/그림자 톤과 비슷한 어두운 색, 처음엔 불투명하게 룬을 덮어 "안 빛나는
+           음각 상태"처럼 보이게 했다가 점화 시 투명해지며 걷힘 — mix-blend-mode 없는 일반 블렌드).
+           2026-09-06 6차-6: 룬 5개가 새 원화에서 각각 다른 밝기/색의 자리(별 꼭짓점 사이 vs 눈가
+           그림자)에 있어서 공통 색 1개로는 자국이 티 남 — 룬마다 그 자리 실측 색을 따로 넣은
+           전용 클래스(fx-rune-mask-1~5)로 배경색을 개별 지정. 공통 그라디언트 모양/블러만 여기서. */
+        .fx-rune-mask {
+            position: absolute; border-radius: 50%; pointer-events: none;
+            opacity: 0.85;
+            filter: blur(2px);
+        }
+        /* 2026-09-07 6차-9: 새 원화(선명도 향상판)로 룬 위치가 바뀌면서 그 자리 주변 실제 픽셀
+           색상도 달라져 재샘플링(다크닝 계수 0.55 적용, 6차-6과 동일 방식). */
+        .fx-rune-mask-1 { background: radial-gradient(circle, rgba(43,39,39,0.85) 0%, rgba(43,39,39,0.78) 32%, rgba(43,39,39,0.55) 52%, rgba(43,39,39,0.3) 68%, rgba(43,39,39,0.1) 84%, rgba(43,39,39,0) 100%); }
+        .fx-rune-mask-2 { background: radial-gradient(circle, rgba(51,46,46,0.85) 0%, rgba(51,46,46,0.78) 32%, rgba(51,46,46,0.55) 52%, rgba(51,46,46,0.3) 68%, rgba(51,46,46,0.1) 84%, rgba(51,46,46,0) 100%); }
+        .fx-rune-mask-3 { background: radial-gradient(circle, rgba(41,39,41,0.85) 0%, rgba(41,39,41,0.78) 32%, rgba(41,39,41,0.55) 52%, rgba(41,39,41,0.3) 68%, rgba(41,39,41,0.1) 84%, rgba(41,39,41,0) 100%); }
+        .fx-rune-mask-4 { background: radial-gradient(circle, rgba(30,28,32,0.85) 0%, rgba(30,28,32,0.78) 32%, rgba(30,28,32,0.55) 52%, rgba(30,28,32,0.3) 68%, rgba(30,28,32,0.1) 84%, rgba(30,28,32,0) 100%); }
+        .fx-rune-mask-5 { background: radial-gradient(circle, rgba(26,25,30,0.85) 0%, rgba(26,25,30,0.78) 32%, rgba(26,25,30,0.55) 52%, rgba(26,25,30,0.3) 68%, rgba(26,25,30,0.1) 84%, rgba(26,25,30,0) 100%); }
+        /* 2026-09-06 6차-2 수정: 처음 버전은 글로우가 초반(30%)에 확 반짝했다가 가라앉는
+           "확 타오르는" 곡선이었는데, 이제 위에 fxTorchMaskFade 가리개가 후반부(50%~)에야
+           걷히는 구조로 바뀌어서 그 전에 반짝여봤자 가리개에 가려 안 보임 → 가리개가 걷히는
+           타이밍(50%~100%)에 맞춰 글로우도 그 구간에서만 서서히 올라오도록 재정렬. 룬 점화와
+           같은 "가려진 채 대기 → 후반부에 서서히/화르륵 드러남" 곡선. */
+        @keyframes fxTorchIgnite {
+            0%   { opacity: 0;    transform: scale(0.5); }
+            50%  { opacity: 0;    transform: scale(0.5); }
+            78%  { opacity: 0.85; transform: scale(1.18); }
+            92%  { opacity: 0.55; transform: scale(0.94); }
+            100% { opacity: 0.62; transform: scale(1); }
+        }
+        @keyframes fxTorchFlicker {
+            0%   { opacity: 0.62; transform: scale(1); }
+            20%  { opacity: 0.5;  transform: scale(0.95); }
+            35%  { opacity: 0.68; transform: scale(1.04); }
+            50%  { opacity: 0.55; transform: scale(0.98); }
+            70%  { opacity: 0.66; transform: scale(1.03); }
+            85%  { opacity: 0.58; transform: scale(0.99); }
+            100% { opacity: 0.62; transform: scale(1); }
+        }
+        /* 벽 반사광(fx-torch-bounce)용 — 코어 글로우보다 훨씬 낮은 세기로 같은 리듬을 따라감 */
+        @keyframes fxTorchBounceIgnite {
+            0%   { opacity: 0;    transform: scale(0.5); }
+            50%  { opacity: 0;    transform: scale(0.5); }
+            78%  { opacity: 0.32; transform: scale(1.15); }
+            92%  { opacity: 0.22; transform: scale(0.96); }
+            100% { opacity: 0.2;  transform: scale(1); }
+        }
+        @keyframes fxTorchBounceFlicker {
+            0%   { opacity: 0.2;  transform: scale(1); }
+            20%  { opacity: 0.15; transform: scale(0.96); }
+            35%  { opacity: 0.24; transform: scale(1.03); }
+            50%  { opacity: 0.17; transform: scale(0.98); }
+            70%  { opacity: 0.22; transform: scale(1.02); }
+            85%  { opacity: 0.18; transform: scale(0.99); }
+            100% { opacity: 0.2;  transform: scale(1); }
+        }
+        /* 횃불 가리개 — 챗지피티 제안대로 "처음엔 완전히 꺼진 것처럼" 보이도록, 점화 직전까지
+           불투명하게 덮어둠(룬 가리개보다 살짝 늦게 걷혀서 "먼저 횃불이 켜지고 그 빛이 룬까지
+           번진다"는 기존 스토리는 그대로 유지). */
+        @keyframes fxTorchMaskFade {
+            0%   { opacity: 0.88; }
+            50%  { opacity: 0.84; }
+            100% { opacity: 0; }
+        }
+        /* 가리개가 걷히는 타이밍(처음엔 그대로 덮은 채 대기하다가 후반부에 확 걷힘) */
+        @keyframes fxRuneMaskFade {
+            0%   { opacity: 0.85; }
+            60%  { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+        /* 가리개가 걷히는 순간에 맞춰 파란 룬 글자가 반짝 켜지는 점광원 */
+        @keyframes fxRuneIgnite {
+            0%   { opacity: 0;    transform: scale(0.5); }
+            60%  { opacity: 0;    transform: scale(0.5); }
+            80%  { opacity: 1;    transform: scale(1.3); }
+            100% { opacity: 0.4;  transform: scale(1); }
+        }
+        @keyframes fxRunePulse {
+            0%, 85% { opacity: 0.4; transform: scale(1); }
+            92%     { opacity: 0.8; transform: scale(1.12); }
+            100%    { opacity: 0.4; transform: scale(1); }
+        }
+        /* .reveal-card가 붙는 순간(=배경 이미지 로드 완료 후 페이드인 시작)과 정확히 같은 타이밍에
+           점화 애니메이션도 같이 시작 — 패널이 나타나는 연출과 빛이 켜지는 연출이 항상 함께 감.
+           룬 4개는 왼쪽 → 왼쪽아래 → 오른쪽 → 오른쪽위 순서로 delay를 조금씩 늦춰서 하나씩
+           차례로 반짝이며 켜지는 것처럼 보이게 함(전부 동시에 켜지면 밋밋해서 순차 연출로 변경). */
+        #loginOverlay.reveal-card .fx-torch-left {
+            animation: fxTorchIgnite 1.5s ease-out 0.15s both, fxTorchFlicker 4.6s ease-in-out 1.65s infinite;
+        }
+        #loginOverlay.reveal-card .fx-torch-right {
+            animation: fxTorchIgnite 1.5s ease-out 0.32s both, fxTorchFlicker 5.3s ease-in-out 1.82s infinite;
+        }
+        #loginOverlay.reveal-card .fx-torch-bounce-left {
+            animation: fxTorchBounceIgnite 1.5s ease-out 0.15s both, fxTorchBounceFlicker 4.6s ease-in-out 1.65s infinite;
+        }
+        #loginOverlay.reveal-card .fx-torch-bounce-right {
+            animation: fxTorchBounceIgnite 1.5s ease-out 0.32s both, fxTorchBounceFlicker 5.3s ease-in-out 1.82s infinite;
+        }
+        #loginOverlay.reveal-card .fx-torch-mask-left { animation: fxTorchMaskFade 1.4s ease-out 0.15s both; }
+        #loginOverlay.reveal-card .fx-torch-mask-right { animation: fxTorchMaskFade 1.4s ease-out 0.32s both; }
+        /* 2026-09-06 6차-3: 대장님 요청으로 (1) 룬을 5개로 늘리고(위쪽 별 꼭짓점 — 원화엔 안 그려져
+           있지만 마스킹 기법은 "원래 파란색이었는지"와 무관하게 그냥 그 위치에 새로 빛을 얹는
+           방식이라 새 이미지 없이 그대로 적용 가능함) (2) 하나씩 켜지는 속도를 1초 간격으로 늘림
+           (기존엔 0.12초 간격이라 거의 동시에 반짝이는 것처럼 보였음). */
+        /* 2026-09-06 6차-6: 기존엔 룬 5개가 1초 간격으로 하나씩 켜져서(마지막 룬은 4.5s+0.9s=5.4s에야
+           가리개가 다 걷힘) 배경/패널은 이미 다 보이는데 룬 하나만 한참 더 어두운 원으로 남아있는
+           시간이 너무 길었음 — "화면 처음 들어갈 때 자국이 심하다"는 지적의 실질 원인. 순차 점화
+           연출의 느낌은 유지하되 간격을 0.32s로 좁혀서 전체 시퀀스가 1.5초 안에 끝나도록 단축. */
+        /* 2026-09-09 6차-16: 대장님이 "룬문자 등장을 약간 늦추고, 반짝이는 것도 좀 천천히"라고 요청 —
+           점화 시작 지연을 0.3s→1.1s로 늦추고(패널이 먼저 자리잡은 뒤에야 룬이 켜지는 느낌), 칸마다
+           간격도 0.32s→0.45s로 넓혀 더 여유있게 하나씩 켜지도록 함. 개별 점화 자체의 재생시간도
+           0.7s→1.1s로 늘려 "팟" 하고 튀는 대신 서서히 밝아지는 느낌으로 변경. 대기 상태의 맥동
+           주기(fxRunePulse)도 10s→15s로 늘려 반짝임 자체를 더 느긋하게 만듦. */
+        #loginOverlay.reveal-card .fx-rune-mask-1 { animation: fxRuneMaskFade 1.1s ease-out 1.1s both; }
+        #loginOverlay.reveal-card .fx-rune-mask-2 { animation: fxRuneMaskFade 1.1s ease-out 1.55s both; }
+        #loginOverlay.reveal-card .fx-rune-mask-3 { animation: fxRuneMaskFade 1.1s ease-out 2.0s both; }
+        #loginOverlay.reveal-card .fx-rune-mask-4 { animation: fxRuneMaskFade 1.1s ease-out 2.45s both; }
+        #loginOverlay.reveal-card .fx-rune-mask-5 { animation: fxRuneMaskFade 1.1s ease-out 2.9s both; }
+        #loginOverlay.reveal-card .fx-rune-glow-1 {
+            animation: fxRuneIgnite 1.1s ease-out 1.1s both, fxRunePulse 15s ease-in-out 2.2s infinite;
+        }
+        #loginOverlay.reveal-card .fx-rune-glow-2 {
+            animation: fxRuneIgnite 1.1s ease-out 1.55s both, fxRunePulse 15s ease-in-out 2.65s infinite;
+        }
+        #loginOverlay.reveal-card .fx-rune-glow-3 {
+            animation: fxRuneIgnite 1.1s ease-out 2.0s both, fxRunePulse 15s ease-in-out 3.1s infinite;
+        }
+        #loginOverlay.reveal-card .fx-rune-glow-4 {
+            animation: fxRuneIgnite 1.1s ease-out 2.45s both, fxRunePulse 15s ease-in-out 3.55s infinite;
+        }
+        #loginOverlay.reveal-card .fx-rune-glow-5 {
+            animation: fxRuneIgnite 1.1s ease-out 2.9s both, fxRunePulse 15s ease-in-out 4.0s infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .fx-torch, .fx-torch-bounce, .fx-torch-mask, .fx-rune-glow, .fx-rune-mask { animation: none !important; }
+            .fx-torch { opacity: 0.62; }
+            .fx-torch-bounce { opacity: 0.2; }
+            .fx-torch-mask { opacity: 0; }
+            .fx-rune-glow { opacity: 0.4; }
+            .fx-rune-mask { opacity: 0; }
+        }
+
+        /* 2026-09-07 6차-11: 대장님 요청 신규 이펙트 — (1) 패널 글자 위 금빛 스윕, (2) 화면 전체
+           먼지+횃불 불씨 파티클. 횃불 좌표 자체 보정은 위 LOGIN_FX_ANCHORS(스크립트 영역) 주석
+           참고 — CSS/마크업 변경은 없음.
+           2026-09-07 6차-12: "독수리 뒤 별빛 맥동"(fx-medallion-pulse)은 대장님이 실제로 보니
+           독수리 얼굴이 뿌옇게 흐려 보이는 부작용이 있다고 해서 완전히 제거함(넓은 반경의 블루
+           글로우가 screen 블렌드로 얼굴 위에까지 겹쳐 대비/선명도가 떨어져 보였던 것 — 실제
+           블러 처리는 아니었지만 시각적으로 흐려 보이는 효과는 동일). 관련 CSS/키프레임/HTML
+           엘리먼트/JS 앵커·배치 코드 전부 삭제 — 기존 룬 5개 개별 점광원(rune1~5, 10초 펄스)은
+           이 제거와 무관하게 그대로 유지됨(그건 원래부터 있던 효과라 문제 없었음). */
+        /* 패널 제목/부제/태그라인 글자 픽셀만 담은 마스크(assets/login-text-sweep-mask.png) 위에서만
+           대각선 하이라이트 바가 보이도록 클리핑. 평소(0~70%)엔 바가 화면 왼쪽 밖(-60%)에 가만히
+           있어 전혀 안 보이고, 70~88% 구간에만 가로질러 지나간 뒤 다시 오른쪽 밖(130%)에서 대기 —
+           8초 주기라 실제로는 6.4초 대기 후 1.4초짜리 스윕 한 번, 그래서 "6~10초에 한 번" 느낌.
+           2026-09-07 6차-12: 대장님이 "아무 효과도 안 보인다"고 해서 훨씬 과감하게 강화 —
+           블렌드모드를 screen→plus-lighter(단순 합산이라 밝은 은색 글자 위에서도 확실히 튐)로
+           바꾸고, 바 폭을 34%→48%로 넓히고, 중심부 알파를 완전 불투명으로, 게다가 바 자체에
+           blur(2.5px)를 얹어 "빛이 번지며 스치는" 느낌의 부드러운 광선처럼 보이도록 함.
+           2026-09-09 6차-13: 6차-12로 강화했는데도 대장님이 여전히 "그런 효과가 어딨어?"라고
+           함 — 원인 규명 결과, 문제는 CSS가 아니라 "파일을 브라우저로 그냥 열었을 때(file://
+           경로)"였음. CSS mask-image는 이미지의 픽셀(알파) 데이터를 직접 읽어야 해서 <img> 태그로
+           단순히 그리는 것과 달리 CORS 규칙이 훨씬 엄격하게 적용되는데, file:// 로 연 로컬 파일은
+           브라우저가 각 파일을 별개의 "null" origin으로 취급해서 상대경로 마스크 이미지 로드가
+           CORS로 조용히 차단됨(콘솔에러는 뜨지만 화면엔 아무 표시 없이 그냥 실패) — 그 결과
+           마스크가 완전히 안 먹혀서(정상 blend에서도 아예 아무것도 안 보임, 확인됨) 스윕 자체가
+           통째로 무효화됐던 것. 실제 웹서버(http://, 배포된 GitHub Pages 등)로 열면 same-origin이라
+           문제없이 작동했음(픽셀 diff로 검증: file://일 때 최대 diff 38~41/255 → 로컬 서버로 열면
+           151/255로 훨씬 뚜렷하게 상승). 근본 해결로 마스크 PNG를 별도 파일 참조 대신 CSS 안에
+           base64 data URI로 직접 인라인 — data: URI는 origin 개념이 없어 file://로 열어도, 어떤
+           서버로 열어도 항상 100% 동일하게 작동함(같은 이유로 이 파일은 이제 assets 폴더에 없어도
+           스윕 자체는 깨지지 않지만, 파일 정리 목적상 원본은 그대로 assets에 유지). */
+        .fx-text-sweep-wrap {
+            position: absolute; pointer-events: none; overflow: hidden;
+            -webkit-mask-image: url('data:image/png;base64,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');
+            -webkit-mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; -webkit-mask-position: 0 0;
+            mask-image: url('data:image/png;base64,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');
+            mask-size: 100% 100%; mask-repeat: no-repeat; mask-position: 0 0;
+            mix-blend-mode: plus-lighter; opacity: 1;
+        }
+        .fx-text-sweep-bar {
+            position: absolute; top: -60%; left: -70%; width: 48%; height: 220%;
+            filter: blur(2.5px);
+            background: linear-gradient(100deg, rgba(255,200,110,0) 0%, rgba(255,232,180,0.75) 28%, rgba(255,255,255,1) 50%, rgba(255,232,180,0.75) 72%, rgba(255,200,110,0) 100%);
+        }
+        /* 2026-09-09 6차-16: "글자 반짝이는 스윕이 지나가는 속도도 좀 천천히" 요청 — 전체 주기를
+           7s→10s로 늘리고, 실제로 바가 화면을 가로지르는 구간(예전엔 62~85%=1.61s)도 55~90%=3.3s로
+           넓혀서 스치는 속도 자체를 약 2배 느리게 만듦(대기 구간이 짧아지는 게 아니라 "지나가는
+           움직임" 자체가 느려지도록 구간 비율을 조정). */
+        #loginOverlay.reveal-card .fx-text-sweep-bar {
+            animation: fxTextSweepMove 10s cubic-bezier(.45,0,.2,1) 2.2s infinite;
+        }
+        @keyframes fxTextSweepMove {
+            0%, 55% { left: -70%; }
+            90%     { left: 140%; }
+            100%    { left: 140%; }
+        }
+        /* 2026-09-10 6차-17: 대장님 요청 — "왼쪽 앞쪽 칼 부분에 아주 미세한 빛 반사" 효과.
+           칼날 부분만 정확히 감싸는 폴리곤 알파마스크(브라이트니스 기반이 아니라 칼날 실측 좌표로
+           직접 그린 사다리꼴 — 칼날 자체가 대부분 어두운 강철이라 밝기 기준 마스크로는 걸러낼 수
+           없어서, 그리드 실측으로 칼날 윤곽을 딴 폴리곤을 새로 그림)로 하이라이트 바를 클리핑해서
+           오직 칼날 위에서만 빛이 스치도록 함. 텍스트 스윕과 마찬가지로 CORS 이슈를 피하려고
+           마스크를 base64 data URI로 인라인(6차-13-2 원칙 유지). 평소엔 가만히 있다가 10~15초에
+           한 번 정도, 1~1.5초 동안만 위→아래로 스윽 지나가고 사라짐 — 텍스트 스윕(금빛)과 달리
+           차가운 은백색 톤으로 "쇠붙이 반사광" 느낌을 냄. */
+        .fx-blade-sweep-wrap {
+            position: absolute; pointer-events: none; overflow: hidden;
+            -webkit-mask-image: url('data:image/png;base64,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');
+            -webkit-mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; -webkit-mask-position: 0 0;
+            mask-image: url('data:image/png;base64,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');
+            mask-size: 100% 100%; mask-repeat: no-repeat; mask-position: 0 0;
+            mix-blend-mode: screen; opacity: 1;
+        }
+        /* 2026-09-10 6차-19: 6차-18에서 200deg→192deg로 바꾼 건 잘못된 방향(마스크가 좌측 하강으로
+           잘못 그려져 있던 착시) 기준으로 맞춘 것이라 근본 수정이 아니었음 — 실측해보니 칼날은
+           세로 기준 약 10.6도 "우측"으로 기울어져 있어서(위 bladeSweep 마스크 수정 참고), 빛이
+           그 방향을 따라 흐르도록 169deg(칼날과 같은 우측 하강 방향)로 재수정.
+           2026-09-10 6차-20: 위 bladeSweep 재실측(정밀 그리드+최소자승 피팅)으로 실제 기울기가
+           15.9도(0.28~0.29 slope)임이 확인돼서, 벡터→CSS각도 변환식(dx=sin θ, dy=-cos θ, 우측 하강이면
+           θ=180°-φ)에 새 φ=15.9도를 대입해 169deg→164deg로 재조정.
+           2026-09-10 6차-21: 대장님이 재차 "칼날 빛이 약간 부정확해"라고 지적 + "색상을 더 다크하게,
+           살짝만 빛반사 되는 느낌만 있어도 된다"고 요청. (1) 위 bladeSweep 폴리곤을 칼날 좌/우
+           가장자리에서 각각 3px씩 안쪽으로 줄여서(경계에 딱 붙지 않고 여유를 둬서 블러 번짐이 칼날
+           밖 바위로 새어나가는 걸 방지) 재생성. (2) 그라디언트를 훨씬 어둡고 옅게 재조정 — 기존
+          거의 불투명한 흰색(0.95) 피크를 낮은 채도의 은은한 강청색(0.4)로, 중간 톤도 0.55→0.2로
+           낮춰서 "확 지나가는 밝은 띠"가 아니라 "살짝 스치는 냉기 어린 반사광" 느낌만 남기고 전체
+           톤을 어둡게 유지. */
+        .fx-blade-sweep-bar {
+            position: absolute; left: -25%; top: -55%; width: 150%; height: 34%;
+            filter: blur(2.5px);
+            background: linear-gradient(164deg, rgba(150,165,190,0) 0%, rgba(160,175,200,0.2) 32%, rgba(180,195,220,0.4) 50%, rgba(160,175,200,0.2) 68%, rgba(150,165,190,0) 100%);
+        }
+        #loginOverlay.reveal-card .fx-blade-sweep-bar {
+            animation: fxBladeSweepMove 13s cubic-bezier(.4,0,.2,1) 4.5s infinite;
+        }
+        @keyframes fxBladeSweepMove {
+            0%, 87% { top: -55%; }
+            98%     { top: 130%; }
+            100%    { top: 130%; }
+        }
+        /* 먼지(전체 화면, %기반) + 불씨(횃불 2곳 기준, px기반) — JS(initFxParticles())가 개수만큼
+           div를 생성해서 이 레이어에 채우고, 좌표/지속시간 등은 인라인 CSS 변수로 랜덤 지정. */
+        .fx-particle-layer {
+            position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5;
+        }
+        .fx-dust {
+            position: absolute; bottom: -2%; left: var(--start-left);
+            width: var(--size); height: var(--size); border-radius: 50%;
+            background: var(--color); opacity: 0; filter: blur(0.4px);
+            animation: fxDustRise var(--duration) linear var(--delay) infinite;
+        }
+        @keyframes fxDustRise {
+            0%   { transform: translate(0, 0); opacity: 0; }
+            8%   { opacity: var(--peak-opacity); }
+            85%  { opacity: var(--peak-opacity); }
+            100% { transform: translate(var(--drift-x), -108vh); opacity: 0; }
+        }
+        .fx-ember {
+            position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0;
+            width: var(--size); height: var(--size);
+            background: radial-gradient(circle, rgba(255,196,120,0.95) 0%, rgba(255,135,45,0.5) 55%, rgba(255,120,30,0) 100%);
+            mix-blend-mode: screen;
+            animation: fxEmberRise var(--duration) ease-out var(--delay) infinite;
+        }
+        @keyframes fxEmberRise {
+            0%   { transform: translate(0, 0) scale(0.6); opacity: 0; }
+            18%  { opacity: 0.85; transform: translate(calc(var(--drift-x) * 0.25), -9vh) scale(1); }
+            100% { opacity: 0; transform: translate(var(--drift-x), -42vh) scale(0.4); }
+        }
+        /* 2026-09-10 6차-17: 대장님 요청 — "칼 주변에 아주 작은 불씨/먼지 입자 3~10개가 천천히
+           떠다니게, 왼쪽 횃불에서 나온 불씨가 화면 아래쪽으로 날아와 칼 주변을 지나가는 것처럼".
+           화면 전체를 가로지르는 진짜 횃불→칼 궤적을 계산하는 대신(기존 좌표계에서 앵커 하나당
+           고정 지점 + 지터만 다루는 구조라 두 앵커 사이 장거리 이동은 무리가 있음), 칼 주변
+           영역(LOGIN_FX_ANCHORS.swordArea) 안에서 서서히 아래로 가라앉듯 떠다니는 국소적인
+           불씨 입자로 구현 — "위쪽에서 떨어져 내려온 불티가 칼 옆을 스쳐가는" 느낌은 유지하면서도
+           과하지 않게. 기존 fx-ember보다 개수를 훨씬 적게(6개), 훨씬 느리게(10~16s), 훨씬
+           옅게(peak-opacity 0.16~0.3) 만들어서 "거의 눈치채기 어려운" 정도로 유지. */
+        .fx-sword-ember {
+            position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0;
+            width: var(--size); height: var(--size);
+            background: radial-gradient(circle, rgba(255,196,120,0.85) 0%, rgba(255,140,60,0.4) 55%, rgba(255,120,30,0) 100%);
+            mix-blend-mode: screen;
+            animation: fxSwordEmberDrift var(--duration) ease-in-out var(--delay) infinite;
+        }
+        @keyframes fxSwordEmberDrift {
+            0%   { transform: translate(0, -16px) scale(0.7); opacity: 0; }
+            14%  { opacity: var(--peak-opacity); }
+            50%  { transform: translate(calc(var(--drift-x) * 0.5), 10px) scale(1); }
+            86%  { opacity: var(--peak-opacity); }
+            100% { transform: translate(var(--drift-x), 34px) scale(0.6); opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .fx-text-sweep-bar { animation: none !important; left: -70%; }
+            .fx-blade-sweep-bar { animation: none !important; top: -55%; }
+            .fx-dust, .fx-ember, .fx-sword-ember { animation: none !important; opacity: 0 !important; }
+        }
 
         /* 로그인 직후 ~ 데이터 로딩 완료 사이 빈 화면 깜빡임 방지 오버레이 (디자인개선 4번, 2026-08-29) */
         #dataLoadingOverlay {
@@ -802,375 +1197,128 @@
         }
         .dl-text { font-size: 13px; font-weight: 600; color: #C3D6E6; letter-spacing: 0.2px; }
 
-        /* 2026-08-29: 직사각형 사진을 오려붙인 느낌 대신, 배경을 투명하게 딴 엠블럼(독수리+링)
-           "컷아웃" 이미지를 오른쪽에 떠 있듯이 배치. 별도 마스크 없이도 가장자리가 자연스럽게
-           어두운 배경(#loginOverlay 자체 그라디언트)과 섞임 — 파일도 index.html과 분리해서
-           assets/eagle-medallion.webp로 별도 로딩(같은 이미지를 네브바 로고/인트로에서도 재사용,
-           브라우저가 한 번만 내려받고 캐싱함) */
-        .login-emblem-img {
-            position: absolute; top: 50%; right: 3%; transform: translateY(-50%);
-            height: 92%; width: 58%;
-            object-fit: contain; object-position: center;
-            filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5));
-            opacity: 0; /* 2026-08-30: 영상 인트로 폐기 → 아래 login-emblem-materialize로 직접 등장 */
-        }
-        #loginOverlay.reveal-card .login-emblem-img {
-            animation: login-emblem-materialize 1.05s cubic-bezier(0.33, 1, 0.68, 1) 0.45s forwards;
-        }
-        @keyframes login-emblem-materialize {
-            0%   { opacity: 0; transform: translateY(-50%) scale(0.86); filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5)) brightness(2.4); }
-            55%  { opacity: 1; transform: translateY(-50%) scale(1.02); filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5)) brightness(1.5); }
-            100% { opacity: 1; transform: translateY(-50%) scale(1);    filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5)) brightness(1); }
-        }
-        /* 2026-08-30: 가만히 있을 때(로그인 안 하고 대기 중일 때) 너무 정적으로 느껴지지 않도록,
-           엠블럼 뒤에서 은은한 골드 글로우가 아주 천천히 커졌다 작아졌다 하는 "심장박동" 같은
-           앰비언트 효과를 추가. 무한 반복이라 movement가 있는 걸 불편해하는 분들을 위해
-           prefers-reduced-motion이면 애니메이션을 꺼서 고정된 은은한 글로우만 남김.
-           2026-08-30 추가: 영상 인트로를 폐기하면서, 등장 직후 곧바로 무한 pulse가 시작되던 것을
-           독수리가 빛으로 맺히는 순간(login-emblem-glow-in)까지 기다렸다가 그 뒤부터 pulse가
-           이어지도록 두 애니메이션을 체이닝함(콤마로 구분된 두 번째 애니메이션의 delay가 첫 번째의
-           재생시간과 맞물림).
-           2026-08-31: pulse가 밝기(opacity)까지 같이 흔들다 보니 밝아지는 순간 이미지가 뿌옇게
-           뜬 것처럼 보인다는 피드백 반영 — 밝기는 glow-in이 끝난 값(0.55)에 고정해두고, pulse는
-           크기(scale)만 흔들도록 분리함. "숨쉬는" 느낌은 그대로 유지하면서 빛이 밝아졌다 어두워지는
-           깜빡임만 사라짐. */
-        .login-emblem-glow {
-            position: absolute; top: 50%; right: 3%; transform: translateY(-50%);
-            height: 92%; width: 58%;
-            background: radial-gradient(ellipse 55% 55% at 55% 48%, rgba(242,201,76,0.22) 0%, rgba(242,201,76,0.06) 45%, transparent 72%);
-            pointer-events: none;
-            opacity: 0;
-        }
-        #loginOverlay.reveal-card .login-emblem-glow {
-            animation: login-emblem-glow-in 1.05s ease-out 0.45s forwards,
-                       login-emblem-pulse 9s ease-in-out 1.5s infinite;
-        }
-        @keyframes login-emblem-glow-in {
-            0%   { opacity: 0;    transform: translateY(-50%) scale(0.75); }
-            100% { opacity: 0.55; transform: translateY(-50%) scale(1); }
-        }
-        @keyframes login-emblem-pulse {
-            0%, 100% { transform: translateY(-50%) scale(1); }
-            50%      { transform: translateY(-50%) scale(1.06); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-emblem-glow { animation: none; opacity: 0.55; }
-        }
-        /* 2026-08-31: 엠블럼 오른쪽에서 원형으로 도는 링 스윕을 제거하고, 화면 가장자리에서 살짝
-           간격을 두고 화면 전체를 사각형으로 한 바퀴 도는 라이트 트레일로 교체. CSS Motion Path
-           (offset-path: inset(...))로 경로 자체를 "화면 끝에서 18px 안쪽, 모서리는 16px 둥글게"로
-           정의해뒀기 때문에, 창 크기/비율이 어떻게 바뀌든 항상 정확히 가장자리를 따라감(원처럼
-           특정 좌표에 맞출 필요가 없어서 어긋날 일이 없음). 트리거 방식(오프닝 1회 재생 + 10초
-           유휴마다 재생)은 기존 링과 동일하게 그대로 재사용 — JS는 이름만 정리(ring→border). */
-        .login-border-trace {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none;
-        }
-        .login-border-trace i {
-            position: absolute; top: 0; left: 0;
-            width: 70px; height: 3px; margin: -1.5px 0 0 -35px;
-            border-radius: 3px;
-            background: linear-gradient(90deg, transparent, rgba(255,245,214,0.95) 50%, transparent);
-            filter: drop-shadow(0 0 10px rgba(242, 201, 76, 0.85));
-            offset-path: inset(18px round 16px);
-            offset-rotate: auto;
-            offset-distance: 0%;
-            opacity: 0;
-        }
-        .login-border-trace.active i {
-            animation: login-border-travel 4.2s linear, login-border-fade 4.2s ease-in-out;
-        }
-        @keyframes login-border-travel {
-            from { offset-distance: 0%; }
-            to   { offset-distance: 100%; }
-        }
-        @keyframes login-border-fade {
-            0%, 100% { opacity: 0; }
-            6%, 94%  { opacity: 1; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-border-trace.active i { animation: none; opacity: 0; }
-        }
+        /* ===================== 로그인 화면 3차 재설계 (2026-09-05, "핫스팟" 방식) =====================
+           대장님이 명확히 확인해준 요구사항: "떠있는 레이어 느낌이 아니라 벽에 박혀서 배경과 한몸인
+           느낌"을 원함. CSS로 아무리 그라디언트/그림자를 다듬어도 AI가 한 장으로 그려낸 사진 특유의
+           질감·조명과는 태생적으로 다른 "따로 얹은 UI 카드" 티가 날 수밖에 없다는 한계가 있어서,
+           방식을 근본적으로 바꿈: 대장님이 확정한 원화(돌벽+횃불+엠블럼+로그인 패널까지 전부 한 장에
+           그려진 그림, ID:/PASSWORD:/keep me logged in/ENTER 문구까지 이미 다 그려져 있음)를
+           `assets/login-bg-scene.webp`로 그대로 사용하고, 그 위에 "보이지 않는" 진짜 입력창/체크박스
+           /버튼을 그림 속 정확한 위치에 좌표로 겹쳐 올리는 방식으로 전환. 카드를 CSS로 새로 그리는
+           게 아니라 그림 자체가 카드이므로 100% 원화와 동일하게 보임.
 
-        /* 2026-08-31: 어두운 배경이 너무 밋밋하지 않도록, 반딧불/별가루 같은 작은 점들이 화면
-           곳곳에서 듬성듬성 나타났다 흐려지며 살짝 흔들리는 상시 앰비언트 효과 추가. 카드/글자를
-           가리면 안 되므로 아주 옅고(최대 불투명도 0.8 이하) 작게(2~3px), 개수도 적게(14개) 유지.
-           각 점의 위치·크기·타이밍은 HTML에 인라인 CSS 변수(--fx/--fy/--fs/--fdur/--fdelay)로
-           박아둬서 자바스크립트 없이도 자연스럽게 제각각 다르게 움직임. */
-        .login-ambient-dust { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-        .login-ambient-dust i {
-            position: absolute; left: var(--fx, 50%); top: var(--fy, 50%);
-            width: var(--fs, 2px); height: var(--fs, 2px);
-            border-radius: 50%;
-            background: #fff8e6;
-            box-shadow: 0 0 6px 1px rgba(247,216,116,0.65);
-            opacity: 0;
-            animation: login-dust-drift var(--fdur, 8s) ease-in-out var(--fdelay, 0s) infinite;
-        }
-        @keyframes login-dust-drift {
-            0%   { opacity: 0;    transform: translate(0, 0) scale(0.5); }
-            15%  { opacity: 0.75; }
-            50%  { opacity: 0.25; transform: translate(7px, -12px) scale(1); }
-            85%  { opacity: 0.7; }
-            100% { opacity: 0;    transform: translate(-5px, -22px) scale(0.5); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-ambient-dust { display: none; }
-        }
-
-        /* ===================== 로그인 인트로: 빛 입자 조립 효과 (2026-08-30 영상 폐기 후 신규) =====================
-           예전엔 제미나이 영상이 "빛줄기가 모여 독수리 엠블럼을 그리는" 오프닝을 담당했는데, 화질/
-           동기화 문제로 영상을 완전히 걷어내고 그 역할을 순수 CSS 애니메이션으로 대체함.
-           작은 금빛 입자 14개가 사방(각자 다른 --px/--py 오프셋)에서 엠블럼 링 중심(가로 50%,
-           세로 37% — 엠블럼 이미지 중심부와 동일 좌표)을 향해 날아들며 사라지고, 그 직후(0.45초
-           지연) 독수리 이미지가 빛과 함께 맺힘(login-emblem-materialize) → 이어서 화면 가장자리를
-           한 바퀴 도는 라이트 트레일이 재생되고(.login-border-trace.active, JS에서 한 번 트리거)
-           → 유리카드가 슬라이드(기존
-           login-card-materialize, 그대로 재사용). 전부 %/px 기반 CSS라 창 크기가 어떻게
-           바뀌든 항상 같은 자리에서 재생되므로, 영상 시절 겪었던 "화면 비율에 따라 어긋나는"
-           문제 자체가 원천적으로 없음. 모바일(폭 880px 이하)은 엠블럼 배치가 아예 다른 레이아웃이라
-           아래 모바일 미디어쿼리에서 입자 효과만 끄고 나머지(엠블럼/텍스트/카드 등장)는 그대로 둠. */
-        .login-particles {
-            position: absolute; top: 50%; right: 3%; transform: translateY(-50%);
-            height: 92%; width: 58%;
-            pointer-events: none; z-index: 1;
-        }
-        .login-particles span {
-            position: absolute; left: 50%; top: 37%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #FFF6DC 0%, #F7D874 55%, transparent 75%);
-            box-shadow: 0 0 8px 1px rgba(247,216,116,0.9);
-            opacity: 0;
-        }
-        #loginOverlay.reveal-card .login-particles span {
-            animation: login-particle-fly 0.95s cubic-bezier(0.25,0.8,0.4,1) forwards;
-            animation-delay: var(--pd, 0s);
-        }
-        @keyframes login-particle-fly {
-            0%   { opacity: 0; transform: translate(var(--px, 0px), var(--py, 0px)) scale(0.5); }
-            45%  { opacity: 1; }
-            100% { opacity: 0; transform: translate(0, 0) scale(0.2); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-particles { display: none; }
-        }
-        .login-bg-shade {
-            position: absolute; inset: 0; z-index: 1; pointer-events: none;
-            background: linear-gradient(100deg, rgba(6,11,20,0.98) 0%, rgba(6,11,20,0.88) 34%, rgba(6,11,20,0.35) 62%, rgba(6,11,20,0.05) 100%);
-        }
+           화면 비율이 바뀌면 배경(cover)이 잘리는 위치가 달라지는 문제는, 2026-08-30에 인트로
+           영상-카드 좌표를 실시간 동기화했던 것과 동일한 원리(object-fit:cover 수학 공식)를
+           `syncLoginHotspots()` 함수(스크립트 영역 참고)로 재사용해서 해결 — 리사이즈/로드 시마다
+           "그림 속 이 사각형이 지금 화면의 어느 픽셀에 그려지고 있는지"를 계산해서 각 입력 요소의
+           left/top/width/height를 그때그때 갱신함. 좌표 기준값은 원본 이미지(2754×1536) 픽셀. */
         .login-content {
-            position: relative; z-index: 2; height: 100%; box-sizing: border-box;
-            display: flex; flex-direction: column; justify-content: center;
-            padding: 0 40px 40px clamp(64px, 10vw, 190px);
+            position: absolute; inset: 0; z-index: 2;
+            opacity: 0; transition: opacity 0.6s ease;
         }
-        /* 2026-08-30: 인트로 영상 마지막 장면(왼쪽에 유리질감 카드가 떠 있는 구도)과 자연스럽게
-           이어지도록, 텍스트를 배경에 그냥 떠 있게 두지 않고 반투명 "유리(glass)" 카드로 감쌈.
-           카드 자체 스타일만 바뀐 것이고 안의 폼 구조/id/로직은 전혀 손대지 않음.
-           2026-08-30 추가: 영상 마지막 프레임에서 카드가 있던 자리(뷰포트 기준 왼쪽 약 12%~53%
-           지점)와 최대한 비슷한 위치/폭에 놓이도록 padding-left와 카드 최대폭을 뷰포트 비례(vw)로
-           조정 — 예전엔 고정 px라 큰 화면에서 카드가 영상보다 훨씬 작고 왼쪽 구석에 몰려 보였음. */
-        .login-glass-card {
-            position: relative;
-            width: 100%; max-width: clamp(400px, 40vw, 540px);
-            padding: 36px 36px 30px;
-            border-radius: 20px;
-            background: var(--login-panel-bg);
-            -webkit-backdrop-filter: blur(20px) saturate(150%);
-            backdrop-filter: blur(20px) saturate(150%);
-            border: 1px solid var(--login-panel-border);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset;
-            /* 2026-08-30: 인트로 영상의 "빛으로 카드가 그려지는" 연출을 이어받아, 로그인 화면이
-               드러나는 순간 카드가 왼쪽에서 빛나며 슬라이드해 들어와 자리잡는 것처럼 보이게 함.
-               기본 상태는 살짝 왼쪽/투명/블러 — #loginOverlay.reveal-card가 붙는 순간(영상이 끝나는
-               시점) 아래 login-card-materialize 애니메이션이 재생됨. */
-            opacity: 0;
-            transform: translateX(-60px);
-            filter: brightness(1.7) blur(5px);
+        #loginOverlay.reveal-card .login-content { opacity: 1; }
+        .login-hotspot {
+            position: absolute; box-sizing: border-box;
         }
-        #loginOverlay.reveal-card .login-glass-card {
-            animation: login-card-materialize 1.15s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+        /* ID/비밀번호 입력창: 그림에 이미 그려진 홈 모양 박스가 그대로 "입력창처럼" 보이도록
+           배경/테두리 없이 완전히 투명하게 — 타이핑한 글자만 그림 위에 자연스럽게 얹힘 */
+        #loginEmail, #loginPassword {
+            background: transparent; border: none; outline: none;
+            color: #f2e6c8; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 0.3px;
+            padding: 0 0.6em 0 0.6em;
         }
-        @keyframes login-card-materialize {
-            0%   { opacity: 0;    transform: translateX(-60px) scale(0.97); filter: brightness(1.9) blur(6px); }
-            40%  { opacity: 0.65; transform: translateX(-14px) scale(0.99); filter: brightness(1.35) blur(2px); }
-            100% { opacity: 1;    transform: translateX(0)     scale(1);    filter: brightness(1) blur(0); }
+        /* 2026-09-05 버그수정: padding-right를 %로 주면 자기 자신의 너비가 아니라 부모(.login-content,
+           거의 화면 전체 너비)의 너비 기준으로 계산돼서, 실제 비밀번호 입력창처럼 좁은 박스에서는
+           패딩값이 박스 너비 자체보다 커져버려 콘텐츠 영역이 0으로 찌그러지고 텍스트가 통째로 잘려
+           안 보이는 문제가 있었음(배경/테두리는 padding과 무관해 정상으로 보여서 발견이 늦어짐).
+           font-size는 syncLoginHotspots()가 화면 비율에 맞춰 항상 같은 비율로 계산해주므로, em
+           단위를 쓰면 어떤 화면비에서도 동일한 비율로 유지됨.
+           2026-09-06 4차: 대장님 피드백 — 입력칸이 좁아 보이니 눈 아이콘을 최대한 오른쪽 끝으로
+           붙이고 그만큼 글자 보이는 공간을 넓혀달라는 요청. 왼쪽 여백도 0.6em으로 확 줄여서
+           타이핑 시작 위치가 박스 왼쪽 끝에 더 가깝게 옴 → 실질적으로 보이는 글자 수가 늘어남. */
+        #loginPassword { padding-right: 2.4em; }
+        #loginEmail::placeholder, #loginPassword::placeholder { color: rgba(242,230,200,0.28); }
+        #loginEmail:focus, #loginPassword:focus {
+            box-shadow: inset 0 0 0 2px rgba(229,195,132,0.55), 0 0 14px rgba(229,195,132,0.25);
+            border-radius: 6px;
         }
-        /* 카드 표면을 가로지르며 한 번 훑고 지나가는 빛줄기 — 영상 속 "빛으로 그려지는" 질감 재현 */
-        .login-glass-card::after {
-            content: '';
-            position: absolute; inset: 0; border-radius: inherit; z-index: 1;
-            background: linear-gradient(100deg, transparent 32%, rgba(255,245,214,0.30) 48%, transparent 64%);
-            background-size: 260% 100%; background-position: 160% 0;
-            opacity: 0; pointer-events: none;
+        /* 2026-09-09 6차-15: 새 원화는 "ADVENTURER / IDENTITY" 같은 안내문구가 입력창 옆이 아니라
+           입력창 "안쪽"에 그림으로 박혀 있는 스타일이라, 기존처럼 입력창을 완전히 투명하게 두면
+           실제로 타이핑한 글자와 원화에 그려진 안내문구가 같은 자리에서 겹쳐 보여 지저분해짐
+           (예: "rhea_admin" 뒤에 "URER / IDENTITY"가 그대로 이어져 보임). 값이 실제로 입력된
+           경우에만(:not(:placeholder-shown) — placeholder=""라도 빈 칸일 땐 매치되고 값이 생기면
+           풀림) 입력창 안쪽 배경색과 거의 같은 톤의 어두운 판을 은은하게 깔아 안내문구를 자연스럽게
+           덮음 — 비어있을 때는 기존처럼 원화의 박스+아이콘+안내문구가 그대로 보여 첫인상은 그대로
+           유지됨.
+           2026-09-10 6차-18: 대장님이 "입력한 글자 뒤에 잔상이 있고, 아이콘 주변 외곽선도 이상하게
+           덮인다"고 지적 — (1) 6차-16에서 x1이 1200(아이콘 오른쪽)으로 이동한 뒤에도 이 박스는
+           양쪽 모서리를 전부 둥글게(border-radius:6px) 유지하고 있어서, 박스 왼쪽 끝(아이콘 바로
+           옆, 원화상 평평한 자리)에 실제로는 없는 둥근 모서리가 별도의 테두리처럼 도드라져 보였음
+           → 오른쪽 끝(진짜 배지 모서리)만 둥글게 남기고 왼쪽은 각지게 수정. (2) 불투명도도 0.92→
+           0.97로 올려서 "IDENTITY"/"PASSWORD" 안내문구 잔상이 거의 안 보이도록 보강.
+           2026-09-10 6차-21: 대장님이 초안 목업(아이콘까지 하나로 감싸는 둥근 테두리 배지)과 실제
+           화면을 나란히 비교하며 "외곽선이 덮어진 느낌, 누더기처럼 기워진 느낌"이라고 재지적 —
+           원화를 다시 실측해보니 실제 테두리 박스는 아이콘까지 통째로 감싸는 하나의 사각형(좌측
+           경계 x≈1100)인데, 우리 커버용 검은 배경(x1=1200, 아이콘 오른쪽부터)이 그 안쪽에서 갑자기
+           시작되면서 배경색 rgb(16,16,20)이 원화 실제 안쪽 색(측정치 평균 R30~32,G29~31,B34~38, 즉
+           우리 배경보다 한 톤 더 밝음)보다 눈에 띄게 어두워서 그 경계선이 "덧댄 상자"처럼 도드라져
+           보였음. (참고: 경계를 그라디언트로 페이드시키는 것도 검토했으나, 원화상 안내문구 첫 글자가
+           x≈1206부터 시작돼서 x1=1200 바로 옆이라 페이드 구간에 걸치면 오히려 글자 잔상이 다시
+           비쳐 보일 위험이 있어 채택하지 않음 — 색상 매칭만으로 해결.) 배경색을 원화 실측 평균에
+           맞춰 rgb(27,26,32)로 올려서 경계가 훨씬 자연스럽게 녹아들도록 수정. */
+        #loginEmail:not(:placeholder-shown), #loginPassword:not(:placeholder-shown) {
+            background: rgb(27,26,32);
+            border-radius: 0 6px 6px 0;
         }
-        #loginOverlay.reveal-card .login-glass-card::after {
-            animation: login-card-shimmer 1.15s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+        /* 위치/크기는 다른 .login-hotspot과 마찬가지로 syncLoginHotspots()가 비밀번호 입력창
+           우측 안쪽 일부 영역으로 계산해서 인라인 style로 채움(부모 상대좌표가 아니라 오버레이
+           기준 절대좌표라서 별도 wrapper 없이도 정확히 겹쳐짐) */
+        .login-password-toggle {
+            position: absolute; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: none; padding: 0; cursor: pointer; color: rgba(242,230,200,0.55);
+            transition: color 0.25s ease;
         }
-        @keyframes login-card-shimmer {
-            0%   { opacity: 0; background-position: 160% 0; }
-            12%  { opacity: 1; }
-            75%  { opacity: 1; background-position: -60% 0; }
-            100% { opacity: 0; background-position: -60% 0; }
+        .login-password-toggle:hover { color: var(--login-gold-2); }
+        .login-password-toggle svg { width: 60%; height: 60%; pointer-events: none; }
+        /* 체크박스: 그림 속 네모난 걸쇠 "창"을 그대로 클릭 영역으로 사용 — 평소엔 완전 투명하다가
+           체크되면 그 창 안에 은은한 금색 체크마크만 나타남(그림 자체엔 체크 상태가 없으므로) */
+        .login-checkbox-hotspot {
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
-        @media (prefers-reduced-motion: reduce) {
-            .login-glass-card { opacity: 1; transform: none; filter: none; }
-            #loginOverlay.reveal-card .login-glass-card,
-            #loginOverlay.reveal-card .login-glass-card::after { animation: none !important; }
-            .login-glass-card::after { display: none; }
-            .login-title-sub, .login-brand-title, .login-tagline, .login-tagline-kr {
-                opacity: 1 !important; transform: none !important; animation: none !important;
-            }
-            .login-divider i { transform: scaleX(1) !important; opacity: 1 !important; animation: none !important; }
+        .login-checkbox-hotspot input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+        /* 2026-09-05 4차: 평면 벡터선처럼 붕 떠보이지 않도록, 옆 걸쇠 금속의 명암(위/왼쪽=밝은
+           반사, 아래/오른쪽=어두운 그림자)과 같은 방향으로 그림자를 겹겹이 얹어서 "쇠에 새겨진
+           체크마크"처럼 보이게 함 */
+        /* 2026-09-06 4차: 대장님 피드백 — 체크박스 디자인은 자연스럽고 좋은데 살짝 작아 보인다는
+           요청으로 62% → 74%로 키워서 체크했을 때 더 또렷하게 보이도록 함(창/걸쇠 위치는 그대로,
+           체크마크 크기만 키움) */
+        .login-checkbox-mark {
+            width: 74%; height: 74%; opacity: 0; transform: scale(0.5);
+            transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none;
+            filter:
+                drop-shadow(-0.6px -0.6px 0.4px rgba(255,230,180,0.65))
+                drop-shadow(1px 1.2px 0.6px rgba(0,0,0,0.9))
+                drop-shadow(0 0 3px rgba(0,0,0,0.7));
         }
-        /* 2026-08-30: 카드가 자리 잡는 동안 그 안의 문구들도 한 줄씩 순서대로 살짝 떠오르며 나타나게 함
-           (카드 자체는 login-card-materialize로 통째로 페이드/슬라이드하지만, 그 위에 문구들만 별도로
-           약간의 시차(stagger)를 두어 더 정성스럽게 등장하는 느낌을 더함). 폼/도움말/푸터는 손대지
-           않고 카드의 기본 페이드를 그대로 따라가도록 둠. */
-        .login-title-sub, .login-brand-title, .login-tagline, .login-tagline-kr {
-            opacity: 0; transform: translateY(10px);
+        .login-checkbox-hotspot input:checked + .login-checkbox-mark { opacity: 1; transform: scale(1); }
+        /* keep me logged in 문구도 그림에 이미 있으므로, 접근성을 위한 텍스트만 남기고 시각적으로는
+           숨김 처리(그림 속 문구가 라벨 역할을 대신함) */
+        .login-remember-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+        /* ENTER 버튼: 그림 속 명판 그래픽 위에 완전히 투명한 실제 <button>만 얹음. hover/focus 시
+           아주 은은한 금색 광택만 살짝 더해서 클릭 가능하다는 피드백은 주되 그림 위에 새 레이어를
+           얹은 티가 나지 않게 함 */
+        #loginBtn {
+            background: transparent; border: none; padding: 0; cursor: pointer;
+            font-size: 0; color: transparent; border-radius: 4px;
+            transition: box-shadow 0.3s ease, background 0.3s ease;
         }
-        #loginOverlay.reveal-card .login-title-sub    { animation: login-text-rise 0.6s ease-out 0.55s forwards; }
-        #loginOverlay.reveal-card .login-brand-title  { animation: login-text-rise 0.6s ease-out 0.65s forwards; }
-        #loginOverlay.reveal-card .login-tagline      { animation: login-text-rise 0.6s ease-out 0.75s forwards; }
-        #loginOverlay.reveal-card .login-tagline-kr   { animation: login-text-rise 0.6s ease-out 0.82s forwards; }
-        @keyframes login-text-rise {
-            to { opacity: 1; transform: translateY(0); }
+        #loginBtn:hover { background: rgba(229,195,132,0.10); box-shadow: 0 0 22px rgba(229,195,132,0.25); }
+        #loginBtn:active { background: rgba(229,195,132,0.18); }
+        #loginBtn:disabled { cursor: not-allowed; opacity: 0.7; }
+        #loginError {
+            color: #ff8f6b; font-size: 12px; text-align: center; line-height: 1.3;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
-        /* 2026-08-31: 이 카드 내부 문구/버튼/입력창 전부 로즈골드 참고 시안 색감·구성 그대로 이식.
-           기존 --amber 참조는 전부 --login-gold-1/2로 교체(잔재 없이 전면 교체). */
-        .login-title-sub {
-            color: var(--login-gold-2); font-size: 11px; font-weight: 600; letter-spacing: 3px; margin-bottom: 14px;
-            font-family: 'IBM Plex Mono', monospace; opacity: 0.85; text-transform: uppercase;
-        }
-        .login-brand-title {
-            color: #fff; font-size: clamp(24px, 2.6vw, 32px); font-weight: 800; letter-spacing: 0.2px;
-            margin: 0 0 14px; text-transform: uppercase; font-family: 'Public Sans', 'Malgun Gothic', sans-serif;
-            white-space: nowrap; text-shadow: 0 2px 24px rgba(0,0,0,0.45);
-        }
-        .login-tagline {
-            font-size: 13.5px; font-weight: 700; letter-spacing: 0.6px; line-height: 1.5; margin-bottom: 8px;
-            background: linear-gradient(100deg, var(--login-gold-1), var(--login-gold-2) 55%, var(--login-gold-1));
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-        .login-tagline-kr { color: var(--login-ink-dim); font-size: 12.5px; margin-bottom: 20px; }
-        /* 2026-08-31: 카드가 등장하는 타이밍에 맞춰, 왼쪽에서 오른쪽으로 살짝 깜빡이며 길어지는
-           구분선으로 변경. 최종 길이는 아래 입력창(.login-box, max-width:360px)과 정확히 맞춤 —
-           바깥 래퍼(.login-divider)는 최종 폭을 고정해서 잡아두고, 안쪽 막대(i)만
-           transform:scaleX()로 0→1 자라나게 해서(폭 자체를 애니메이션하는 것보다 가볍고 매끄러움)
-           깜빡임(opacity)을 같이 줌. */
-        .login-divider { width: 100%; max-width: 360px; height: 2px; margin-bottom: 22px; overflow: hidden; }
-        .login-divider i {
-            display: block; width: 100%; height: 100%;
-            background: linear-gradient(90deg, var(--login-gold-1), var(--login-gold-2) 70%, transparent);
-            transform-origin: left center;
-            transform: scaleX(0);
-            opacity: 0;
-        }
-        #loginOverlay.reveal-card .login-divider i {
-            animation: login-divider-grow 1s cubic-bezier(0.3, 0.8, 0.4, 1) 0.88s forwards,
-                       login-divider-flicker 1s steps(1, end) 0.88s forwards;
-        }
-        @keyframes login-divider-grow {
-            from { transform: scaleX(0); }
-            to   { transform: scaleX(1); }
-        }
-        @keyframes login-divider-flicker {
-            0%   { opacity: 0; }
-            10%  { opacity: 1; }
-            22%  { opacity: 0.25; }
-            34%  { opacity: 1; }
-            46%  { opacity: 0.3; }
-            60%  { opacity: 1; }
-            100% { opacity: 1; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-divider i { transform: scaleX(1); opacity: 1; animation: none; }
-        }
-        .login-box {
-            background: none; border: none; padding: 0; box-shadow: none; width: 100%; max-width: 360px;
-        }
-        .login-field-wrap {
-            position: relative; margin-bottom: 14px; border-radius: 10px;
-            background: var(--login-panel-bg);
-            -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: border-color 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
-        }
-        .login-field-wrap:hover { border-color: rgba(229,195,132,0.35); }
-        .login-field-wrap:focus-within {
-            border: 1px solid var(--login-gold-2);
-            box-shadow: 0 0 0 3px rgba(229,195,132,0.14), 0 0 22px rgba(229,195,132,0.25);
-            background: rgba(24,28,38,0.78);
-        }
-        .login-field-icon {
-            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            width: 16px; height: 16px; color: var(--login-ink-faint); pointer-events: none;
-            transition: color 0.3s ease;
-        }
-        .login-field-wrap:focus-within .login-field-icon { color: var(--login-gold-2); }
-        .login-box input {
-            width: 100%; box-sizing: border-box; padding: 14px 12px 14px 40px; border: none; border-radius: 10px;
-            font-size: 14px; font-weight: 500; background: transparent; color: var(--login-ink-dim); color: #f3f4f7;
-            outline: none;
-        }
-        .login-box input::placeholder { color: var(--login-ink-faint); font-weight: 400; }
-        .login-password-wrap input { padding-right: 40px; }
-        .login-help { display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; font-size: 12px; color: var(--login-ink-faint); line-height: 1.6; max-width: 340px; }
-        .login-help svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; color: var(--login-gold-2); opacity: 0.85; }
-        /* 2026-08-29: margin-top:auto로 푸터를 화면 맨 아래에 고정하면, 그 반작용으로 위쪽 텍스트
-           덩어리 전체가 화면 위로 밀려붙어서 "왼쪽 위에 붙어있는" 느낌이 났음 → 고정값으로 바꿔서
-           타이틀~폼~도움말~푸터 전체가 하나의 덩어리로 화면 세로 가운데에 자연스럽게 위치하도록 함 */
-        .login-footer { margin-top: 28px; padding-top: 0; font-size: 11px; color: var(--login-ink-faint); }
-        .login-box button.login-password-toggle {
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-            background: transparent; border: none; padding: 0; cursor: pointer; color: var(--login-ink-faint); border-radius: 6px;
-            font-weight: normal; letter-spacing: normal; margin-top: 0; transition: color 0.25s ease, background 0.25s ease;
-        }
-        .login-box button.login-password-toggle:hover { color: var(--login-gold-2); background: rgba(255,255,255,0.05); }
-        .login-password-toggle svg { width: 16px; height: 16px; pointer-events: none; }
-        /* 로그인 하단 행: "로그인 상태 유지" 체크박스 + "비밀번호를 잊으셨나요?" 링크를 양끝 정렬로 배치 */
-        .login-row-between { display: flex; align-items: center; justify-content: space-between; margin: 2px 0 22px 0; }
-        .login-remember-label {
-            display: flex; align-items: center; gap: 8px; color: var(--login-ink-dim); font-size: 12.5px; font-weight: 500;
-            letter-spacing: normal; margin-bottom: 0; cursor: pointer; user-select: none;
-        }
-        .login-remember-label input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
-        .login-remember-checkbox {
-            width: 16px; height: 16px; border-radius: 4px; flex: none;
-            border: 1.5px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.03);
-            display: flex; align-items: center; justify-content: center;
-            transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
-        }
-        .login-remember-checkbox svg { width: 10px; height: 10px; opacity: 0; transform: scale(0.6); transition: opacity 0.2s ease, transform 0.2s ease; }
-        .login-remember-label input:checked + .login-remember-checkbox {
-            background: linear-gradient(135deg, var(--login-gold-1), var(--login-gold-2));
-            border-color: var(--login-gold-2);
-            box-shadow: 0 0 10px rgba(229,195,132,0.35);
-        }
-        .login-remember-label input:checked + .login-remember-checkbox svg { opacity: 1; transform: scale(1); color: #1a1408; }
-        .login-forgot-link {
-            font-size: 12.5px; color: var(--login-ink-dim); text-decoration: none; font-weight: 500;
-            position: relative; transition: color 0.25s ease;
-        }
-        .login-forgot-link::after {
-            content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px;
-            background: var(--login-gold-2); transform: scaleX(0); transform-origin: right; transition: transform 0.3s ease;
-        }
-        .login-forgot-link:hover { color: var(--login-gold-2); }
-        .login-forgot-link:hover::after { transform: scaleX(1); transform-origin: left; }
-        .login-box button {
-            width: 100%; padding: 14px 20px; border: none; border-radius: 10px;
-            background: linear-gradient(100deg, var(--login-gold-1), var(--login-gold-2) 60%, var(--login-gold-1));
-            background-size: 200% 100%; background-position: 0% 0%;
-            color: #211705; font-weight: 800; font-size: 13px; cursor: pointer; margin-top: 6px;
-            letter-spacing: 0.14em; text-transform: uppercase;
-            box-shadow: 0 8px 24px rgba(209,167,99,0.22);
-            transition: background-position 0.5s ease, box-shadow 0.35s ease, transform 0.15s ease;
-        }
-        .login-box button:hover { background-position: 100% 0%; box-shadow: 0 10px 30px rgba(229,195,132,0.35); }
-        .login-box button:active { transform: translateY(1px) scale(0.995); }
-        .login-box button:disabled { opacity: 0.6; cursor: not-allowed; }
-        #loginError { color: #ff8f6b; font-size: 12px; margin-top: 8px; min-height: 16px; text-align: center; }
         #syncStatus {
             position: fixed; bottom: 14px; right: 18px; z-index: 500;
             background: rgba(18,49,42,0.9); color: #fff; font-size: 11.5px;
@@ -1179,15 +1327,12 @@
         #syncStatus.show { display: block; }
         #syncStatus.error { background: rgba(193,85,44,0.95); }
 
-        /* ===================== (2026-08-30) 영상 기반 인트로(#introSplash) 완전 폐기 =====================
-           화질이 구리고, 화면 비율에 따라 영상 속 카드 위치와 실제 로그인 카드가 어긋나는 문제가
-           구조적으로 있었음(object-fit:cover가 창 비율에 따라 다르게 크롭하기 때문). 실시간 좌표
-           동기화까지 구현해서 수학적으로는 완벽히 맞춰봤지만, 애초에 "영상 위에 실제 카드가 다시
-           한 번 나타나는" 이중 연출 자체가 불필요하다는 판단하에 영상을 통째로 걷어내고, 아래
-          `#loginOverlay` 위에서 바로 재생되는 순수 CSS 애니메이션(빛 입자 조립 + 엠블럼 등장 +
-           텍스트 시차 등장 + 기존 카드 슬라이드)으로 대체함. 자세한 내용은 .login-particles,
-           login-emblem-materialize, playLoginIntro() 참고. 검은 화면으로 전환되는 순간 자체가
-           없어져서 "영상과 로그인 화면이 따로 논다"는 문제도 원천적으로 사라짐. */
+        /* ===================== 로그인 화면 배경 히스토리 메모 =====================
+           영상 기반 인트로 → 여러 레이어를 합성한 던전 씬 → CSS로 그린 카드를 거쳐, 2026-09-05
+           3차 현재는 대장님이 확정한 원화(assets/login-bg-scene.webp, 로그인 패널까지 전부
+           그려진 완성본) 한 장을 배경으로 그대로 쓰고, 그 위에 좌표로 매핑한 보이지 않는 입력
+           요소만 겹침. 자세한 내용은 #loginOverlay 규칙과 syncLoginHotspots()/playLoginIntro()
+           참고. */
 
         /* ===================== 통계 스트립 + 검색/필터바 + 항목그룹표시 토글바를 네브바와 같은 다크 네이비 톤으로 통일 =====================
            (업체 리스트 표는 기존 밝은 디자인 그대로 유지) */
@@ -1244,47 +1389,10 @@
                더 큰 높이로 계산돼서 안의 내용(로고/문구)이 가운데정렬되며 위쪽이 주소창 밑에 가려 보이는
                문제가 있었음 → 지금 실제로 보이는 화면 높이 기준인 100dvh로 교체해서 해결 */
             #loginOverlay { height: 100vh; height: 100dvh; }
-            /* 2026-08-29: PC에서는 엠블럼이 오른쪽으로 크게 번지는 스플릿 레이아웃이지만, 좁은 화면에서
-               그대로 두면 이미지와 글자가 겹쳐 찌그러짐 → 폰에서는 원래처럼 이미지를 위쪽에 작게 중앙배치하고
-               폼을 그 아래 세로로 쌓는 형태로 되돌림 */
-            #loginOverlay { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; padding: 0 0 20px; }
-            /* 2026-08-30: 모바일 첫 화면에서 이메일/비번 입력칸까지 스크롤 없이 한 번에 보이도록,
-               이미지를 위쪽에 작게 배치하고 유리카드를 음수 margin으로 그 아래에 살짝 겹쳐 올림.
-               카드가 backdrop-filter로 뒤를 블러 처리하기 때문에 겹치는 부분은 이미지가 유리 너머로
-               은은하게 비치는 형태로 자연스럽게 섞임(요청하신 "이미지 위에 텍스트를 겹쳐서"에 해당).
-               카드 안쪽 폼 구조/id/로직은 전혀 손대지 않았고, 바깥 배치·여백·글자 크기만 축소했음. */
-            .login-emblem-img {
-                position: relative; top: auto; right: auto; transform: none; width: min(46vw, 190px); height: auto;
-                margin: 16px auto -56px; object-fit: contain;
-                filter: drop-shadow(0 0 30px rgba(242,201,76,0.25));
-                -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 96%);
-                mask-image: linear-gradient(to bottom, #000 60%, transparent 96%);
-                z-index: 1;
-            }
-            /* 데스크톱용 login-emblem-materialize는 translateY(-50%)가 섞여있어서(가운데 정렬용),
-               transform:none인 모바일 배치에 그대로 쓰면 이미지가 엉뚱한 위치로 밀림 → 모바일 전용
-               버전(스케일/밝기만, translateY 없음)으로 애니메이션 이름만 갈아끼움 */
-            #loginOverlay.reveal-card .login-emblem-img {
-                animation-name: login-emblem-materialize-mobile;
-            }
-            @keyframes login-emblem-materialize-mobile {
-                0%   { opacity: 0; transform: scale(0.86); filter: drop-shadow(0 0 30px rgba(242,201,76,0.25)) brightness(2.4); }
-                55%  { opacity: 1; transform: scale(1.02); filter: drop-shadow(0 0 30px rgba(242,201,76,0.25)) brightness(1.5); }
-                100% { opacity: 1; transform: scale(1);    filter: drop-shadow(0 0 30px rgba(242,201,76,0.25)) brightness(1); }
-            }
-            .login-bg-shade { display: none; }
-            .login-emblem-glow { display: none; }
-            .login-particles { display: none; }
-            .login-content { position: relative; z-index: 2; height: auto; width: 100%; max-width: 100%; padding: 0 18px; align-items: center; text-align: center; }
-            .login-glass-card { max-width: 400px; padding: 42px 20px 16px; }
-            .login-title-sub { font-size: 10px; letter-spacing: 2px; margin-bottom: 8px; }
-            .login-brand-title { white-space: normal; font-size: 21px; margin-bottom: 8px; }
-            .login-tagline { font-size: 11px; margin-bottom: 4px; }
-            .login-tagline-kr { font-size: 10.5px; margin-bottom: 12px; }
-            .login-divider { margin: 0 auto 14px; height: 2px; width: 100%; max-width: 300px; }
-            .login-field-wrap { margin-bottom: 9px; }
-            .login-help { max-width: 100%; text-align: left; margin-top: 12px; }
-            .login-footer { margin-top: 14px; padding-top: 0; }
+            /* 2026-09-05 3차: 로그인 화면이 "핫스팟 좌표 매핑" 방식으로 바뀌면서(위 CSS 블록 참고),
+               카드가 더 이상 CSS로 그리는 별도 요소가 아니라 배경 그림 자체 + JS가 실시간 계산하는
+               좌표라서, 모바일 전용으로 폭/패딩/폰트를 따로 손볼 게 없어짐 — syncLoginHotspots()가
+               어떤 화면비에서도 항상 그림 속 정확한 위치에 입력창을 맞춰줌. */
             #dataLoadingOverlay { height: 100vh; height: 100dvh; }
             .side-accent { width: 6px; height: 100vh; height: 100dvh; }
             .modal { height: 100vh; height: 100dvh; }
@@ -1398,82 +1506,60 @@
          빛 입자 조립 효과(.login-particles)로 대체함. 검은 인트로 화면 → 크로스페이드하던 단계가
          아예 없어져서 처음부터 끝까지 "한 화면" 위에서만 연출이 이어짐. -->
     <div id="loginOverlay">
-        <div class="login-ambient-dust" aria-hidden="true">
-            <i style="--fx:8%;  --fy:16%; --fs:2px; --fdur:9s;  --fdelay:0.2s;"></i>
-            <i style="--fx:22%; --fy:72%; --fs:3px; --fdur:11s; --fdelay:2.4s;"></i>
-            <i style="--fx:35%; --fy:30%; --fs:2px; --fdur:8s;  --fdelay:1.1s;"></i>
-            <i style="--fx:48%; --fy:85%; --fs:2px; --fdur:10s; --fdelay:3.6s;"></i>
-            <i style="--fx:58%; --fy:12%; --fs:3px; --fdur:12s; --fdelay:0.8s;"></i>
-            <i style="--fx:66%; --fy:55%; --fs:2px; --fdur:9s;  --fdelay:4.2s;"></i>
-            <i style="--fx:74%; --fy:88%; --fs:2px; --fdur:10s; --fdelay:1.9s;"></i>
-            <i style="--fx:80%; --fy:24%; --fs:3px; --fdur:8s;  --fdelay:5.1s;"></i>
-            <i style="--fx:88%; --fy:66%; --fs:2px; --fdur:11s; --fdelay:0.5s;"></i>
-            <i style="--fx:14%; --fy:48%; --fs:2px; --fdur:9s;  --fdelay:3.2s;"></i>
-            <i style="--fx:42%; --fy:60%; --fs:2px; --fdur:10s; --fdelay:6s;"></i>
-            <i style="--fx:92%; --fy:42%; --fs:3px; --fdur:12s; --fdelay:2.7s;"></i>
-            <i style="--fx:28%; --fy:8%;  --fs:2px; --fdur:9s;  --fdelay:4.8s;"></i>
-            <i style="--fx:63%; --fy:78%; --fs:2px; --fdur:11s; --fdelay:1.5s;"></i>
+        <!-- 2026-09-06 6차-3: 배경 이미지를 #loginOverlay 자체가 아니라 이 자식 요소에 그려서,
+             부모(#loginOverlay)는 항상 즉시 불투명하게 대시보드를 가리고 이 요소만 살짝 늦게
+             페이드인 되도록 분리함(자세한 이유는 CSS 쪽 주석 참고). -->
+        <div class="login-bg-image" id="loginBgImage"></div>
+        <!-- 2026-09-05 3차: 대장님이 확정한 원화(assets/login-bg-scene.webp) 안에 타이틀/태그라인/
+             ID:/PASSWORD:/keep me logged in/ENTER 문구가 전부 이미 그려져 있음. 아래 form은 그 위에
+             "보이지 않는" 진짜 입력 요소만 좌표로 겹쳐 올리는 핫스팟 레이어 — 실제 위치/크기는
+             syncLoginHotspots()가 매 리사이즈마다 계산해서 인라인 style로 채워줌(아래 초기값은
+             자바스크립트 실행 전 깜빡임 방지용 대략치). -->
+        <!-- 2026-09-06 6차: 횃불 점화 + 엠블럼 룬 결계 플래시 + 대기 펄스용 빛 레이어. 순수 장식이라
+             aria-hidden + pointer-events:none — 위치는 placeFx()(스크립트 영역)가 담당. -->
+        <div class="login-fx-layer" aria-hidden="true">
+            <!-- 횃불: 벽 반사광(bounce, 가장 아래) → 코어 불빛(glow) → 가리개(mask, 점화 전엔 이게
+                 덮어서 "완전히 꺼진 것처럼" 보이게 함) 순서로 쌓음. -->
+            <div class="fx-glow fx-torch-bounce fx-torch-bounce-left" id="fxTorchBounceLeft"></div>
+            <div class="fx-glow fx-torch fx-torch-left" id="fxTorchLeft"></div>
+            <div class="fx-torch-mask fx-torch-mask-left" id="fxTorchMaskLeft"></div>
+            <div class="fx-glow fx-torch-bounce fx-torch-bounce-right" id="fxTorchBounceRight"></div>
+            <div class="fx-glow fx-torch fx-torch-right" id="fxTorchRight"></div>
+            <div class="fx-torch-mask fx-torch-mask-right" id="fxTorchMaskRight"></div>
+            <!-- 엠블럼 안쪽 룬 글자 4개: 각각 glow(파란 점광원) + mask(점화 전까지 덮어두는 가리개) 쌍.
+                 mask가 DOM상 glow보다 뒤에 와야 위에 덮여서 "안 빛나는 상태"로 보임. -->
+            <div class="fx-glow fx-rune-glow fx-rune-glow-1" id="fxRuneGlow1"></div>
+            <div class="fx-rune-mask fx-rune-mask-1" id="fxRuneMask1"></div>
+            <div class="fx-glow fx-rune-glow fx-rune-glow-2" id="fxRuneGlow2"></div>
+            <div class="fx-rune-mask fx-rune-mask-2" id="fxRuneMask2"></div>
+            <div class="fx-glow fx-rune-glow fx-rune-glow-3" id="fxRuneGlow3"></div>
+            <div class="fx-rune-mask fx-rune-mask-3" id="fxRuneMask3"></div>
+            <div class="fx-glow fx-rune-glow fx-rune-glow-4" id="fxRuneGlow4"></div>
+            <div class="fx-rune-mask fx-rune-mask-4" id="fxRuneMask4"></div>
+            <div class="fx-glow fx-rune-glow fx-rune-glow-5" id="fxRuneGlow5"></div>
+            <div class="fx-rune-mask fx-rune-mask-5" id="fxRuneMask5"></div>
         </div>
-        <div class="login-emblem-glow"></div>
-        <img class="login-emblem-img" src="assets/eagle-medallion.webp" alt="RHEAVISION CORP">
-        <div class="login-border-trace" id="loginBorderTrace"><i></i></div>
-        <div class="login-particles" aria-hidden="true">
-            <span style="--px:-80px;  --py:-140px; --pd:0.00s;"></span>
-            <span style="--px:120px;  --py:-110px; --pd:0.05s;"></span>
-            <span style="--px:-150px; --py:-40px;  --pd:0.03s;"></span>
-            <span style="--px:160px;  --py:30px;   --pd:0.08s;"></span>
-            <span style="--px:-60px;  --py:130px;  --pd:0.10s;"></span>
-            <span style="--px:90px;   --py:150px;  --pd:0.06s;"></span>
-            <span style="--px:-170px; --py:90px;   --pd:0.14s;"></span>
-            <span style="--px:40px;   --py:-170px; --pd:0.12s;"></span>
-            <span style="--px:-30px;  --py:-180px; --pd:0.18s;"></span>
-            <span style="--px:180px;  --py:-60px;  --pd:0.16s;"></span>
-            <span style="--px:-120px; --py:160px;  --pd:0.22s;"></span>
-            <span style="--px:10px;   --py:190px;  --pd:0.20s;"></span>
-            <span style="--px:-190px; --py:-100px; --pd:0.26s;"></span>
-            <span style="--px:130px;  --py:100px;  --pd:0.24s;"></span>
-        </div>
-        <div class="login-bg-shade"></div>
-        <div class="login-content">
-            <div class="login-glass-card">
-                <div class="login-title-sub">KIOSK MANAGEMENT SYSTEM</div>
-                <h1 class="login-brand-title">Rheavision Corp.</h1>
-                <div class="login-tagline">UNITE PER SCIENTIAM,<br>VISIO AD FUTURUM.</div>
-                <div class="login-tagline-kr">United by science, seeing the future.</div>
-                <div class="login-divider"><i></i></div>
-                <form class="login-box" id="loginForm" onsubmit="handleLogin(event); return false;" autocomplete="on">
-                    <div class="login-field-wrap">
-                        <svg class="login-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>
-                        <input type="email" id="loginEmail" name="email" autocomplete="username" placeholder="Email" onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('loginPassword').focus(); }">
-                    </div>
-                    <div class="login-field-wrap login-password-wrap">
-                        <svg class="login-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                        <input type="password" id="loginPassword" name="password" autocomplete="current-password" placeholder="Password">
-                        <button type="button" class="login-password-toggle" id="loginPasswordToggle" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="Show/hide password">
-                            <svg id="eyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg id="eyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.32 21.32 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.4 21.4 0 0 1-3.22 4.53M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        </button>
-                    </div>
-                    <div class="login-row-between">
-                        <label class="login-remember-label">
-                            <input type="checkbox" id="rememberEmailCheck">
-                            <span class="login-remember-checkbox">
-                                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.2l2.6 2.6L10 3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                            </span>
-                            <span>Keep me logged in</span>
-                        </label>
-                        <a href="#" class="login-forgot-link" onclick="return false;">Forgot password?</a>
-                    </div>
-                    <button type="submit" id="loginBtn">LOG IN</button>
-                    <div id="loginError"></div>
-                </form>
-                <div class="login-help">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
-                    <span>Access the same data anywhere with one shared account.</span>
-                </div>
-                <div class="login-footer">© 2026 Rheavision Corp. All rights reserved.</div>
-            </div>
-        </div>
+        <form class="login-content" id="loginForm" onsubmit="handleLogin(event); return false;" autocomplete="on">
+            <input type="email" id="loginEmail" class="login-hotspot" name="email" autocomplete="username" placeholder="" onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('loginPassword').focus(); }">
+            <input type="password" id="loginPassword" class="login-hotspot" name="password" autocomplete="current-password" placeholder="">
+            <button type="button" class="login-password-toggle" id="loginPasswordToggle" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="Show/hide password">
+                <svg id="eyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg id="eyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.32 21.32 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.4 21.4 0 0 1-3.22 4.53M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+            <label class="login-hotspot login-checkbox-hotspot" id="loginCheckboxHotspot">
+                <input type="checkbox" id="rememberEmailCheck">
+                <svg class="login-checkbox-mark" viewBox="0 0 24 24" fill="none" stroke="#E5C384" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+                <span class="login-remember-text">Keep me within the gate</span>
+            </label>
+            <button type="submit" id="loginBtn" class="login-hotspot">Open the Gate</button>
+            <div id="loginError" class="login-hotspot"></div>
+        </form>
+        <!-- 2026-09-07 6차-11: 패널 글자 위로 지나가는 은은한 금빛 스윕(마스크로 글자 픽셀만 클리핑). -->
+        <div class="fx-text-sweep-wrap" id="fxTextSweepWrap" aria-hidden="true"><div class="fx-text-sweep-bar"></div></div>
+        <!-- 2026-09-10 6차-17: 왼쪽 앞쪽 칼날 위로 아주 가끔(10~15초에 한 번) 지나가는 은백색 빛 반사. -->
+        <div class="fx-blade-sweep-wrap" id="fxBladeSweepWrap" aria-hidden="true"><div class="fx-blade-sweep-bar"></div></div>
+        <!-- 2026-09-07 6차-11: 화면 전체를 떠도는 먼지 + 횃불 불씨 파티클(런타임 생성, initFxParticles()). -->
+        <div class="fx-particle-layer" id="fxParticleLayer" aria-hidden="true"></div>
     </div>
 
     <!-- 로그인 성공 직후 ~ 데이터 로딩 완료 사이 "0개짜리 빈 화면" 깜빡임 방지용 오버레이 (2026-08-29 추가)
@@ -2051,66 +2137,400 @@
            ⑳  엑셀 업로드(대량등록) / 템플릿 다운로드
            ═══════════════════════════════════════════════════════════════ */
 
-        /* 2026-08-29: 엠블럼 이미지를 index.html 안에 base64로 박아넣던 방식을 그만두고
-           assets/eagle-medallion.webp 라는 별도 파일로 분리함 — 로그인 화면/네브바 로고/인트로
-           애니메이션 세 군데 모두 이 파일을 각자 <img src="assets/eagle-medallion.webp">로 직접
-           참조하므로(HTML에 이미 적어둠), 브라우저가 딱 한 번만 내려받아 캐싱하고 그 뒤로는
-           재사용함 — JS로 데이터를 복사해줄 필요가 없어져서 아래 동기화 함수는 삭제함.
+        /* 로고/배경 이미지는 index.html 안에 base64로 박아넣지 않고 별도 webp 파일로 분리함 —
+           <img src="assets/...">/CSS background-image로 직접 참조하므로 브라우저가 한 번만
+           내려받아 캐싱하고 재사용함. 로그인 화면은 assets/login-bg-scene.webp(단일 원화 배경),
+           네브바는 assets/nav-logo.webp — 서로 다른 파일을 씀.
            ⚠️ GitHub Pages 등에 배포할 때는 index.html과 assets 폴더를 항상 같은 위치에
            함께 올려야 이미지가 정상적으로 보임(폴더 구조 그대로 업로드). */
 
-        /* ===================== 로그인 인트로 애니메이션 재생 (2026-08-30: 영상 폐기 → 순수 CSS 연출) =====================
-           예전에는 영상이 다 재생된 뒤(ended 이벤트)에야 카드를 등장시켰지만, 이제는 영상이 없으므로
-           페이지가 열리자마자 바로 #loginOverlay에 reveal-card 클래스를 붙여서 CSS로 짜둔 전체
-           시퀀스(빛 입자 조립 → 엠블럼 등장 → 텍스트 시차 등장 → 카드 슬라이드, 각 애니메이션의
-           animation-delay로 순서가 정해짐)를 한 번에 트리거함. 화면 가장자리를 도는 라이트 트레일
-           (.login-border-trace)만 별도 트리거가 필요해서 살짝 지연 후 .active를 붙여줌 — 평소 10초
-           유휴 감지 때 재생되는 것과 똑같은 애니메이션을 "오프닝 연출"로도 재사용하는 것. */
+        /* ===================== 로그인 화면 핫스팟 좌표 동기화 =====================
+           2026-09-05 3차: "떠있는 UI 카드"가 아니라 "벽에 박힌 한 장의 그림"처럼 보이게 하기 위해,
+           카드를 CSS로 그리지 않고 대장님이 확정한 원화(assets/login-bg-scene.webp, 원본 해상도
+           2754×1536 — 타이틀/태그라인/ID:/PASSWORD:/keep me logged in/ENTER 문구까지 전부 이미
+           그려져 있음) 위에 "보이지 않는" 진짜 입력 요소만 좌표로 정확히 겹쳐 올림.
+           LOGIN_HOTSPOTS 값은 그 원본 이미지를 픽셀 단위로 직접 측정해서 얻은 고정 좌표(왼쪽,위,
+           오른쪽,아래). background-size:cover가 화면 비율에 따라 이미지를 확대/크롭하는 방식은
+           (컨테이너 크기, 이미지 원본 크기)만 알면 100% 예측 가능한 수학 공식이므로, 2026-08-30에
+           인트로 영상-카드 좌표를 실시간 동기화했던 것(그때는 영상)과 완전히 동일한 원리로 리사이즈
+           /방향전환마다 재계산 — 화면 비율이 무엇이든 항상 그림 속 정확한 자리에 입력창이 맞춰짐. */
+        /* 2026-09-05 4차: 대장님 요청으로 좌표를 픽셀 단위 그리드 오버레이로 한 번 더 실측 검수함.
+           기존 값들이 실제 그려진 홈/버튼 테두리보다 미묘하게 크거나 위치가 어긋나 있었음(특히
+           체크박스 창은 실제보다 왼쪽/위로 치우쳐 있었고, ENTER 버튼은 명판 그래픽보다 훨씬 넓게
+           잡혀 있어서 명판 밖 빈 공간을 눌러도 반응하는 상태였음) → 아래 값은 전부 원화를
+           확대해서 테두리 하이라이트 픽셀이 시작/끝나는 지점을 직접 측정해 새로 잡은 정밀 좌표. */
+        /* 2026-09-06 6차-4: 대장님이 구글 플로우로 원화를 재생성(룬 5개 정식 재작화 + 벽 텍스처
+           선명화 + 오타/워터마크 수정)해서 교체함. 새 원화는 가로가 2px 줄었고(2754→2752),
+           패널/엠블럼/횃불 전체가 원화 재생성 특성상 완전히 고정된 변환이 아니라 부분별로 조금씩
+           다르게 밀렸음(패널 쪽은 오른쪽+11/아래+4px 정도로 비교적 균일, 오른쪽 횃불만 유독
+           오른쪽+37/아래+18px로 크게 밀림) — 그래서 전체를 하나의 오프셋으로 퉁치지 않고 각 영역을
+           새 원화에서 다시 그리드로 실측해 아래 값을 갱신함. */
+        const LOGIN_BG_NATIVE_W = 2752, LOGIN_BG_NATIVE_H = 1536;
+        /* 2026-09-06 6차-5: 큰 모니터에서 그림이 화면 전체를 꽉 채우는 게 부담스럽다는 피드백 →
+           cover 배율 계산 후 이 값만큼 추가로 한 번 더 줄여서 상하좌우에 여백이 생기게 함.
+           1.0 = 여백 없음(예전과 동일), 값을 낮출수록 그림이 작아지고 여백이 커짐. */
+        const LOGIN_BG_SHRINK = 0.85;
+        /* 2026-09-06 6차-6: 대장님이 "수정에 수정을 거듭한 이미지"를 버리고 프롬프트로 처음부터
+           새로 그린 원화(구도가 이전과 전혀 다름 — 아치형 문틀 없음, 하단에 방패/사슬/해골 등
+           던전 소품 추가, 패널이 더 아래로 내려감)로 완전히 교체함. 같은 2752x1536 해상도지만
+           패널/엠블럼/횃불 위치가 이전 버전과 전혀 다른 그림이라 기존 좌표를 재활용하지 않고
+           전부 새로 그리드 실측 + 룬 5개는 파란색 픽셀 클러스터를 코드로 직접 검출해서 좌표를 잡음. */
+        /* 2026-09-06 6차-7: 대장님이 실제로 ID란에 값을 입력해보니 텍스트가 "ID:" 라벨 위쪽
+           빈 공간에 붕 떠서 찍히고, 정작 원화에 그려진 입력창 테두리는 비어있는 상태로 남는
+           버그를 발견함(그리드 오버레이로 눈대중 측정했을 때는 "얼추 맞아 보였지만", 실제
+           텍스트를 찍어보니 세로로 15~20px 이상 어긋나 있었음). 원인 규명 겸 재발 방지를 위해
+           이번엔 눈대중이 아니라 원화 픽셀의 밝기 그래디언트(테두리 하이라이트 선이 급격히
+           밝아지는 지점)를 스크립트로 스캔해서 각 입력창의 테두리 좌표를 직접 검출 — ID/PW
+           입력창 모두 세로 위치가 기존 좌표보다 실제로는 더 아래쪽(그리고 더 두꺼움)이었음이
+           확인됨. */
+        /* 2026-09-07 6차-8: 대장님이 실제 화면에서 보니 PASSWORD 입력창 좌측 경계가 "PASSWORD:"
+           라벨 글자 한가운데를 뚫고 지나가 있어서(포커스 시 나오는 금색 테두리가 "WORD:" 글자를
+           덮음), 입력창이 라벨과 어긋나 보이는 버그를 발견함. 원인은 password 핫스팟의 x1(1265)이
+           실제 원화에 그려진 "입력 가능한 어두운 안쪽 칸"의 시작 x좌표가 아니라 라벨 글자 중간
+           지점이었던 것 — id 쪽은 밝기 그래디언트 스캔값(≈1243)과 기존 좌표(1245)가 거의 일치해서
+           멀쩡했지만, password 쪽만 실제 안쪽 칸 시작점(그래디언트 스캔으로 재검출: x≈1364, 세로
+           박스 높이(y=1108~1168) 전체에 걸쳐 지속되는 진짜 테두리 선만 골라냄 — 라벨 글자 획은
+           박스 높이 전체에 걸치지 않아서 구분됨)보다 100px 가까이 왼쪽으로 잘못 잡혀 있었음. */
+            /* 2026-09-09 6차-14: 대장님이 "로그인 패널이 다른 사이트보다 커 보이고 촌스럽다"고
+               지적 — 라틴어 태그라인+영문 번역 2줄(순수 장식, 로그인 기능과 무관)을 원화에서 완전히
+               제거하고 그 아래 내용(ID~ENTER~하단 테두리)을 73px 위로 당겨서 패널 프레임 자체를
+               73px 더 짧게 만듦(이음매 없이 자연스럽게 이어지도록 스톤 텍스처 seam-shift 처리,
+               제거 전/후 픽셀 diff로 이음매 티 안 나는 것 확인). 아래 6개 좌표 전부 그만큼(-73)
+               위로 이동됨 — 원화에서 좌표 다시 잴 때 이 사실을 모르고 예전 6차-13 좌표를 그대로
+               참고하면 다 어긋나니 주의. */
+            /* 2026-09-09 6차-15: 대장님이 ChatGPT/Gemini 목업을 여러 차례 비교 검토한 끝에 완전히
+               새로운 구도의 원화(고대 비석형 벽면 일체형 — 문틀 없이 돌벽에 새겨진 하나의 거대한
+               석판처럼 보이는 스타일, 독수리 메달+룬 5개+양옆 바닥형 랜턴, 체크박스 문구
+               "KEEP ME WITHIN THE GATE", 버튼 문구 "OPEN THE GATE")로 전면 교체함 — 이전 원화와는
+               패널 크기/비율/장식 전부 달라서 6차-14 좌표를 재활용하지 않고 전부 새로 그리드
+               브라이트니스 스캔으로 재실측(id/password/checkbox/enter는 테두리 그라디언트 스캔,
+               error/textSweep은 시각 검수로 빈 여백 확보). 이번 원화는 바닥 화로(brazier)가 없어서
+               fireBasketLeft/Right 앵커와 그 전용 불씨(BRAZIER_EMBER_COUNT)는 완전히 삭제함. */
+        const LOGIN_HOTSPOTS = {
+            /* 2026-09-09 6차-16: 대장님이 "아이디/패스워드 입력하면 앞 아이콘이 사라지고 그 자리부터
+               글자가 써진다"고 지적 — 원인은 입력창 히트박스 왼쪽 시작(x1)이 새로 그려넣은 중세풍
+               아이콘 배지(투구/열쇠) 영역 위까지 겹쳐 있었기 때문. 새 아이콘 배지의 오른쪽 끝을
+               픽셀 단위로 재측정(≈x1193~1200, 라벨 글자 시작은 ≈x1204~1206)해서 x1을 1200으로
+               밀어 아이콘은 그대로 보이고 그 뒤(오른쪽)부터 입력 텍스트/커서/placeholder가 시작되도록
+               수정. */
+            id:       [1200, 883, 1636, 954],
+            password: [1200, 972, 1638, 1045],
+            /* 2026-09-10 6차-18: 대장님이 "눈 아이콘이 완전 겹쳐 보인다"고 지적 — 실측해보니 원화에
+               그려진 실제 눈 아이콘 중심이 x≈1601(기존 박스 중심 1590보다 11px 오른쪽)에 있어서,
+               CSS SVG 눈 아이콘이 그 옆에 따로 겹쳐 그려지고 있었음. 박스를 그대로 오른쪽으로 11px
+               이동해서 SVG가 원화 눈 아이콘과 정확히 겹치도록 수정. */
+            toggle:   [1581, 990, 1621, 1030],
+            checkbox: [1198, 1071, 1242, 1117],
+            enter:    [1200, 1178, 1560, 1246],
+            error:    [1118, 1265, 1636, 1310],
+            /* 2026-09-07 6차-11: 패널 제목/부제 글자만 정확히 감싸는 박스(입력창 위쪽 텍스트 영역만
+               — ID/PASSWORD 줄은 제외). 금빛 스윕 마스크(CSS에 base64로 인라인됨, 6차-13-2 참고)를
+               만들 때 쓴 크롭 범위와 정확히 동일해야 마스크가 어긋나지 않음.
+               2026-09-09 6차-15: 원화 전면 교체에 맞춰 새 패널의 "RHEAVISION CORP. / KIOSK
+               MANAGEMENT SYSTEM" 2줄 제목 영역만 감싸도록 재측정, 마스크도 이 새 박스 기준
+               크롭에서 밝기 임계값으로 재생성(assets/login-text-sweep-mask.png 파일 자체도 교체,
+               CSS 인라인 base64도 함께 갱신 — 6차-13-2 file:// CORS 회피 원칙 유지). */
+            textSweep: [1118, 750, 1636, 848],
+            /* 2026-09-10 6차-19: 대장님이 "칼 이펙트 방향이 완전 틀려"라며 스크린샷을 보내줘서
+               다시 파본 결과, 6차-17에서 그린 이 박스/마스크 자체가 칼날의 실제 기울기와 반대
+               방향(좌측 하강)으로 잘못 그려져 있던 게 진짜 원인이었음(6차-18의 그라디언트 각도
+               조정은 이 근본 버그를 못 건드린 채 곁가지만 만졌던 것 — 아래 참고). 브라이트니스
+               부스트한 원화를 그리드로 다시 실측해보니 칼날은 크로스가드(y≈965) 부근 x≈210~265
+               에서 시작해서 아래로 갈수록 오른쪽으로 기울어(세로 기준 약 10.6도 우측 하강)
+               y≈1310 지점에서 x≈275~330까지 이동함 — 기존 박스/마스크는 이걸 반대 방향(좌측
+               하강)으로 그려놔서, 실제로는 칼날 옆 허공(왼쪽 어두운 공간)에서 스윕이 나타나고
+               있었음. 박스와 폴리곤 마스크 전부 이 실측값 기준으로 새로 그려서 교체.
+               2026-09-10 6차-20: 대장님이 "방향은 맞는데 약간 틀리긴해"라고 재지적 — 6차-19는
+               "왼쪽 vs 오른쪽" 방향만 맞춘 1차 실측이라 기울기 각도(10.6도)가 실제보다 얕게(underestimate)
+               측정돼 있었음. 같은 박스를 더 촘촘한 10px 그리드+3.5배 밝기부스트로 재실측해서 칼날
+               좌/우 가장자리 각 8개 지점씩 좌표를 찍고 최소자승법으로 직선 피팅한 결과, 실제 기울기는
+               약 15.9도(slope 0.28~0.29)로 6차-19 추정치보다 훨씬 가파름 — 특히 박스 하단(y=1315)에서
+               칼날 우측 가장자리가 x≈341.7까지 나가는데 기존 박스 우측 경계(x2=340)를 이미 넘어서고
+               있어서, 스윕 하단부가 특히 어긋나 보였던 것. 박스를 [185,960,350,1315]로 넓히고(좌우
+               여유 확보), 폴리곤도 새 피팅값(y=960: x≈211~239, y=1315: x≈309~342) 기준으로 재생성. */
+            bladeSweep: [185, 960, 350, 1315]
+        };
+        /* 2026-09-06 4차: 화면이 극단적으로 가로로 넓고 세로로 짧아서(예: 와이드 모니터 + 브라우저
+           주소창/북마크바로 실사용 높이가 줄어든 상태) 순수 cover 배율대로면 ENTER 버튼이나
+           에러문구가 화면 아래로 밀려나갈 상황이면, 그 지점이 항상 화면 안쪽(margin만큼 여유 두고)에
+           들어오도록 배율 상한을 계산해서 cover 배율과 비교해 더 작은 쪽을 씀.
+           LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y = 패널에서 가장 아래에 있는 요소(에러 문구 바깥 테두리
+           근처)의 원화 y좌표. (6차-6에서 새 원화 기준으로 재실측) */
+        const LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y = 1302; // 6차-15: 새 원화 error 박스 기준 재실측
+        /* 2026-09-06 6차: 이펙트 레이어(횃불 2개 + 룬 글자 5개) 앵커 좌표. 다른 핫스팟과 동일하게
+           원화를 그리드 오버레이로 확대해서 실측 — x,y는 빛의 중심점, r은 원화 픽셀 기준 반지름
+           (횃불은 불꽃 실측 범위보다 살짝 크게 잡아 주변 벽까지 은은히 번지도록 r을 넉넉히 잡음).
+           2026-09-06 6차-6: 원화를 처음부터 새로 그린 버전으로 전면 교체 — 이번 원화는 횃불이
+           벽걸이형 2개(패널 훨씬 위, 엠블럼 옆) + 바닥에 놓인 화로 2개(패널 바로 옆, 훨씬 아래)까지
+           총 4곳에 불이 있는데, 기존 연출 컨셉(패널 옆에서 딱 두 개가 점화되는 구조)과 가장 비슷한
+           역할을 하는 건 벽걸이형 위쪽 횃불 2개라 그 둘을 torchLeft/Right로 지정함(바닥 화로는
+           연출 없이 원화 그대로 항상 켜진 정적 장식으로 둠). 룬 5개는 파란색(B-R>60) 픽셀을
+           스크립트로 클러스터링해서 자동 검출한 중심 좌표 — 위쪽 2개(별 꼭짓점 사이 상단),
+           중간 2개(독수리 눈 양옆), 아래 1개(부리 아래) 순서. */
+        /* 2026-09-07 6차-9: 대장님이 원화 선명도를 직접 한 단계 더 올린 파일로 교체 요청. 원인
+           규명차 새 파일을 옛 파일과 템플릿 매칭으로 대조해본 결과 — 로그인 패널(id/password/
+           toggle/checkbox/enter/error)은 픽셀 단위로 완전히 그대로였지만(offset 0,0, 매칭 신뢰도
+           0.78~0.94), 독수리 메달과 그 안의 룬 글자 5개만 위치가 20px 안팎으로 밀리고 디자인 자체도
+           다시 그려졌음(룬의 파란 번개빛 효과가 단순 발광 아이콘으로 바뀜 등) — 대장님 확인 후 새
+           메달 디자인으로 채택 확정. 룬 5개는 기존과 동일하게 파란색(B-R>40) 픽셀 클러스터링으로
+           새 원화에서 좌표 재검출, 횃불 2개도 밝은 픽셀 클러스터링으로 재검증(거의 그대로, 수 px
+           이내 오차라 오히려 더 정밀한 값으로 갱신). */
+        /* 2026-09-07 6차-11: 대장님이 "좌우 횃불 좌표가 약간 어긋났다"고 지적. 기존 값(271,803 /
+           2517,804)은 6차-9에서 넓은 범위(R>200,G>110,B<130)로 밝은 픽셀을 뭉뚱그려 잡은
+           중심이라, 벽에 번진 여열/그을음까지 같이 포함되며 실제 "불꽃 심지"보다 오른쪽·아래로
+           쏠려 있었음. 이번엔 임계값을 훨씬 빡빡하게(R>230,G>170) 잡고 scipy 연결요소 라벨링으로
+           가장 큰 덩어리(=불꽃 본체) 하나만 골라 그 중심을 재실측 — 왼쪽은 x가 271→216(약 55px
+           왼쪽), 오른쪽은 x가 2517→2555(약 38px 오른쪽)로 보정됨(y는 원래도 거의 정확해서 유지). */
+        /* 2026-09-09 6차-15: 원화 전면 교체 — 이번 구도는 벽걸이형 횃불 대신 패널 양옆에 바닥형
+           랜턴(등불 바구니) 2개만 있고, 6차-13에서 추가했던 별도의 "바닥 화로(brazier)"에 해당하는
+           소품 자체가 이번 그림엔 없음(패널 하단 좌우 구석엔 검+갑옷 조각만 있고 불은 없음) —
+           그래서 fireBasketLeft/Right 앵커와 그 전용 불씨 세트를 통째로 제거함. torchLeft/Right는
+           이번 원화의 바닥형 랜턴 불꽃 중심을 밝은 픽셀(R>230,G>170) 연결요소 라벨링으로 재검출,
+           룬 5개도 동일 기법(파란색 B-R>25 클러스터링)으로 새 메달 디자인 기준 재검출. */
+        const LOGIN_FX_ANCHORS = {
+            torchLeft:  { x: 633,  y: 652, r: 100 },
+            torchRight: { x: 2136, y: 646, r: 100 },
+            /* 2026-09-06 6차-2: 벽 반사광용 큰 반경 앵커 — 같은 중심에 코어 글로우보다 훨씬 넓게
+               퍼지지만(챗지피디 제안대로 "벽에 비치는 온기"), 그래도 패널(x:1200~1600대)까지는
+               한참 못 미치는 반경이라 패널 쪽엔 전혀 영향 없음. */
+            torchLeftBounce:  { x: 633,  y: 652, r: 200 },
+            torchRightBounce: { x: 2136, y: 646, r: 200 },
+            rune1: { x: 1314, y: 277, r: 30 },
+            rune2: { x: 1437, y: 277, r: 30 },
+            rune3: { x: 1231, y: 357, r: 30 },
+            rune4: { x: 1527, y: 354, r: 30 },
+            rune5: { x: 1232, y: 475, r: 30 },
+            /* 2026-09-10 6차-17: 화면 왼쪽 앞쪽 바닥에 놓인 검(칼) 주변 — 불씨 입자가 떠다닐 중심점.
+               검 전체(투구/자루~칼날 끝)의 세로 중심보다 살짝 아래(칼날 위주)로 잡음. r은 실제
+               반경 계산엔 안 쓰고(불씨는 placeFx가 아니라 아래 전용 forEach에서 anchor.x/y +
+               지터로 배치) 참고용 크기 표기. */
+            swordArea: { x: 205, y: 1080, r: 170 }
+        };
+        function syncLoginHotspots() {
+            const overlay = document.getElementById('loginOverlay');
+            if (!overlay) return;
+            const cw = overlay.clientWidth, ch = overlay.clientHeight;
+            if (!cw || !ch) return;
+            const coverScale = Math.max(cw / LOGIN_BG_NATIVE_W, ch / LOGIN_BG_NATIVE_H);
+            const margin = 24; // 패널 아래로 최소 이만큼은 화면이 남도록
+            const halfH = LOGIN_BG_NATIVE_H / 2;
+            const capScale = (ch / 2 - margin) / (LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y - halfH);
+            /* 2026-09-06 6차-5: 대장님이 큰 모니터에서 그림이 화면을 꽉 채우니 부담스럽다고 해서,
+               cover/cap 배율을 구한 뒤 일부러 LOGIN_BG_SHRINK만큼 한번 더 줄임 — offsetX/offsetY가
+               (컨테이너 - 이미지크기)/2로 항상 중앙 정렬하므로, 줄어든 만큼 상하좌우에 균등하게
+               여백(#loginOverlay의 배경색 #09080d)이 생김. 극단적 화면비의 letterbox와 원리는 같고
+               강도만 항상 켜져 있는 상태.
+               2026-09-07 6차-8: 대장님이 일반 데스크톱 창(초대형 모니터 아님)에서는 오히려 상하
+               여백이 "쓸데없이" 크게 느껴진다고 피드백함. 원인 확인해보니 rawScale(=cover/cap
+               중 작은 값, 즉 "화면에 맞추기 위한 배율")이 이 화면에서는 이미 1 미만(=원본을 그대로
+               축소해서 맞추는 중이라 애초에 화면을 꽉 채우지도 않는 상태)이었는데, 6차-5의 0.85
+               축소를 그 위에 무조건 한 번 더 곱해버려서 안 그래도 여유 있던 그림을 필요 이상으로
+               더 줄여 여백만 키우고 있었음. 6차-5가 실제로 막으려던 상황은 "rawScale이 1보다 커서
+               원본 해상도 이상으로 업스케일되며 화면을 꽉 채우는" 초대형 모니터 케이스뿐이므로,
+               그 조건(rawScale > 1)일 때만 SHRINK를 적용하도록 변경 — 일반 모니터/노트북에서는
+               그림이 화면에 맞는 만큼 최대한 크게 보이고, 초대형 모니터에서는 기존처럼 여전히
+               한 번 더 줄어듦. */
+            const rawScale = Math.min(coverScale, capScale > 0 ? capScale : coverScale);
+            const scale = rawScale > 1 ? rawScale * LOGIN_BG_SHRINK : rawScale;
+            const offsetX = (cw - LOGIN_BG_NATIVE_W * scale) / 2;
+            const offsetY = (ch - LOGIN_BG_NATIVE_H * scale) / 2;
+            // 배경 이미지도 입력창과 완전히 같은 배율/위치로 직접 그림 — CSS의 cover 키워드를 쓰지
+            // 않으므로 위에서 배율을 줄여도(=화면이 극단적 비율이어도) 입력창과 절대 어긋나지 않음.
+            // 2026-09-06 6차-3: #loginOverlay 자체가 아니라 자식 .login-bg-image에 그림(이유는 CSS 주석 참고).
+            const bgImageEl = document.getElementById('loginBgImage');
+            if (bgImageEl) {
+                bgImageEl.style.backgroundImage = "url('assets/login-bg-scene.webp')";
+                bgImageEl.style.backgroundSize = (LOGIN_BG_NATIVE_W * scale) + 'px ' + (LOGIN_BG_NATIVE_H * scale) + 'px';
+                bgImageEl.style.backgroundPosition = offsetX + 'px ' + offsetY + 'px';
+            }
+            const place = (el, key, fontRatio) => {
+                if (!el) return;
+                const [x1, y1, x2, y2] = LOGIN_HOTSPOTS[key];
+                el.style.left = (offsetX + x1 * scale) + 'px';
+                el.style.top = (offsetY + y1 * scale) + 'px';
+                el.style.width = ((x2 - x1) * scale) + 'px';
+                const height = (y2 - y1) * scale;
+                el.style.height = height + 'px';
+                if (fontRatio) el.style.fontSize = Math.max(9, height * fontRatio) + 'px';
+            };
+            place(document.getElementById('loginEmail'), 'id', 0.42);
+            place(document.getElementById('loginPassword'), 'password', 0.42);
+            place(document.getElementById('loginPasswordToggle'), 'toggle');
+            place(document.getElementById('loginCheckboxHotspot'), 'checkbox');
+            place(document.getElementById('loginBtn'), 'enter');
+            place(document.getElementById('loginError'), 'error', 0.55);
+            place(document.getElementById('fxTextSweepWrap'), 'textSweep');
+            place(document.getElementById('fxBladeSweepWrap'), 'bladeSweep');
+            // 이펙트 레이어도 같은 scale/offset으로 배치 — 중심(x,y)에서 반지름(r)만큼 사방으로
+            // 뻗은 정사각형 박스를 만들고, 그 안에서 radial-gradient가 원형으로 퍼짐.
+            const placeFx = (id, anchorKey) => {
+                const el = document.getElementById(id);
+                const a = LOGIN_FX_ANCHORS[anchorKey];
+                if (!el || !a) return;
+                const d = a.r * 2;
+                el.style.left = (offsetX + (a.x - a.r) * scale) + 'px';
+                el.style.top = (offsetY + (a.y - a.r) * scale) + 'px';
+                el.style.width = (d * scale) + 'px';
+                el.style.height = (d * scale) + 'px';
+            };
+            placeFx('fxTorchLeft', 'torchLeft');
+            placeFx('fxTorchRight', 'torchRight');
+            placeFx('fxTorchMaskLeft', 'torchLeft');
+            placeFx('fxTorchMaskRight', 'torchRight');
+            placeFx('fxTorchBounceLeft', 'torchLeftBounce');
+            placeFx('fxTorchBounceRight', 'torchRightBounce');
+            // 룬 글자 4개: glow(빛)와 mask(가리개)가 항상 같은 자리/크기를 공유해야 정확히 겹쳐짐
+            [1, 2, 3, 4, 5].forEach((n) => {
+                const key = 'rune' + n;
+                placeFx('fxRuneGlow' + n, key);
+                placeFx('fxRuneMask' + n, key);
+            });
+            // 2026-09-07 6차-11: 횃불 주변 불씨 파티클 — initFxParticles()가 생성할 때 각 불씨 el에
+            // data-side(left/right)와 원화 기준 지터(dataset.jx/jy, px)를
+            // 심어두면, 여기서 매 리사이즈마다 그 불씨가 속한 불 앵커 + 지터를 같은 scale/offset으로
+            // 환산해 배치. 2026-09-09 6차-15: 이번 원화엔 바닥 화로(brazier) 소품이 없어서
+            // brazierLeft/Right 매핑은 삭제(6차-13에서 추가했던 전용 세트도 함께 제거).
+            const EMBER_ANCHOR_MAP = {
+                left: 'torchLeft', right: 'torchRight'
+            };
+            document.querySelectorAll('.fx-ember').forEach((el) => {
+                const anchor = LOGIN_FX_ANCHORS[EMBER_ANCHOR_MAP[el.dataset.side] || 'torchLeft'];
+                if (!anchor) return;
+                const jx = parseFloat(el.dataset.jx) || 0;
+                const jy = parseFloat(el.dataset.jy) || 0;
+                el.style.left = (offsetX + (anchor.x + jx) * scale) + 'px';
+                el.style.top = (offsetY + (anchor.y + jy) * scale) + 'px';
+            });
+            // 2026-09-10 6차-17: 칼 주변 불씨 — 앵커가 swordArea 하나뿐이라 EMBER_ANCHOR_MAP 같은
+            // 매핑 없이 바로 사용. 지터(dataset.jx/jy)는 initFxParticles()에서 칼의 실측 폭/높이에
+            // 맞는 범위로 생성됨.
+            const swordAnchor = LOGIN_FX_ANCHORS.swordArea;
+            document.querySelectorAll('.fx-sword-ember').forEach((el) => {
+                if (!swordAnchor) return;
+                const jx = parseFloat(el.dataset.jx) || 0;
+                const jy = parseFloat(el.dataset.jy) || 0;
+                el.style.left = (offsetX + (swordAnchor.x + jx) * scale) + 'px';
+                el.style.top = (offsetY + (swordAnchor.y + jy) * scale) + 'px';
+            });
+        }
+        /* 2026-09-07 6차-11: 먼지(전체 화면, 아래→위로 아주 천천히) + 불씨(횃불 2곳에서만, 조금 더
+           빠르게 위로 흩날림) 파티클을 런타임에 생성. 개수를 적게(먼지 18개+불씨 6개) 유지하고
+           CSS 애니메이션만 쓰므로 가벼움 — 딱 한 번만 생성하고 이후엔 CSS가 무한 반복. */
+        function initFxParticles() {
+            const layer = document.getElementById('fxParticleLayer');
+            if (!layer || layer.dataset.init) return;
+            layer.dataset.init = '1';
+            const DUST_COLORS = ['rgba(150,150,150,0.55)', 'rgba(196,168,110,0.55)', 'rgba(255,150,90,0.4)'];
+            const DUST_COUNT = 18;
+            for (let i = 0; i < DUST_COUNT; i++) {
+                const d = document.createElement('div');
+                d.className = 'fx-dust';
+                d.style.setProperty('--size', (1.5 + Math.random() * 2.2).toFixed(1) + 'px');
+                d.style.setProperty('--duration', (22 + Math.random() * 18).toFixed(1) + 's');
+                d.style.setProperty('--delay', (-Math.random() * 40).toFixed(1) + 's');
+                d.style.setProperty('--start-left', (Math.random() * 100).toFixed(1) + '%');
+                d.style.setProperty('--drift-x', (Math.random() * 60 - 30).toFixed(0) + 'px');
+                d.style.setProperty('--peak-opacity', (0.32 + Math.random() * 0.4).toFixed(2));
+                d.style.setProperty('--color', DUST_COLORS[i % DUST_COLORS.length]);
+                layer.appendChild(d);
+            }
+            /* 2026-09-07 6차-12: 대장님이 "먼지 효과를 횃불 위주로 좀 더 넣어도 될듯"이라고 해서
+               불씨 개수를 6→16으로 크게 늘리고, 지터 범위도 넓혀서(가로 ±35→±55, 세로도 위쪽으로
+               더 퍼지게) 화로 위로 불티가 풍성하게 흩날리는 느낌을 강화. */
+            const EMBER_COUNT = 16;
+            for (let i = 0; i < EMBER_COUNT; i++) {
+                const e = document.createElement('div');
+                e.className = 'fx-ember';
+                e.dataset.side = (i % 2 === 0) ? 'left' : 'right';
+                e.dataset.jx = (Math.random() * 110 - 55).toFixed(0);
+                e.dataset.jy = (Math.random() * 50 - 30).toFixed(0);
+                e.style.setProperty('--size', (2 + Math.random() * 3.5).toFixed(1) + 'px');
+                e.style.setProperty('--duration', (3.5 + Math.random() * 4).toFixed(1) + 's');
+                e.style.setProperty('--delay', (-Math.random() * 8).toFixed(1) + 's');
+                e.style.setProperty('--drift-x', (Math.random() * 50 - 25).toFixed(0) + 'px');
+                layer.appendChild(e);
+            }
+            /* 2026-09-09 6차-15: 원화 전면 교체로 바닥 화로(brazier) 소품 자체가 사라져서 6차-13에서
+               추가했던 화로 전용 불씨 세트(BRAZIER_EMBER_COUNT)는 완전히 삭제함 — 위 횃불(랜턴)
+               불씨(EMBER_COUNT)만 유지. */
+            /* 2026-09-10 6차-17: 대장님 요청 — 화면 왼쪽 앞쪽 칼 주변에 아주 옅고 느리게 떠다니는
+               불씨/먼지 입자 3~10개. "게임 홈페이지처럼 많이 날리면 싸구려로 보인다"는 우려가
+               명확했으므로 개수(6개)·투명도(peak 0.16~0.30)·속도(10~16s) 전부 기존 fx-ember보다
+               훨씬 절제해서 잡음 — 존재감보다 "어? 뭔가 있었나?" 정도의 은은함을 목표로 함. 지터
+               범위(가로 ±70, 세로 -220~+220)는 검의 실측 폭/높이(약 140×440, LOGIN_FX_ANCHORS.
+               swordArea 참고)에 맞춘 것. */
+            const SWORD_EMBER_COUNT = 6;
+            for (let i = 0; i < SWORD_EMBER_COUNT; i++) {
+                const s = document.createElement('div');
+                s.className = 'fx-sword-ember';
+                s.dataset.jx = (Math.random() * 140 - 70).toFixed(0);
+                s.dataset.jy = (Math.random() * 440 - 220).toFixed(0);
+                s.style.setProperty('--size', (1 + Math.random() * 1.4).toFixed(1) + 'px');
+                s.style.setProperty('--duration', (10 + Math.random() * 6).toFixed(1) + 's');
+                s.style.setProperty('--delay', (-Math.random() * 14).toFixed(1) + 's');
+                s.style.setProperty('--drift-x', (Math.random() * 30 - 22).toFixed(0) + 'px');
+                s.style.setProperty('--peak-opacity', (0.16 + Math.random() * 0.14).toFixed(2));
+                layer.appendChild(s);
+            }
+        }
+        initFxParticles();
+        syncLoginHotspots();
+        window.addEventListener('resize', syncLoginHotspots);
+        window.addEventListener('orientationchange', syncLoginHotspots);
+
         (function playLoginIntro() {
             const overlay = document.getElementById('loginOverlay');
             if (!overlay) return;
-            overlay.classList.add('reveal-card');
-            const trace = document.getElementById('loginBorderTrace');
-            setTimeout(function () {
-                if (trace) trace.classList.add('active');
-            }, 500);
-            startLoginBorderIdle();
+            // 배경 이미지가 실제로 로드된 뒤 한 번 더 좌표를 재계산(레이아웃/캐시 타이밍 이슈 방지)
+            // 하고 나서 페이드인 — 좌표가 틀어진 채로 잠깐 보이는 깜빡임을 막기 위함.
+            const img = new Image();
+            img.onload = function () {
+                syncLoginHotspots();
+                requestAnimationFrame(() => overlay.classList.add('reveal-card'));
+            };
+            img.onerror = function () { overlay.classList.add('reveal-card'); };
+            img.src = 'assets/login-bg-scene.webp';
         })();
 
-        /* 2026-08-30: 로그인 화면에서 10초 정도 마우스/키보드/터치 조작이 없으면, 화면 가장자리를
-           한 바퀴 도는 라이트 트레일(#loginBorderTrace, CSS의 login-border-travel/login-border-fade
-           참고)을 다시 한 번 재현. 조작이 있으면 타이머를 리셋하고, 로그인에 성공해서 #loginOverlay가
-           hidden 되면 더 이상 재생하지 않고 조용히 멈춤. */
-        function startLoginBorderIdle() {
-            const trace = document.getElementById('loginBorderTrace');
-            const overlay = document.getElementById('loginOverlay');
-            if (!trace || !overlay) return;
-            let idleTimer = null;
-
-            function isLoginVisible() {
-                return !overlay.classList.contains('hidden');
-            }
-            function triggerTrace() {
-                if (!isLoginVisible()) return;
-                trace.classList.remove('active');
-                void trace.offsetWidth; // 강제 리플로우 — 애니메이션 재시작을 위해
-                trace.classList.add('active');
-                schedule();
-            }
-            function schedule() {
-                clearTimeout(idleTimer);
-                if (!isLoginVisible()) return;
-                idleTimer = setTimeout(triggerTrace, 10000);
-            }
-            function resetIdle() {
-                if (!isLoginVisible()) return;
-                schedule();
-            }
-            ['mousemove', 'mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (evt) {
-                window.addEventListener(evt, resetIdle, { passive: true });
-            });
-            schedule();
-        }
+        /* 2026-09-06 6차-2: 챗지피티 제안 채택 — 평소 미세한 flicker(CSS 무한 애니메이션)와는
+           별개로, 8~12초 사이 랜덤한 간격마다 횃불이 한 번씩 "조금 더 크게" 출렁이는 연출을
+           Web Animations API(element.animate())로 추가. CSS keyframe은 주기가 고정이라 랜덤
+           간격을 표현할 수 없어서 스크립트로 처리 — 같은 transform/opacity 속성이라도 CSS
+           애니메이션 위에 별도로 얹혀서 합성되고, 짧게 끝나면 자동으로 원래 flicker로 돌아옴
+           (덮어쓰는 게 아니라 겹쳐 그리는 방식이라 이어붙는 부분이 끊기지 않음).
+           prefers-reduced-motion이면 아예 스케줄링을 안 함. */
+        (function scheduleTorchFlares() {
+            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduceMotion) return;
+            const pairs = [
+                [document.getElementById('fxTorchLeft'), document.getElementById('fxTorchBounceLeft')],
+                [document.getElementById('fxTorchRight'), document.getElementById('fxTorchBounceRight')]
+            ];
+            const loop = (glowEl, bounceEl) => {
+                const delay = 8000 + Math.random() * 4000; // 8~12초 랜덤
+                setTimeout(() => {
+                    if (glowEl && glowEl.animate) {
+                        const dur = 900 + Math.random() * 500;
+                        glowEl.animate([
+                            { transform: 'scale(1)' },
+                            { transform: 'scale(1.16)', offset: 0.4 },
+                            { transform: 'scale(0.97)', offset: 0.7 },
+                            { transform: 'scale(1)' }
+                        ], { duration: dur, easing: 'ease-in-out' });
+                        if (bounceEl) {
+                            bounceEl.animate([
+                                { transform: 'scale(1)' },
+                                { transform: 'scale(1.2)', offset: 0.4 },
+                                { transform: 'scale(0.96)', offset: 0.7 },
+                                { transform: 'scale(1)' }
+                            ], { duration: dur, easing: 'ease-in-out' });
+                        }
+                    }
+                    loop(glowEl, bounceEl);
+                }, delay);
+            };
+            pairs.forEach(([glowEl, bounceEl]) => loop(glowEl, bounceEl));
+        })();
 
         // "아이디 저장" 체크박스 - 비밀번호는 절대 저장 안 하고, 이메일 주소만 이 브라우저에 기억해둠
         // (비밀번호 저장/자동완성은 브라우저 자체 비밀번호 관리자가 담당)
