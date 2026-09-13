@@ -145,13 +145,25 @@
         }
         #loginPassword { padding-right: 2.4em; }
         #loginEmail::placeholder, #loginPassword::placeholder { color: transparent; }
-        /* 2026-09-12 7차-2: 타이핑 중(입력값 있음)엔 포커스가 빠져도 아주 은은한 앰버 잔광이 남도록 —
-           챗지피티 제안("입력창에 아주 미세한 주황빛") 반영. :focus가 뒤에서 더 강하게 덮어씀. */
-        #loginEmail:not(:placeholder-shown), #loginPassword:not(:placeholder-shown) {
+        /* 2026-09-14 8차-9: 아래 앰버 글로우 테두리(box-shadow)는 원래 #loginEmail/#loginPassword
+           본인에게 직접 걸려 있었는데, textNudgeNative가 그 입력창 자체에 transform으로 걸리다 보니
+           box-shadow까지 같이 딸려서 움직여버림(칸 자체 좌표는 안 바뀌는데, "칸이 내려간다"고
+           느껴진 진짜 원인 — transform은 요소가 그리는 모든 것(글자+box-shadow)을 통째로 옮김).
+           그래서 이 글로우 테두리를 입력창과 완전히 분리된 별도 요소(#loginEmailGlow/
+           #loginPasswordGlow, HTML/JS 쪽 참고)로 옮기고, 그 요소는 textNudgeNative 없이 순수
+           LOGIN_HOTSPOTS 좌표에만 고정 — 이제 글자를 아무리 내려도 이 테두리는 배경그림 좌표에
+           박제된 것처럼 절대 안 움직임. */
+        .login-input-glow { pointer-events: none; }
+        /* 2026-09-14 8차-10: 대장님 요청으로 위치 조정 중 헷갈림 방지 위해 잠시 꺼뒀다가,
+           라벨 글자색이 이 글로우 없이는 배경 위에서 칙칙하게 죽어 보인다는 게 확인돼서
+           8차-11에서 다시 복원함 — 아래 두 규칙은 8차-9 이후 값 그대로. */
+        #loginEmail:not(:placeholder-shown) ~ #loginEmailGlow,
+        #loginPassword:not(:placeholder-shown) ~ #loginPasswordGlow {
             box-shadow: inset 0 0 0 1px rgba(229,195,132,0.30), 0 0 8px rgba(229,195,132,0.12);
             border-radius: 6px;
         }
-        #loginEmail:focus, #loginPassword:focus {
+        #loginEmail:focus ~ #loginEmailGlow,
+        #loginPassword:focus ~ #loginPasswordGlow {
             box-shadow: inset 0 0 0 2px rgba(229,195,132,0.55), 0 0 14px rgba(229,195,132,0.25);
             border-radius: 6px;
         }
@@ -168,10 +180,17 @@
             transition: transform 0.22s ease, color 0.22s ease, opacity 0.22s ease, font-size 0.22s ease;
             white-space: nowrap;
         }
+		#loginEmailLabel { transform: translateY(10px); }
+		#loginPasswordLabel { transform: translateY(6px); }
+
+        /* 2026-09-14 8차-8: 기존엔 아이디/패스워드가 이 규칙 하나(translateY 값 공유)를 같이 썼는데,
+           패스워드 쪽만 살짝 내리려고 값을 바꾸면 아이디 쪽도 같이 움직여버리는 문제가 있어서
+           완전히 두 개로 분리함 — 이제 아래 두 블록은 서로 완전히 독립적으로, 한쪽 값을 바꿔도
+           다른 쪽엔 전혀 영향 없음. ⚠️ 파일을 편집기에 열어둔 채로 오래 두면 편집기가 들고 있는
+           옛날 버전으로 덮어써질 수 있으니, 수정 전엔 항상 파일을 새로 열어서 최신 상태인지
+           확인할 것. */
         #loginEmail:focus ~ #loginEmailLabel,
-        #loginEmail:not(:placeholder-shown) ~ #loginEmailLabel,
-        #loginPassword:focus ~ #loginPasswordLabel,
-        #loginPassword:not(:placeholder-shown) ~ #loginPasswordLabel {
+        #loginEmail:not(:placeholder-shown) ~ #loginEmailLabel {
             /* 명판 프레임 안 입력칸 사이 여백이 좁아서(제목 줄~ID칸, ID칸~PW칸 간격이 각각 15~20px
                정도) 라벨을 박스 밖으로 완전히 띄우면 위/아래 다른 요소와 겹침 — 그 대신 박스 안쪽
                상단으로만 살짝 떠오르게(은행앱처럼 박스 밖으로 나가지 않는 컴팩트 버전).
@@ -181,19 +200,21 @@
                문제가 있었음 — scale() 대신 font-size 자체를 줄이고(라벨 폰트도 세리프 유지하되
                실제 렌더 크기를 키워 가독성 확보), translateY 값도 박스 테두리를 넘지 않도록
                재조정. --baseFs는 place()가 인라인으로 셋팅(입력창과 동일한 기준 크기).
-               2026-09-13 8차-2: 실사용 피드백 — 실제 입력한 값(입력창 자체, 박스 정중앙 고정)과
-               떠오른 라벨 사이 세로 간격이 너무 좁아 답답해 보이고, 라벨이 밝은 금색으로 확 바뀌는
-               것도 원치 않는다는 지적 → (1) 위로 뜨는 양을 -24%→-32%로 늘려 입력값과의 간격을
-               넓힘(박스 테두리/제목 줄과는 여전히 안 겹치는 여유 범위 안, 7차-3에서 문제였던
-               -52%의 절반 조금 넘는 수준), (2) 플로팅 시 배율을 0.66→0.60으로 낮춰 더 커진
-               이동량에서도 여유 있게, (3) 색상 변경(밝은 금색 강조) 제거 — 평소와 완전히 같은
-               색을 유지한 채 크기/위치만 바뀌도록 단순화. */
-            transform: translateY(-32%);
+               2026-09-14 8차-8: 아이디 전용으로 분리됨 — 이 값을 바꿔도 패스워드 쪽엔 영향 없음. */
+            transform: translateY(-9%);
             font-size: max(8px, calc(var(--baseFs, 1em) * 0.60)) !important; /* JS가 인라인
                font-size를 직접 셋팅해서(다른 .login-hotspot 요소와 공유하는 place() 헬퍼) 그냥
                두면 인라인 스타일 우선순위에 밀려 이 규칙이 아예 적용되지 않음 — !important로
                명시 승격. max(8px, ...)는 아주 좁은 모바일 화면에서 너무 작아지는 것 방지 */
             color: rgba(242,230,200,0.42); /* 8차-2: 평소(placeholder) 색과 동일 — 밝아지지 않음 */
+        }
+        #loginPassword:focus ~ #loginPasswordLabel,
+        #loginPassword:not(:placeholder-shown) ~ #loginPasswordLabel {
+            /* 2026-09-14 8차-8: 패스워드 전용으로 분리됨 — 이 값을 바꿔도 아이디 쪽엔 영향 없음.
+               나머지 설명은 위 아이디 블록과 동일(공통 이력 참고). */
+            transform: translateY(-12%);
+            font-size: max(8px, calc(var(--baseFs, 1em) * 0.60)) !important;
+            color: rgba(242,230,200,0.42);
         }
         @media (prefers-reduced-motion: reduce) {
             .login-floating-label { transition: none; }
@@ -255,7 +276,7 @@
            3차 이후 한 번도 안 바뀌었고, 원화만 계속 교체되어 왔음. 자세한 내용은 #loginOverlay 규칙과
            syncLoginHotspots()/playLoginIntro() 참고. */
 
-        
+
         @media (max-width: 880px) {
             /* 로그인 화면(#loginOverlay)은 position:fixed라 body 높이 설정과 무관하게 따로 화면 전체를
                차지하는데, 폰 브라우저가 주소창을 보여주고 있는 "첫 진입 순간"엔 100vh가 주소창까지 포함한
@@ -297,8 +318,12 @@
         <form class="login-content" id="loginForm" onsubmit="handleLogin(event); return false;" autocomplete="on">
             <input type="email" id="loginEmail" class="login-hotspot" name="email" autocomplete="username" placeholder=" " onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('loginPassword').focus(); }">
             <label class="login-hotspot login-floating-label" id="loginEmailLabel" for="loginEmail">Adventurer</label>
+            <!-- 2026-09-14 8차-9: 앰버 글로우 테두리 전용 요소 — #loginEmail의 textNudgeNative transform과
+                 완전히 분리해서, LOGIN_HOTSPOTS 좌표에만 고정(글자를 내려도 이 테두리는 안 움직임). -->
+            <div class="login-hotspot login-input-glow" id="loginEmailGlow"></div>
             <input type="password" id="loginPassword" class="login-hotspot" name="password" autocomplete="current-password" placeholder=" ">
             <label class="login-hotspot login-floating-label" id="loginPasswordLabel" for="loginPassword">Arcane Key</label>
+            <div class="login-hotspot login-input-glow" id="loginPasswordGlow"></div>
             <button type="button" class="login-password-toggle" id="loginPasswordToggle" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="Show/hide password">
                 <svg id="eyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                 <svg id="eyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.32 21.32 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.4 21.4 0 0 1-3.22 4.53M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -346,8 +371,16 @@
            없음) 새겼기 때문에, 이전처럼 ":not(:placeholder-shown)" 덮개를 씌워 baked 안내문구를
            가릴 필요가 없어짐(CSS 영역 참고). */
         const LOGIN_HOTSPOTS = {
-            id:       [1210, 1097, 1585, 1150],
-            password: [1210, 1170, 1585, 1222],
+            id:       [1210, 1091, 1585, 1145], /* 2026-09-13 8차-3: 밝기 그래디언트로 실측한 결과
+               기존 y좌표가 실제 명판 테두리보다 5px 위로 어긋나 있었음(패스워드 칸은 이미 정확했음) —
+               ID 라벨/입력값이 유독 세로 중앙정렬이 안 맞아 보인 진짜 원인. 아래로 5px 보정. */
+            password: [1210, 1158, 1585, 1212],
+            /* 2026-09-14 8차-12: 금박 글로우 테두리 전용 좌표 — 대장님 요청으로 실제 입력창(id/password,
+               클릭·타이핑 되는 진짜 영역)과 완전히 분리함. 지금은 값이 위 id/password와 동일해서
+               시각적으로 아무 변화 없지만, 이 두 줄만 따로 건드리면 테두리만 움직이고 입력 가능
+               영역은 전혀 안 움직임(반대도 마찬가지). */
+            idGlow:       [1210, 1100, 1585, 1156],
+            passwordGlow: [1210, 1168, 1585, 1222],
             toggle:   [1535, 1176, 1575, 1216],
             checkbox: [1128, 1240, 1167, 1280],
             enter:    [1393, 1233, 1585, 1288],
@@ -391,7 +424,7 @@
                 bgImageEl.style.backgroundSize = (LOGIN_BG_NATIVE_W * scale) + 'px ' + (LOGIN_BG_NATIVE_H * scale) + 'px';
                 bgImageEl.style.backgroundPosition = offsetX + 'px ' + offsetY + 'px';
             }
-            const place = (el, key, fontRatio) => {
+            const place = (el, key, fontRatio, textNudgeNative) => {
                 if (!el) return;
                 const [x1, y1, x2, y2] = LOGIN_HOTSPOTS[key];
                 el.style.left = (offsetX + x1 * scale) + 'px';
@@ -404,11 +437,27 @@
                     el.style.fontSize = fs + 'px';
                     el.style.setProperty('--baseFs', fs + 'px');
                 }
+                /* 2026-09-14 8차-5: 대장님 지적 — 칸(왼/위/너비/높이, 위 4줄) 자체는 배경 그림과
+                   그대로 딱 맞아야 하고(8차-3에서 픽셀 실측으로 이미 맞춰둔 값, 절대 건드리면 안 됨),
+                   "살짝 아래로"는 칸이 아니라 그 안의 글자(타이핑한 값)만 내려달라는 의미였음.
+                   8차-4에서 top 좌표 자체를 밀었던 건 결과적으로 칸까지 같이 밀어버린 잘못된 접근이라
+                   되돌림. padding-top/line-height는 크롬이 <input> 값 텍스트에 무시한다는 게 실측
+                   확인된 상태라(8차-4 참고) 못 쓰고, 대신 레이아웃 박스(top/left/width/height,
+                   클릭 히트박스)는 전혀 안 바꾸면서 "그려지는 모습"만 살짝 옮기는 transform을 씀 —
+                   레이아웃상 칸은 100% 원화와 일치한 채로 유지되고, 그 안의 글자만 미세하게(원화
+                   기준 3px, 화면 배율에 비례) 아래로 보이게 됨.
+                   2026-09-14 8차-7: 아이디(10)/패스워드(6) textNudgeNative 값이 서로 달라서 두 칸의
+                   글자 줄간격이 다르게 보이는 진짜 원인이었음 — 아이디 기준(10)으로 통일. */
+                if (textNudgeNative) {
+                    el.style.transform = `translateY(${textNudgeNative * scale}px)`;
+                }
             };
-            place(document.getElementById('loginEmail'), 'id', 0.40);
+            place(document.getElementById('loginEmail'), 'id', 0.38, 18);
             place(document.getElementById('loginEmailLabel'), 'id', 0.40);
-            place(document.getElementById('loginPassword'), 'password', 0.40);
+            place(document.getElementById('loginEmailGlow'), 'idGlow'); /* 8차-12: 전용 좌표(idGlow) 사용 — 실제 입력창(id)과 분리 */
+            place(document.getElementById('loginPassword'), 'password', 0.38, 16);
             place(document.getElementById('loginPasswordLabel'), 'password', 0.40);
+            place(document.getElementById('loginPasswordGlow'), 'passwordGlow'); /* 8차-12: 전용 좌표(passwordGlow) 사용 — 실제 입력창(password)과 분리 */
             place(document.getElementById('loginPasswordToggle'), 'toggle');
             place(document.getElementById('loginCheckboxHotspot'), 'checkbox');
             place(document.getElementById('loginBtn'), 'enter');
