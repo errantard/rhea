@@ -86,6 +86,12 @@
            깔면 원화의 선명함이 죽어서 하단 일부에만 약하게), (2) 촛불 흔들림(원화 하단 계단에 이미
            그려진 촛불 무리 위에 은은한 빛 웅덩이만 얹어 미세하게 깜빡이게 함 — 원화 자체는 그대로,
            투명 글로우 레이어만 겹치는 기존 fx-torch 방식과 동일 원리). */
+        /* 2026-09-14 9차-10: 대장님이 "안개가 있는지도 모르겠다"고 함 — 측정해보니 실제로는 애니메이션이
+           돌고는 있는데(로드 후 정착 시점 기준 밝기 스윙이 하단 안개 26~28, 폭포 안개 92~99 정도),
+           범위가 좁아서 정적인 배경처럼 보이는 게 맞았음. 챗지피티가 제안한 "화면 전체 새 공기층
+           레이어 추가"는 기각(그 자체가 더 옅게 설계된 제안이라 기존과 똑같이 안 보일 위험) — 대신
+           대장님 선택대로 새 레이어 없이 기존 두 안개(.login-fog / .login-fog-mist)의 opacity·이동폭
+           진폭만 키워서 실제로 체감되게 함. 원화 선명도는 blur/blend 방식 그대로라 훼손 없음. */
         .login-fog {
             position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
             pointer-events: none; z-index: 1; opacity: 0.8; mix-blend-mode: screen;
@@ -94,26 +100,150 @@
             animation: fxFogDrift 17s ease-in-out infinite alternate;
         }
         @keyframes fxFogDrift {
-            0%   { transform: translate(-1.5%, 0%);   opacity: 0.68; }
-            50%  { transform: translate(1.2%, -1.6%); opacity: 0.9; }
-            100% { transform: translate(-0.8%, 0.6%); opacity: 0.72; }
+            0%   { transform: translate(-2.4%, 0.5%);  opacity: 0.36; }
+            45%  { transform: translate(2.2%, -2.6%);  opacity: 0.96; }
+            100% { transform: translate(-1.4%, 1.1%);  opacity: 0.5; }
         }
-        .login-fx-candle {
-            position: absolute; border-radius: 50%; pointer-events: none; z-index: 1;
-            mix-blend-mode: screen; transform-origin: center;
-            background: radial-gradient(circle, rgba(255,200,120,0.55) 0%, rgba(255,150,60,0.24) 42%, rgba(255,120,40,0) 72%);
-            animation: fxCandleFlicker 2.6s ease-in-out infinite;
+        /* 2026-09-14 9차: 대장님 요청으로 계단 촛불 무리 위 pulsing 글로우(.login-fx-candle, 구버전)는
+           완전히 제거하고 아래 3종 이펙트로 교체 — ① 명판 좌우 대형 횃불(브라지어) 불꽃 흔들림,
+           ② 촛불 자리엔 은은한 불씨 파티클, ③ 오른쪽 폭포 착수부 국소 물안개.
+           (챗지피티가 준 5가지 아이디어 중 이 배경화면에 실제로 있는 요소와 맞는 것만 골라 적용 —
+           안개를 화면 전체에 까는 것 등 원화 선명도를 해치는 제안은 그대로 따르지 않고 축소/각색함.) */
+
+        /* ① 횃불 불꽃 흔들림 + 주변 빛 흔들림 — 명판 좌우 대형 브라지어(assets 원화에 이미 불꽃이
+           그려진 두 곳)에 얹음. 촛불 pulsing과 다르게 불꽃 "모양" 자체가 scaleY/scaleX/translateX로
+           옆으로 살짝씩 흔들리는 레이어(.torch-flame)와, 그 주변으로 번지는 주황빛이 숨쉬듯 opacity/
+           scale이 변하는 레이어(.torch-halo)를 분리해서 얹음 — 완전히 꺼졌다 켜지지 않고 항상
+           "살아서 흔들리는" 정도로만 범위를 좁게 유지, 개체별 주기는 1.8~3.5초 사이에서 서로 다르게
+           둬서 두 횃불이 같은 박자로 움직이는 "싸구려 게임 홈페이지" 느낌을 피함. */
+        .login-fx-torch {
+            position: absolute; pointer-events: none; z-index: 1; mix-blend-mode: screen;
         }
-        .login-fx-candle.fx-candle-b { animation-duration: 3.1s; animation-delay: 0.4s; }
-        .login-fx-candle.fx-candle-c { animation-duration: 3.4s; animation-delay: 0.9s; }
-        @keyframes fxCandleFlicker {
-            0%, 100% { opacity: 0.55; transform: scale(1); }
-            28%      { opacity: 0.75; transform: scale(1.1); }
-            54%      { opacity: 0.48; transform: scale(0.92); }
-            79%      { opacity: 0.68; transform: scale(1.05); }
+        .login-fx-torch .torch-halo {
+            position: absolute; inset: 8%; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,170,90,0.26) 0%, rgba(255,130,50,0.10) 50%, rgba(255,90,30,0) 75%);
+            filter: blur(10px);
+            animation: fxTorchHalo 3s ease-in-out infinite;
+        }
+        .login-fx-torch .torch-flame {
+            position: absolute; left: 50%; top: 46%; width: 34%; height: 48%;
+            transform: translate(-50%, -50%); transform-origin: 50% 88%;
+            background: radial-gradient(ellipse at 50% 30%, rgba(255,235,180,0.55) 0%, rgba(255,160,70,0.32) 46%, rgba(255,90,30,0) 78%);
+            filter: blur(3px);
+            border-radius: 50% 50% 42% 42% / 62% 62% 38% 38%;
+            animation: fxTorchFlame 2.3s ease-in-out infinite;
+        }
+        #fxTorchLeft .torch-flame  { animation-duration: 2.1s; }
+        #fxTorchLeft .torch-halo   { animation-duration: 2.9s; }
+        #fxTorchRight .torch-flame { animation-duration: 2.7s; animation-delay: -1s; }
+        #fxTorchRight .torch-halo  { animation-duration: 3.4s; animation-delay: -0.6s; }
+        @keyframes fxTorchFlame {
+            0%, 100% { transform: translate(-50%, -50%) scaleY(1)    scaleX(1)    translateX(0);    opacity: 0.5; }
+            25%      { transform: translate(-50%, -50%) scaleY(1.14) scaleX(0.9)  translateX(-3%);  opacity: 0.68; }
+            50%      { transform: translate(-50%, -50%) scaleY(0.92) scaleX(1.06) translateX(2%);   opacity: 0.38; }
+            75%      { transform: translate(-50%, -50%) scaleY(1.08) scaleX(0.95) translateX(-2%);  opacity: 0.6; }
+        }
+        @keyframes fxTorchHalo {
+            0%, 100% { opacity: 0.32; transform: scale(1); }
+            50%      { opacity: 0.55; transform: scale(1.08); }
+        }
+
+        /* ⑤ 횃불 먼지 파티클 — 2026-09-14 9차-3: 계단 촛불에서 솟아오르던 이전 버전은 "바닥에서
+           불씨가 난다"는 느낌이라 피드백을 받고 전면 교체. 화면에 보이는 횃불(명판 좌우 대형 2개 +
+           검 옆/배너 옆/폭포 쪽 벽걸이 횃불)마다 그 위 아주 가까운 자리에 작은 먼지 입자 1~2개만
+           살짝 떠올랐다 사그라드는 정도로 얹음 — 불씨라기보단 "횃불 열기에 날리는 재/먼지" 느낌으로
+           이동 범위도 짧게(12~24px) 줄임. 흰색(.dust-white) 입자는 진짜 작게 만들어서 눈이 쌓인
+           화면 좌우 바깥쪽 횃불(검 옆/폭포 쪽)에만 아주 소량 섞음. */
+        .login-fx-dust {
+            position: absolute; pointer-events: none; z-index: 1; overflow: visible;
+            mix-blend-mode: screen;
+        }
+        .login-fx-dust .dust {
+            position: absolute; width: var(--sz, 1.8px); height: var(--sz, 1.8px);
+            border-radius: 50%; opacity: 0;
+            box-shadow: 0 0 5px 1px currentColor; /* 2026-09-14 9차-4: 어두운 배경 사진 속에서 그냥
+                점만 찍으면 묻혀서 안 보인다는 피드백 → currentColor 글로우로 존재감을 더함(색은
+                JS에서 background와 함께 color도 같이 셋팅) */
+            animation-name: fxDustFloat; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
+        }
+        .login-fx-dust .dust-white { box-shadow: 0 0 3px 0.5px rgba(255,255,255,0.6); }
+        /* 2026-09-14 9차-4: "떠오르는 게 티가 안 난다" 피드백 → 짧게 위로만 뜨던 것에서, 옆으로도
+           제법 흩날리는(바람에 날리는 재 느낌) 궤적으로 재설계. 이동 거리도 훨씬 늘림(--dy 35~70px). */
+        @keyframes fxDustFloat {
+            0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
+            20%  { transform: translate(calc(var(--dx, 14px) * 0.35), calc(var(--dy, -45px) * 0.3))  scale(1);    opacity: 0.9; }
+            55%  { transform: translate(calc(var(--dx, 14px) * 0.8),  calc(var(--dy, -45px) * 0.6))  scale(0.6);  opacity: 0.5; }
+            100% { transform: translate(var(--dx, 14px), var(--dy, -45px)) scale(0.15); opacity: 0; }
+        }
+
+        /* 2026-09-14 9차-5: 눈발(전체 화면 낙하)은 "너무 과하다"는 피드백으로 완전히 폐기 — 대신
+           재(ash)가 공중에 떠서 아주 천천히 흩날리는 느낌으로 교체. 눈처럼 위→아래로 떨어지는 게
+           아니라, 이미 공중에 떠 있던 재가 느릿하게 위아래/좌우로 표류하다 사라지는 쪽이 실제
+           불씨 재 느낌에 더 가까워서 화면 전체(뷰포트) 아무 위치에서나 시작하도록 함. 크기/개수/
+           밝기 전부 크게 낮춰서 눈발보다 훨씬 절제된 인상. */
+        .login-ashdrift {
+            position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden;
+        }
+        .login-ashdrift .ash {
+            position: absolute; border-radius: 50%; background: #B9AF9E; opacity: 0;
+            animation-name: fxAshDrift; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
+        }
+        @keyframes fxAshDrift {
+            0%   { transform: translate(0, 0); opacity: 0; }
+            15%  { opacity: var(--op, 0.22); }
+            50%  { transform: translate(var(--sway, 10px), var(--rise, -30px)); }
+            85%  { opacity: var(--op, 0.22); }
+            100% { transform: translate(calc(var(--sway, 10px) * -1), calc(var(--rise, -30px) * 1.7)); opacity: 0; }
+        }
+
+        /* ② 아주 옅은 안개 — 원화 전체에 깔면 선명도가 죽으므로, 하단 전역은 기존 .login-fog(아래)가
+           이미 담당 중. 그와 별개로, 이 배경엔 마침 오른쪽에 폭포가 그려져 있어서 그 착수 지점에만
+           국소적으로 아주 옅은 물안개 레이어를 하나 더 얹어 깊이감을 보탬(챗지피티 원안의 "폭포 옆
+           안개" 아이디어를 실제 원화의 폭포 위치에 맞게 각색). */
+        /* 2026-09-14 9차-2: 1차 버전은 opacity 변화폭이 좁고 주기도 길어서(14s) "그냥 하얗게 밝아지기만
+           하는 정적인 얼룩"처럼 보인다는 피드백 → opacity 진폭을 크게 키우고 좌우로도 살짝 드리프트를
+           줘서 짧은 시간 봐도 "떠다니는 안개"라는 게 느껴지도록 주기를 10초로 단축. */
+        .login-fog-mist {
+            position: absolute; pointer-events: none; z-index: 1; mix-blend-mode: screen;
+            background: radial-gradient(ellipse at 50% 60%, rgba(205,215,225,0.22), rgba(205,215,225,0) 70%);
+            filter: blur(16px);
+            animation: fxMistDrift 10s ease-in-out infinite alternate;
+        }
+        @keyframes fxMistDrift {
+            0%   { opacity: 0.12; transform: translate(-4.5%, 4%) scale(0.94); }
+            50%  { opacity: 0.9;  transform: translate(4.5%, -5.5%) scale(1.16); }
+            100% { opacity: 0.2;  transform: translate(-3%, 2.5%) scale(1.06); }
+        }
+        /* 2026-09-14 9차-9: 검 각인 글로우(9차-6~8, 세 번 다 시도)는 결국 전부 "허접하다"는 판정을
+           받고 폐기 — 대장님이 대신 챗지피티가 제안한 다른 방향("횃불/화로의 동적 광원": 불꽃 자체는
+           안 건드리고, 그 빛이 주변 돌벽/석상/갑옷/바닥/로그인 석판에 아주 미세하게 반사되어
+           밝아졌다 어두워지는 효과, 2~4초 불규칙 주기, "효과가 움직인다고 느껴지면 실패"할 정도로
+           약하게)을 검토해달라고 함 — 판단: 이미 있는 torch-flame/halo 인프라와 자연스럽게 어울리고
+           리스크가 낮은 좋은 제안이라 채택. 기존 명판 좌우 대형 횃불(LOGIN_FX_TORCHES) 좌표를 그대로
+           재사용하되, halo보다 훨씬 큰 반경의 아주 옅은 radial-gradient를 얹어서 화로 주변 돌벽/석상
+           받침대/석판까지 빛이 번지는 느낌만 살짝 냄. mix-blend-mode: soft-light는 screen보다 훨씬
+           순한 방식으로 "밝게"만 만들어서(어둡게는 절대 안 만듦) 은은한 반사광 표현에 적합 —
+           opacity 진폭도 아주 좁게(0.3~0.6 사이) 잡고, 키프레임 퍼센트를 불균등하게 흩어서
+           기계적으로 뛰지 않는 불규칙한 숨쉬기를 만듦. */
+        .login-fx-ambient {
+            position: absolute; pointer-events: none; z-index: 1;
+            border-radius: 50%;
+            mix-blend-mode: soft-light;
+            background: radial-gradient(circle, rgba(255,180,120,0.9) 0%, rgba(255,155,95,0.5) 38%, rgba(255,130,70,0) 70%);
+            animation: fxAmbientBreathe 3.6s ease-in-out infinite;
+        }
+        #fxAmbientLeft  { animation-duration: 3.3s; }
+        #fxAmbientRight { animation-duration: 4.1s; animation-delay: -1.8s; }
+        @keyframes fxAmbientBreathe {
+            0%   { opacity: 0.32; }
+            18%  { opacity: 0.48; }
+            37%  { opacity: 0.36; }
+            58%  { opacity: 0.58; }
+            79%  { opacity: 0.4; }
+            100% { opacity: 0.32; }
         }
         @media (prefers-reduced-motion: reduce) {
-            .login-fog, .login-fx-candle { animation: none; }
+            .login-fog, .login-fog-mist, .torch-flame, .torch-halo, .dust, .ash, .login-fx-ambient { animation: none; }
         }
 
         /* ===================== 로그인 폼 "핫스팟" 레이어 =====================
@@ -308,9 +438,26 @@
         <!-- 2026-09-12 7차-2: 챗지피티 추천 안개/촛불 이펙트 — 둘 다 원화는 그대로 두고 위에 얇은
              글로우/블러 레이어만 얹는 방식(6차 계열 fx-torch와 같은 원리). -->
         <div class="login-fog" id="loginFog"></div>
-        <div class="login-fx-candle fx-candle-a" id="fxCandleA"></div>
-        <div class="login-fx-candle fx-candle-b" id="fxCandleB"></div>
-        <div class="login-fx-candle fx-candle-c" id="fxCandleC"></div>
+        <!-- 2026-09-14 9차: 명판 좌우 대형 횃불(브라지어) — 불꽃 흔들림 + 주변 빛 흔들림 -->
+        <div class="login-fx-torch" id="fxTorchLeft"><span class="torch-flame"></span><span class="torch-halo"></span></div>
+        <div class="login-fx-torch" id="fxTorchRight"><span class="torch-flame"></span><span class="torch-halo"></span></div>
+        <!-- 2026-09-14 9차-9: 챗지피티 제안 — 횃불빛이 주변 돌벽/석상/바닥/석판에 아주 미세하게
+             반사되어 밝아졌다 어두워지는 "동적 광원" 효과. 명판 좌우 대형 횃불과 같은 중심좌표, 훨씬
+             큰 반경으로 은은하게 퍼짐. -->
+        <div class="login-fx-ambient" id="fxAmbientLeft"></div>
+        <div class="login-fx-ambient" id="fxAmbientRight"></div>
+        <!-- 2026-09-14 9차-3: 화면에 보이는 횃불 5곳(명판 좌우 대형 2개 + 검 옆/배너 옆/폭포 쪽 벽걸이
+             횃불)에 먼지 파티클 컨테이너. 실제 입자(span)는 스크립트 쪽에서 개수/흩날림을 랜덤하게
+             생성해서 채움(9차-4, 아래 spawnTorchDust 참고) — 컨테이너 자체는 비워둠. -->
+        <div class="login-fx-dust" id="fxDustMainLeft"></div>
+        <div class="login-fx-dust" id="fxDustMainRight"></div>
+        <div class="login-fx-dust" id="fxDustSwordLeft"></div>
+        <div class="login-fx-dust" id="fxDustLampRight"></div>
+        <div class="login-fx-dust" id="fxDustFarRight"></div>
+        <!-- 2026-09-14 9차-5: 눈발 대신, 화면 전체에 아주 옅게 떠서 천천히 흩날리는 재(ash) 레이어 -->
+        <div class="login-ashdrift" id="loginAshdrift"></div>
+        <!-- 2026-09-14 9차: 오른쪽 폭포 착수 지점 국소 물안개 -->
+        <div class="login-fog-mist" id="fxMistWaterfall"></div>
         <!-- 2026-09-12 7차: 원화(assets/login-bg-scene.webp) 안에 타이틀/아이콘/입력칸 홈/체크박스/
              버튼이 전부 이미 그려져 있음. 아래 form은 그 위에 "보이지 않는" 진짜 입력 요소만 좌표로
              겹쳐 올리는 핫스팟 레이어 — 실제 위치/크기는 syncLoginHotspots()가 매 리사이즈마다
@@ -395,14 +542,33 @@
            cover 배율과 비교해 더 작은 쪽을 씀. LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y = 패널에서 가장
            아래에 있는 요소(에러 문구 바깥 테두리 근처)의 원화 y좌표. */
         const LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y = 1330;
-        /* 2026-09-12 7차-2: 챗지피티 추천 "촛불 흔들림" — 원화 하단 계단에 이미 그려진 촛불 무리
-           위에 얹을 은은한 빛 웅덩이 좌표(그리드+밝은 픽셀 클러스터링으로 실측). a/b는 왼쪽 촛불
-           무리(4~5개) 중 대표 2곳, c는 오른쪽 단독 촛불. */
-        const LOGIN_FX_CANDLES = {
-            a: [1090, 1345, 46],
-            b: [1122, 1328, 38],
-            c: [1650, 1310, 40]
+        /* 2026-09-14 9차 → 9차-2 재실측: 처음엔 "밝은 주황빛" 전체(R>170 등)로 잡았더니, 불꽃 위로
+           뻗어나가는 장식용 번개/균열 이펙트(원화에 이미 그려진, 불꽃과는 별개인 효과)까지 같이
+           잡혀서 halo 중심이 실제 불꽃보다 너무 위로/넓게 잡혔던 게 "좌표가 이상하다" 피드백의
+           원인이었음 — connected-component로 가장 큰 덩어리(=불꽃 몸통)만 분리해서 재실측한 값. */
+        const LOGIN_FX_TORCHES = {
+            left:  [905, 1050, 85],
+            right: [1769, 1080, 90]
         };
+        /* 2026-09-14 9차-9: 횃불 주변 돌벽/석상/석판까지 은은하게 번지는 "동적 광원" — 중심좌표는
+           위 LOGIN_FX_TORCHES와 동일(같은 불꽃에서 나오는 빛이므로), 반경만 훨씬 크게 잡아서 명판
+           주변 넓은 영역을 옅게 덮음. */
+        const LOGIN_FX_AMBIENT = {
+            left:  [905, 1050, 420],
+            right: [1769, 1080, 440]
+        };
+        /* 2026-09-14 9차-3: 화면에 보이는 횃불 5곳(원화를 connected-component 분석으로 재실측)의
+           먼지 파티클 컨테이너 zone(x1, y1, x2, y2) — 각 횃불 불꽃 바로 위/주변을 감싸는 작은 박스. */
+        const LOGIN_FX_DUST_ZONES = {
+            mainLeft:  [845, 955, 975, 1105],   // 명판 좌측 대형 횃불
+            mainRight: [1685, 995, 1845, 1145], // 명판 우측 대형 횃불
+            swordLeft: [400, 940, 480, 1050],   // 검 옆 벽걸이 횃불(화면 좌측 바깥)
+            lampRight: [1800, 880, 1890, 980],  // 배너 옆 벽걸이 횃불
+            farRight:  [2030, 1190, 2110, 1280] // 폭포 아래쪽 원경 횃불(화면 우측 바깥)
+        };
+        /* 오른쪽 폭포 착수 지점 물안개 zone(x1, y1, x2, y2) — 원화 속 폭포가 바닥에 떨어지며 이미
+           옅게 그려진 물보라 위치를 실측 */
+        const LOGIN_FX_MIST_ZONE = [2050, 1080, 2400, 1250];
         function syncLoginHotspots() {
             const overlay = document.getElementById('loginOverlay');
             if (!overlay) return;
@@ -463,23 +629,95 @@
             place(document.getElementById('loginBtn'), 'enter');
             place(document.getElementById('loginError'), 'error', 0.55);
 
-            // 촛불 글로우 — 정사각형 박스가 아니라 반지름 기반 원이라 place()와 다른 헬퍼 사용
-            const placeGlow = (el, key) => {
+            // 원(반지름) 기반 배치 — 횃불 halo용, 정사각형 박스가 아니라서 place()와 다른 헬퍼 사용
+            const placeCircle = (el, [cx, cy, r]) => {
                 if (!el) return;
-                const [cx, cy, r] = LOGIN_FX_CANDLES[key];
                 const rs = r * scale;
                 el.style.left = (offsetX + cx * scale - rs) + 'px';
                 el.style.top = (offsetY + cy * scale - rs) + 'px';
                 el.style.width = (rs * 2) + 'px';
                 el.style.height = (rs * 2) + 'px';
             };
-            placeGlow(document.getElementById('fxCandleA'), 'a');
-            placeGlow(document.getElementById('fxCandleB'), 'b');
-            placeGlow(document.getElementById('fxCandleC'), 'c');
+            // 사각형 zone 기반 배치 — 불씨 파티클 컨테이너, 물안개 패치
+            const placeBox = (el, [x1, y1, x2, y2]) => {
+                if (!el) return;
+                el.style.left = (offsetX + x1 * scale) + 'px';
+                el.style.top = (offsetY + y1 * scale) + 'px';
+                el.style.width = ((x2 - x1) * scale) + 'px';
+                el.style.height = ((y2 - y1) * scale) + 'px';
+            };
+            placeCircle(document.getElementById('fxTorchLeft'), LOGIN_FX_TORCHES.left);
+            placeCircle(document.getElementById('fxTorchRight'), LOGIN_FX_TORCHES.right);
+            placeCircle(document.getElementById('fxAmbientLeft'), LOGIN_FX_AMBIENT.left);
+            placeCircle(document.getElementById('fxAmbientRight'), LOGIN_FX_AMBIENT.right);
+            placeBox(document.getElementById('fxDustMainLeft'), LOGIN_FX_DUST_ZONES.mainLeft);
+            placeBox(document.getElementById('fxDustMainRight'), LOGIN_FX_DUST_ZONES.mainRight);
+            placeBox(document.getElementById('fxDustSwordLeft'), LOGIN_FX_DUST_ZONES.swordLeft);
+            placeBox(document.getElementById('fxDustLampRight'), LOGIN_FX_DUST_ZONES.lampRight);
+            placeBox(document.getElementById('fxDustFarRight'), LOGIN_FX_DUST_ZONES.farRight);
+            placeBox(document.getElementById('fxMistWaterfall'), LOGIN_FX_MIST_ZONE);
         }
         syncLoginHotspots();
         window.addEventListener('resize', syncLoginHotspots);
         window.addEventListener('orientationchange', syncLoginHotspots);
+
+        /* ===================== 파티클 생성 (횃불 먼지 + 재 표류) =====================
+           2026-09-14 9차-4: "티가 안 난다" 피드백으로 손으로 하나하나 span 치던 방식 대신 런타임
+           생성으로 교체 — 개수/흩날림 폭을 상수 하나로 조절할 수 있고, 랜덤값 덕분에 자연스러운
+           변주도 생김. 횃불 먼지 컨테이너(.login-fx-dust)는 syncLoginHotspots()가 좌표/크기를 잡아둔
+           상태이고, #loginAshdrift는 CSS로 이미 화면 전체(inset:0)를 덮고 있음 — 두 경우 다 안의
+           입자들은 전부 %(퍼센트) 기준이라 리사이즈 때 컨테이너만 따라가면 되므로 이 생성은 페이지
+           로드 시 한 번만 실행하면 충분함(리사이즈마다 다시 만들 필요 없음). */
+        function spawnTorchDust(containerId, count, colors, whiteCount) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            for (let i = 0; i < count; i++) {
+                const s = document.createElement('span');
+                const isWhite = whiteCount && i < whiteCount;
+                s.className = 'dust' + (isWhite ? ' dust-white' : '');
+                const color = isWhite ? '#F4F6F8' : colors[i % colors.length];
+                s.style.background = color;
+                s.style.color = color; /* box-shadow: currentColor 글로우용 */
+                s.style.left = (8 + Math.random() * 78) + '%';
+                s.style.bottom = (Math.random() * 55) + '%';
+                const sz = isWhite ? (1.1 + Math.random() * 0.7) : (2.2 + Math.random() * 2.2);
+                s.style.setProperty('--sz', sz.toFixed(1) + 'px');
+                s.style.setProperty('--dx', (Math.random() * 50 - 20).toFixed(1) + 'px'); /* -20~30px 옆으로 흩날림 */
+                s.style.setProperty('--dy', (-(35 + Math.random() * 35)).toFixed(1) + 'px'); /* -35~-70px 위로 */
+                const dur = 3.2 + Math.random() * 3.2;
+                s.style.animationDuration = dur.toFixed(2) + 's';
+                s.style.animationDelay = (-Math.random() * dur).toFixed(2) + 's'; /* 음수 delay로 시작부터 제각각 위상 */
+                el.appendChild(s);
+            }
+        }
+        /* 2026-09-14 9차-5: 눈발(spawnSnowfall, 화면 위→아래 낙하)은 폐기 — 화면 아무 데서나 떠서
+           아주 느리게 표류하다 사라지는 재(ash)로 교체. 눈보다 훨씬 작고 느리고 옅게. */
+        function spawnAshdrift(containerId, count) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            for (let i = 0; i < count; i++) {
+                const s = document.createElement('span');
+                s.className = 'ash';
+                s.style.left = (Math.random() * 100) + '%';
+                s.style.top = (Math.random() * 100) + '%';
+                const sz = 1 + Math.random() * 1.4; /* 1~2.4px — 눈발보다 훨씬 작게 */
+                s.style.width = sz.toFixed(1) + 'px';
+                s.style.height = sz.toFixed(1) + 'px';
+                s.style.setProperty('--op', (0.14 + Math.random() * 0.18).toFixed(2)); /* 0.14~0.32 — 훨씬 옅게 */
+                s.style.setProperty('--sway', (6 + Math.random() * 10).toFixed(1) + 'px');
+                s.style.setProperty('--rise', (-(14 + Math.random() * 18)).toFixed(1) + 'px');
+                const dur = 16 + Math.random() * 14; /* 16~30초 — "천천히" 표류 */
+                s.style.animationDuration = dur.toFixed(2) + 's';
+                s.style.animationDelay = (-Math.random() * dur).toFixed(2) + 's';
+                el.appendChild(s);
+            }
+        }
+        spawnTorchDust('fxDustMainLeft',  6, ['#F2C94C', '#FF8A3D', '#9AA0A6']);
+        spawnTorchDust('fxDustMainRight', 6, ['#FF8A3D', '#F2C94C', '#9AA0A6']);
+        spawnTorchDust('fxDustSwordLeft', 4, ['#F2C94C', '#9AA0A6'], 1);
+        spawnTorchDust('fxDustLampRight', 4, ['#9AA0A6', '#FF8A3D']);
+        spawnTorchDust('fxDustFarRight',  4, ['#FF8A3D', '#9AA0A6'], 1);
+        spawnAshdrift('loginAshdrift', 22);
 
         (function playLoginIntro() {
             const overlay = document.getElementById('loginOverlay');
