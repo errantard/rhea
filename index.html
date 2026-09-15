@@ -578,7 +578,18 @@
             const margin = 24; // 패널 아래로 최소 이만큼은 화면이 남도록
             const halfH = LOGIN_BG_NATIVE_H / 2;
             const capScale = (ch / 2 - margin) / (LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y - halfH);
-            const rawScale = Math.min(coverScale, capScale > 0 ? capScale : coverScale);
+            /* 2026-09-15: 모바일 세로 화면에서 로그인폼 글자/입력칸이 작아 보인다는 피드백 — 세로가
+               긴 좁은 화면(cw < ch, 폰)에서는 coverScale이 항상 "세로를 꽉 채우는" 배율로 결정되는데,
+               원화가 가로로 긴 landscape라 이 경우 가로 방향으로는 이미 화면보다 훨씬 넓게 잘리는
+               여유가 남아있음. 그 여유를 이용해 살짝만 더 확대(MOBILE_ZOOM_BOOST)해서 명판/글자가
+               커 보이게 하되, capScale(로그인 버튼·에러문구가 화면 아래로 밀려나지 않도록 보장하는
+               상한)은 절대 넘지 않음 — 기존 안전장치 그대로 유지. */
+            const MOBILE_ZOOM_BOOST = 1.18;
+            const isPortraitNarrow = cw < ch;
+            const boostedCoverScale = (isPortraitNarrow && capScale > coverScale)
+                ? Math.min(coverScale * MOBILE_ZOOM_BOOST, capScale)
+                : coverScale;
+            const rawScale = Math.min(boostedCoverScale, capScale > 0 ? capScale : boostedCoverScale);
             const scale = rawScale > 1 ? rawScale * LOGIN_BG_SHRINK : rawScale;
             const offsetX = (cw - LOGIN_BG_NATIVE_W * scale) / 2;
             const offsetY = (ch - LOGIN_BG_NATIVE_H * scale) / 2;

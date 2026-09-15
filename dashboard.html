@@ -74,7 +74,13 @@
             color: var(--amber);
         }
         #dataLoadingOverlay.hidden { display: none; }
-        .dl-emoji { font-size: 44px; animation: dlBob 1.6s ease-in-out infinite; }
+        /* 2026-09-15 재작업: 1차로 펜싱 이모지(🤺) → 2차로 체커보드 스크린샷에서 직접 배경 분리한
+           캐주얼 일러스트(loading-knight.png)를 썼는데, 대장님이 그 이후 본인이 직접 더 고퀄리티인
+           왕관 쓴 기사 일러스트(진짜 알파 채널 있는 webp, 스파크/먼지 이펙트까지 있음)를 assets
+           폴더에 loading-knight.webp로 교체 투입 — 파일명이 달라져서 src만 이 파일을 가리키게
+           맞춰줌(.png는 더 이상 폴더에 없음). 새 원화가 가로로 더 넓은 구도(1500×1031)라 width를
+           키움. 이모지 시절 dlWalk 애니메이션(좌우 스텝 + bob + rotate)의 골격은 그대로 재사용. */
+        .dl-knight { width: 160px; height: auto; display: inline-block; animation: dlKnightRun 1.6s ease-in-out infinite; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); }
         .dl-dots { display: flex; gap: 8px; }
         .dl-dots span {
             width: 9px; height: 9px; border-radius: 50%; background: var(--amber);
@@ -83,10 +89,16 @@
         .dl-dots span:nth-child(2) { animation-delay: 0.15s; }
         .dl-dots span:nth-child(3) { animation-delay: 0.3s; }
         .dl-text { font-size: 15px; letter-spacing: 0.2px; color: #F5EFE0; }
-        @keyframes dlBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes dlKnightRun {
+            0%   { transform: translateX(-9px) translateY(0)   rotate(-3deg); }
+            25%  { transform: translateX(-3px) translateY(-6px) rotate(1deg); }
+            50%  { transform: translateX(4px)  translateY(0)   rotate(3deg); }
+            75%  { transform: translateX(9px)  translateY(-6px) rotate(-1deg); }
+            100% { transform: translateX(-9px) translateY(0)   rotate(-3deg); }
+        }
         @keyframes dlDot { 0%, 100% { opacity: 0.35; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } }
         @media (prefers-reduced-motion: reduce) {
-            .dl-emoji, .dl-dots span { animation: none; }
+            .dl-knight, .dl-dots span { animation: none; }
         }
 
         .navbar {
@@ -106,9 +118,13 @@
         .navbar h2 { font-size: 18px; color: #fff; font-weight: 800; letter-spacing: -0.2px; }
         .navbar h2 .logo-mark { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: var(--r-sm); background: var(--amber); color: var(--ink); font-size: 12px; font-weight: 800; margin-right: 8px; vertical-align: middle; }
         .brand { display: flex; align-items: center; gap: var(--sp-4); }
-        .brand-logo-wrap { position: relative; flex-shrink: 0; width: 74px; height: 74px; border-radius: 50%; }
-        .brand-logo-wrap::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: radial-gradient(circle, rgba(242,201,76,0.38) 0%, rgba(242,201,76,0.10) 55%, transparent 75%); z-index: 0; }
-        .brand-logo { position: relative; z-index: 1; width: 74px; height: 74px; border-radius: 50%; object-fit: cover; object-position: 50% 42%; display: block; box-shadow: 0 0 0 2px rgba(242,201,76,0.75), 0 0 22px rgba(242,201,76,0.55); background: radial-gradient(circle, #1c2436 0%, var(--ink) 100%); filter: brightness(1.08) saturate(1.12); }
+        /* 2026-09-15: 대장님 피드백 — 금박 글로우(halo ::before + box-shadow 링/블러)는 없애고, 그
+           글로우가 차지하던 공간만큼 아이콘 자체를 키워달라고 함. 아이콘 원화에 금색 테두리가 이미
+           그려져 있어서(엠블럼 자체 디자인) CSS 글로우 없이도 "금박 링" 느낌은 유지됨 — 순수 장식용
+           발광 레이어만 제거. 74px → 96px로 키움(기존 halo가 inset:-6px + 22px 블러로 차지하던
+           시각적 반경과 비슷한 크기). */
+        .brand-logo-wrap { position: relative; flex-shrink: 0; width: 96px; height: 96px; border-radius: 50%; }
+        .brand-logo { position: relative; z-index: 1; width: 96px; height: 96px; border-radius: 50%; object-fit: cover; object-position: 50% 42%; display: block; background: radial-gradient(circle, #1c2436 0%, var(--ink) 100%); filter: brightness(1.08) saturate(1.12); }
         .brand-name { font-family: 'Cinzel', 'Public Sans', serif; font-size: 26px; font-weight: 600; color: #F3E9C9; letter-spacing: 1px; white-space: nowrap; }
         .navbar-left-stack { display: flex; flex-direction: column; justify-content: center; gap: var(--sp-4); }
         .navbar-line-top { display: flex; align-items: center; gap: var(--sp-7); }
@@ -859,8 +875,8 @@
             .navbar, .navbar-left, .navbar-left-stack, .navbar-line-top, .navbar-line-stats,
             .navbar-right-stack, .navbar-right { min-width: 0; }
             .navbar-left { gap: var(--sp-4); min-width: 0; flex-wrap: wrap; }
-            .brand-logo-wrap { width: 40px; height: 40px; }
-            .brand-logo { width: 40px; height: 40px; }
+            .brand-logo-wrap { width: 52px; height: 52px; }
+            .brand-logo { width: 52px; height: 52px; }
             .brand-name { font-size: 16.5px; }
             .navbar-left-stack { width: 100%; gap: var(--sp-3); }
             .navbar-line-top { flex-wrap: wrap; row-gap: var(--sp-3); }
@@ -959,7 +975,7 @@
          디자인개선 4번: 로그인화면을 지우자마자 이 화면이 바로 덮어써서, Supabase에서 데이터를 받아오는 동안
          (현장 LTE처럼 느린 연결이면 1~2초 이상) 빈 대시보드 대신 이 화면이 보이게 함. -->
     <div id="dataLoadingOverlay" class="hidden">
-        <div class="dl-emoji">🦅</div>
+        <img class="dl-knight" src="assets/loading-knight.webp" alt="로딩 중">
         <div class="dl-dots"><span></span><span></span><span></span></div>
         <div class="dl-text" id="dataLoadingText">데이터 불러오는 중...</div>
     </div>
