@@ -275,6 +275,24 @@
         }
         #loginPassword { padding-right: 2.4em; }
         #loginEmail::placeholder, #loginPassword::placeholder { color: transparent; }
+        /* 2026-09-16: 브라우저 "자동 로그인"(저장된 비밀번호 자동완성) 시 크롬이 입력창에 강제로
+           흰색/노란색 배경을 칠해버리는 문제 수정 — input 자체의 background:transparent는 크롬의
+           자동완성 전용 내부 스타일(-webkit-autofill)을 못 이김. 표준 우회법인 inset box-shadow로
+           배경을 안쪽에서 덮어써서 항상 투명하게(=돌에 새겨진 홈처럼) 유지하고, 글자색도 자동완성
+           시 크롬이 검정으로 강제하는 -webkit-text-fill-color를 원래 디자인 색(#f2e6c8)으로 재지정.
+           transition을 아주 길게(5000s) 걸어두는 건 자동완성 배경이 바뀌는 짧은 순간에도 색이
+           깜빡이지 않게 하는 널리 쓰이는 트릭. */
+        #loginEmail:-webkit-autofill, #loginPassword:-webkit-autofill,
+        #loginEmail:-webkit-autofill:hover, #loginPassword:-webkit-autofill:hover,
+        #loginEmail:-webkit-autofill:focus, #loginPassword:-webkit-autofill:focus,
+        #loginEmail:-webkit-autofill:active, #loginPassword:-webkit-autofill:active {
+            -webkit-text-fill-color: #f2e6c8 !important;
+            -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+            box-shadow: 0 0 0 1000px transparent inset !important;
+            background-color: transparent !important;
+            transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+            caret-color: #f2e6c8;
+        }
         /* 2026-09-14 8차-9: 아래 앰버 글로우 테두리(box-shadow)는 원래 #loginEmail/#loginPassword
            본인에게 직접 걸려 있었는데, textNudgeNative가 그 입력창 자체에 transform으로 걸리다 보니
            box-shadow까지 같이 딸려서 움직여버림(칸 자체 좌표는 안 바뀌는데, "칸이 내려간다"고
