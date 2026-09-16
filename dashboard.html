@@ -351,16 +351,15 @@
         .icon-btn-move:hover { background: var(--amber); color: var(--ink); border-color: var(--amber); }
         .group-move-menu {
             display: none;
-            position: absolute;
-            top: calc(100% + 6px);
-            right: 0;
+            position: fixed;
             background: #ffffff;
             border: 1px solid #dfe6e9;
             border-radius: var(--r-sm);
             box-shadow: 0 6px 16px rgba(0,0,0,0.12);
             min-width: 160px;
-            z-index: 50;
-            overflow: hidden;
+            max-height: 60vh;
+            overflow-y: auto;
+            z-index: 9999;
         }
         .group-move-menu.open { display: block; }
         .group-move-item {
@@ -368,6 +367,24 @@
         }
         .group-move-item:hover { background: #E9F2EF; color: var(--teal); }
         .group-move-empty { padding: 10px 16px; font-size: 12px; color: #b2bec3; white-space: nowrap; }
+
+        /* 그룹편집 팝업 — 그룹별 행(색상/이름/삭제) + 새 그룹 추가 행 */
+        .group-edit-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid #eef1f2; }
+        .group-edit-row:last-child { border-bottom: none; }
+        .group-edit-swatch { width: 28px; height: 28px; min-width: 28px; border: 1px solid #dfe6e9; padding: 0; border-radius: 7px; cursor: pointer; background: none; }
+        .group-edit-name { flex: 1; font-size: 13px; color: #2d3436; cursor: pointer; padding: 4px 6px; border-radius: var(--r-xs); }
+        .group-edit-name:hover { background: #f1f3f5; }
+        .group-edit-del { background: none; border: none; color: var(--coral-text, #C1552C); cursor: pointer; font-size: 15px; padding: 4px 8px; border-radius: var(--r-xs); }
+        .group-edit-del:hover { background: #F7E2D8; }
+        .group-edit-order { display: flex; flex-direction: column; gap: 1px; }
+        .group-edit-order-btn {
+            width: 22px; height: 17px; line-height: 1; border: 1px solid #dfe6e9; background: #fafbfc; color: #636e72;
+            cursor: pointer; font-size: 9px; padding: 0; border-radius: 3px; display: flex; align-items: center; justify-content: center;
+        }
+        .group-edit-order-btn:hover:not(:disabled) { background: #eef1f2; color: #2d3436; }
+        .group-edit-order-btn:disabled { opacity: 0.3; cursor: default; }
+        .group-edit-add-row { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #dfe6e9; }
+        .group-edit-add-row input { flex: 1; padding: 8px 10px; border: 1px solid #dfe6e9; border-radius: var(--r-sm); font-size: 13px; }
 
         .table-container { background: #ffffff; border-radius: var(--r-lg); border: 1px solid var(--border-warm); overflow-x: auto; margin-bottom: 50px; padding-bottom: 12px; position: relative;}
         /* width:100%를 주면 창이 넓을 때 셀들이 억지로 늘어남 — 자연 컨텐츠 크기로 고정하고 남는 공간은 오른쪽에 여백으로 남김 */
@@ -399,21 +416,28 @@
 
         thead th { background: var(--paper2); color: var(--ink); font-weight: 700; position: sticky; top: 0; z-index: 10; font-size: 10.5px; letter-spacing: .3px; }
 
-        /* 고정 셀 position 정의 */
-        th.sticky-col-0, td.sticky-col-0 { position: sticky; left: 0; width: 50px; min-width: 50px; z-index: 5; background-color: #ffffff; }
-        th.sticky-col-1, td.sticky-col-1 { position: sticky; left: 50px; width: 45px; min-width: 45px; z-index: 5; background-color: #ffffff; text-align: center; }
-        th.sticky-col-2, td.sticky-col-2 { position: sticky; left: 95px; width: 120px; min-width: 120px; z-index: 5; background-color: #ffffff; }
-        th.sticky-col-3, td.sticky-col-3 { position: sticky; left: 215px; width: 140px; min-width: 140px; z-index: 5; background-color: #ffffff; border-right: 2px solid #dcdde1; }
+        /* 고정 셀 position 정의 — No 바로 뒤에 그룹명 칸(sticky-col-group)이 추가되면서 뒤 칸들의 left 값이 밀림 */
+        th.sticky-col-0, td.sticky-col-0 { position: sticky; left: 0; width: 34px; min-width: 34px; z-index: 5; background-color: #ffffff; padding-left: 4px !important; padding-right: 2px !important; text-align: center; }
+        th.sticky-col-group, td.sticky-col-group { position: sticky; left: 34px; width: 60px; min-width: 60px; z-index: 5; background-color: #ffffff; text-align: center; padding-left: 3px !important; padding-right: 3px !important; }
+        th.sticky-col-1, td.sticky-col-1 { position: sticky; left: 94px; width: 45px; min-width: 45px; z-index: 5; background-color: #ffffff; text-align: center; }
+        th.sticky-col-2, td.sticky-col-2 { position: sticky; left: 139px; width: 120px; min-width: 120px; z-index: 5; background-color: #ffffff; }
+        th.sticky-col-3, td.sticky-col-3 { position: sticky; left: 259px; width: 140px; min-width: 140px; z-index: 5; background-color: #ffffff; border-right: 2px solid #dcdde1; }
+
+        /* 그룹명 컬럼 안의 색상 알약(pill) — 탭과 동일한 그룹 색상을 인라인 style로 받아서 씀 */
+        .group-name-pill {
+            display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 800;
+            color: var(--ink); white-space: nowrap; line-height: 1.5;
+        }
 
         /* 상단 헤더 고정 셀 레이어 우선순위 및 배경색 고정 */
-        thead th.sticky-col-0, thead th.sticky-col-1, thead th.sticky-col-2, thead th.sticky-col-3 { z-index: 20; background-color: var(--paper2); }
+        thead th.sticky-col-0, thead th.sticky-col-group, thead th.sticky-col-1, thead th.sticky-col-2, thead th.sticky-col-3 { z-index: 20; background-color: var(--paper2); }
 
         /* 마우스 오버 시 행 전체가 모든 셀의 배경색을 덮어쓰도록 수정 */
         tr:hover td { background: #F2EFE6 !important; }
-        tr:hover td.sticky-col-0, tr:hover td.sticky-col-1, tr:hover td.sticky-col-2, tr:hover td.sticky-col-3 { background-color: #F2EFE6 !important; }
+        tr:hover td.sticky-col-0, tr:hover td.sticky-col-group, tr:hover td.sticky-col-1, tr:hover td.sticky-col-2, tr:hover td.sticky-col-3 { background-color: #F2EFE6 !important; }
 
         tr.checked-row td { background-color: #FBEEC7 !important; }
-        tr.checked-row td.sticky-col-0, tr.checked-row td.sticky-col-1, tr.checked-row td.sticky-col-2, tr.checked-row td.sticky-col-3 { background-color: #FBEEC7 !important; }
+        tr.checked-row td.sticky-col-0, tr.checked-row td.sticky-col-group, tr.checked-row td.sticky-col-1, tr.checked-row td.sticky-col-2, tr.checked-row td.sticky-col-3 { background-color: #FBEEC7 !important; }
 
         .badge { padding: 4px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
         .badge-success { background: #E1F0EA; color: var(--teal); }
@@ -991,7 +1015,9 @@
                 <div class="navbar-line-top">
                     <span class="brand-name">Rheavision Corp.</span>
                     <ul class="top-menu" id="topMenu"></ul>
-                    <button class="group-add-btn" id="groupAddBtn" onclick="addNewGroup()" title="새 그룹 추가" aria-label="새 그룹 추가">+</button>
+                    <button class="group-add-btn" id="groupAddBtn" onclick="openGroupEditModal()" title="그룹 편집" aria-label="그룹 편집">
+                        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                    </button>
                 </div>
                 <div class="navbar-line-stats">
                     <div class="cards" title="클릭하면 해당 상태로 목록이 필터링됩니다">
@@ -1179,17 +1205,18 @@
                 <table id="customerTable">
                     <thead>
                         <tr>
-                            <th colspan="4" class="sticky-col-0 group-banner-region" style="border-bottom: none; border-right: 2px solid #dcdde1; z-index: 20;"><span class="group-pill" data-group-label="region">지역</span></th>
+                            <th colspan="5" class="sticky-col-0 group-banner-region" style="border-bottom: none; border-right: 2px solid #dcdde1; z-index: 20;"><span class="group-pill" data-group-label="region">지역</span></th>
                             <th colspan="2" class="group-banner-address address-group"><span class="group-pill" data-group-label="address">주소</span></th>
                             <th colspan="5" class="group-banner-org org-group"><span class="group-pill" data-group-label="org">소속</span></th>
                             <th colspan="2" class="group-banner-manager manager-group"><span class="group-pill" data-group-label="manager">담당자</span></th>
                             <th colspan="3" class="group-banner-device device-group"><span class="group-pill" data-group-label="device">기기정보</span></th>
-                            <th colspan="3" class="group-banner-sys sys-group"><span class="group-pill" data-group-label="sys">고유넘버</span></th>
+                            <th colspan="2" class="group-banner-sys sys-group"><span class="group-pill" data-group-label="sys">고유넘버</span></th>
                             <th colspan="2" class="group-banner-rental rental-group"><span class="group-pill">임대</span></th>
                             <th colspan="3" class="group-banner-etc"><span class="group-pill" data-group-label="etc">기타</span></th>
                         </tr>
                         <tr>
                             <th class="sticky-col-0">No</th>
+                            <th class="sticky-col-group">그룹</th>
                             <th class="sticky-col-1" style="text-align: center;">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" title="전체 선택/해제">
                             </th>
@@ -1207,8 +1234,7 @@
                             <th class="device-group sortable-th" data-field-label="deviceModel" data-sort-key="deviceModel">모델명</th>
                             <th class="device-group sortable-th" data-field-label="deviceType" data-sort-key="deviceType">유형</th>
                             <th class="device-group sortable-th" data-field-label="deviceOption" data-sort-key="deviceOption">옵션</th>
-                            <th class="sys-group sortable-th" data-field-label="kioId" data-sort-key="kioId">키오에듀번호</th>
-                            <th class="sys-group sortable-th" data-field-label="kioAdminId" data-sort-key="kioAdminId">키오드민번호</th>
+                            <th class="sys-group sortable-th" data-field-label="kioId" data-sort-key="kioId">키오에듀ID</th>
                             <th class="sys-group sortable-th" data-field-label="reaCode" data-sort-key="reaCode">레아코드</th>
                             <th class="rental-group">구분</th>
                             <th class="rental-group">임대만료일</th>
@@ -1341,9 +1367,9 @@
                 <div class="form-section">
                     <div class="section-tab section-sys" data-group-label="sys">고유넘버</div>
                     <div class="section-fields">
-                        <div class="form-group"><label><span data-field-label="kioId">키오에듀 번호</span></label><input type="text" id="kioId"></div>
-                        <div class="form-group"><label><span data-field-label="kioAdminId">키오드민 번호</span></label><input type="text" id="kioAdminId"></div>
-                        <div class="form-group"><label><span data-field-label="reaCode">레아코드</span></label><input type="text" id="reaCode"></div>
+                        <div class="form-group"><label><span data-field-label="kioId">키오에듀ID</span></label><input type="text" id="kioId" style="width: 70px;"></div>
+                        <div class="form-group"><label><span data-field-label="reaCode">레아코드</span></label><input type="text" id="reaCode" style="width: 70px;"></div>
+                        <div class="form-group"><label><span data-field-label="kioAdminId">그외</span></label><input type="text" id="kioAdminId"></div>
                     </div>
                 </div>
 
@@ -1440,8 +1466,7 @@
                     <div class="detail-section">
                         <div class="detail-section-title" style="background:#00a8b5;">기기SW</div>
                         <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">키오에듀 번호</span><span class="detail-value mono" id="detailKioId">-</span></div>
-                            <div class="detail-item"><span class="detail-label">키오드민 번호</span><span class="detail-value mono" id="detailKioAdminId">-</span></div>
+                            <div class="detail-item"><span class="detail-label">키오에듀ID</span><span class="detail-value mono" id="detailKioId">-</span></div>
                             <div class="detail-item full"><span class="detail-label">레아코드</span><span class="detail-value mono" id="detailReaCode">-</span></div>
                         </div>
                     </div>
@@ -1520,7 +1545,19 @@
         </div>
     </div>
 
-    
+    <div id="groupEditModal" class="modal">
+        <div class="modal-content" style="width: 460px;">
+            <div class="modal-header">
+                <span style="font-size: 16px; font-weight: bold; color: #2d3436;">🗂️ 그룹 편집</span>
+                <span class="close" onclick="closeGroupEditModal()" role="button" tabindex="0" aria-label="닫기" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">&times;</span>
+            </div>
+            <div id="groupEditList"></div>
+            <div class="group-edit-add-row">
+                <input type="text" id="newGroupNameInput" placeholder="새 그룹 이름" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewGroupFromModal();}">
+                <button type="button" class="btn btn-primary" onclick="addNewGroupFromModal()">+ 새 그룹</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         /* ═══════════════════════════════════════════════════════════════
@@ -1636,6 +1673,10 @@ function showSyncStatus(msg, isError) {
         let customFieldLabels = {};
         let customGroupLabels = {};
         let dashboardSettings = null;
+        // "전체" 탭(가상 그룹) — 실제 groups 테이블에는 없는, 모든 그룹을 합쳐서 보여주는 화면 전용 키
+        const ALL_GROUP_KEY = '__ALL__';
+        let groupColors = {}; // { [groupId]: '#hexColor' } — dashboardSettings.groupColors에 저장됨
+        const GROUP_COLOR_PALETTE = ['#F2C94C', '#6FCF97', '#56CCF2', '#BB6BD9', '#F2994A', '#EB5757', '#9CCC65', '#64B5F6'];
         let lastBackupAtIso = null;
         let rentalFilter = null; // null | 'all' | 'upcoming' | 'expiring' | 'expired'
         let columnSort = { key: null, dir: 'asc' }; // 테이블 헤더 클릭 정렬 상태
@@ -1709,8 +1750,8 @@ function showSyncStatus(msg, isError) {
             deviceModel: '모델명',
             deviceType: '유형',
             deviceOption: '옵션',
-            kioId: '키오에듀 번호',
-            kioAdminId: '키오드민 번호',
+            kioId: '키오에듀ID',
+            kioAdminId: '그외',
             reaCode: '레아코드',
             memo: '메모',
             status: '상태'
@@ -1725,6 +1766,41 @@ function showSyncStatus(msg, isError) {
             region: '지역', address: '주소', org: '소속',
             manager: '담당자', device: '기기정보', sys: '고유넘버', etc: '기타'
         };
+
+        /* ----- ③-0 그룹 색상 / "전체" 보기 / 아이템 조회 공용 헬퍼 ----- */
+        function getGroupColor(key) {
+            if (groupColors[key]) return groupColors[key];
+            const idx = groupOrder.indexOf(key);
+            return GROUP_COLOR_PALETTE[(idx >= 0 ? idx : 0) % GROUP_COLOR_PALETTE.length];
+        }
+
+        // 현재 탭에서 보여줘야 할 데이터 배열. "전체" 탭이면 모든 그룹을 합쳐서 반환.
+        function getCurrentViewData() {
+            if (currentGroup === ALL_GROUP_KEY) {
+                return groupOrder.reduce((acc, k) => acc.concat(allGroupsData[k] || []), []);
+            }
+            return allGroupsData[currentGroup] || [];
+        }
+
+        // 2026-09-16: 상단 통계 카드(전체/정상/요청 등) 전용 — "전체" 탭에서는 상태가 "종료"인 업체는 카운트에서 제외함
+        // ("종료 업체 표시" 체크박스로 표에서 숨기는 것과 같은 "종료"). 표 자체에는 영향 없고 통계 숫자에서만 빠짐.
+        // 개별 그룹 탭(종료라는 이름의 그룹 포함)은 지금까지처럼 그대로 전부 카운트함.
+        function getStatsViewData() {
+            if (currentGroup === ALL_GROUP_KEY) {
+                return getCurrentViewData().filter(i => i.status !== '종료');
+            }
+            return getCurrentViewData();
+        }
+
+        // 업체 id로 실제 소속 그룹/배열/인덱스를 찾음 — "전체" 탭에서도 체크/수정/삭제/이동이 정확히 동작하게 해줌
+        function findItemLocation(id) {
+            for (const gk of groupOrder) {
+                const arr = allGroupsData[gk] || [];
+                const idx = arr.findIndex(d => d.id === id);
+                if (idx !== -1) return { groupKey: gk, index: idx, arr, item: arr[idx] };
+            }
+            return { groupKey: null, index: -1, arr: null, item: null };
+        }
 
         /* ----- ③-1 라벨(필드명/그룹명) 커스터마이징 — 화면에 보이는 컬럼명/그룹명을 사용자가 바꿀 수 있게 ----- */
         function getLabel(key) {
@@ -1945,10 +2021,71 @@ function showSyncStatus(msg, isError) {
             customFieldLabels = settings.field_labels || {};
             customGroupLabels = settings.group_labels || {};
             dashboardSettings = settings.dashboard_settings || null;
+            groupColors = (dashboardSettings && dashboardSettings.groupColors) || {};
             lastBackupAtIso = settings.last_backup_at || null;
 
-            if (!currentGroup || !groupOrder.includes(currentGroup)) {
-                currentGroup = groupOrder[0] || null;
+            // 2026-09-16: 초기 접속 시 기본 탭은 "전체" — 이미 "전체"거나 유효한 실제 그룹을 보고 있었다면 그대로 유지
+            if (!currentGroup || (currentGroup !== ALL_GROUP_KEY && !groupOrder.includes(currentGroup))) {
+                currentGroup = ALL_GROUP_KEY;
+            }
+        }
+
+        /* 2026-09-16 추가: 고유넘버 항목 재구성 — 기존 "설치자"(kioId 칸)/"키오드민"(kioAdminId 칸)을 없애고
+           kioId 칸은 새로운 빈 "키오에듀ID"로, kioAdminId 칸은 두 값을 합친 "그외"로 한 번만 옮겨담는 1회성 마이그레이션.
+           dashboardSettings.kioMigrationDone 플래그로 다시 실행되지 않게 막아둠 (여러 명이 같이 써도 안전하게 관리자만 실행). */
+        async function migrateKioFieldsIfNeeded() {
+            if (dashboardSettings && dashboardSettings.kioMigrationDone) return;
+            if (!isAdminUser()) return; // 일반 사용자 화면에서는 굳이 쓰기 작업을 시도하지 않음 (다음 관리자 로그인 때 실행됨)
+
+            const updates = [];
+            groupOrder.forEach(gk => {
+                (allGroupsData[gk] || []).forEach(item => {
+                    const oldInstaller = (item.kioId || '').trim();
+                    const oldKioAdmin = (item.kioAdminId || '').trim();
+                    if (!oldInstaller && !oldKioAdmin) return;
+                    const parts = [];
+                    if (oldInstaller) parts.push(`설치자 ${oldInstaller}`);
+                    if (oldKioAdmin) parts.push(`키오드민 ${oldKioAdmin}`);
+                    const etcVal = parts.join(', ');
+                    item.kioId = '';
+                    item.kioAdminId = etcVal;
+                    updates.push({ id: item.id, kio_id: '', kio_admin_id: etcVal });
+                });
+            });
+
+            try {
+                if (updates.length > 0) {
+                    await Promise.all(updates.map(u =>
+                        sb.from('companies').update({ kio_id: u.kio_id, kio_admin_id: u.kio_admin_id }).eq('id', u.id)
+                    ));
+                }
+                dashboardSettings = Object.assign({}, dashboardSettings, { kioMigrationDone: true });
+                await persistAppSettings({ dashboard_settings: dashboardSettings });
+            } catch (err) {
+                console.error('고유넘버 마이그레이션 실패:', err);
+                // 실패해도 화면은 이미 새 값으로 바뀌어 보이는 상태라, 다음 로드 때 플래그가 없으니 다시 시도됨
+            }
+        }
+
+        /* 2026-09-16 추가: 예전에 "설치자"/"키오드민"으로 커스텀 이름표를 바꿔뒀던 게 kioId/kioAdminId 필드에
+           그대로 남아있어서, 항목을 "키오에듀ID"/"그외"로 재구성해도 화면엔 옛날 이름표가 계속 보이던 버그 수정.
+           kioMigrationDone과는 별도 플래그(kioLabelsReset)로 딱 한 번만 정리함. */
+        async function resetStaleKioLabelsIfNeeded() {
+            if (dashboardSettings && dashboardSettings.kioLabelsReset) return;
+            if (!isAdminUser()) return;
+
+            const hadCustomKioId = customFieldLabels.kioId !== undefined;
+            const hadCustomKioAdminId = customFieldLabels.kioAdminId !== undefined;
+            if (hadCustomKioId) delete customFieldLabels.kioId;
+            if (hadCustomKioAdminId) delete customFieldLabels.kioAdminId;
+
+            dashboardSettings = Object.assign({}, dashboardSettings, { kioLabelsReset: true });
+            try {
+                const partial = { dashboard_settings: dashboardSettings };
+                if (hadCustomKioId || hadCustomKioAdminId) partial.field_labels = customFieldLabels;
+                await persistAppSettings(partial);
+            } catch (err) {
+                console.error('고유넘버 이름표 초기화 실패:', err);
             }
         }
 
@@ -1987,6 +2124,8 @@ function showSyncStatus(msg, isError) {
             try {
                 await loadAllDataFromSupabase();
                 await syncExpiredRentalStatuses();
+                await migrateKioFieldsIfNeeded();
+                await resetStaleKioLabelsIfNeeded();
                 renderGroupTabs();
                 loadSettings();
                 applyFieldLabels();
@@ -2048,15 +2187,20 @@ function generateUniqueId() {
 
         function renderGroupTabs() {
             const menu = document.getElementById('topMenu');
-            menu.innerHTML = groupOrder.map(key => `
+            const allTab = `
+                <li id="menu_${ALL_GROUP_KEY}" class="${currentGroup === ALL_GROUP_KEY ? 'active' : ''}"
+                    onclick="switchGroup('${ALL_GROUP_KEY}', this)"
+                    style="${currentGroup === ALL_GROUP_KEY ? 'background-color:' + getGroupColor(ALL_GROUP_KEY) + ';' : ''}">
+                    <span class="tab-label">전체</span>
+                </li>`;
+            const groupTabs = groupOrder.map(key => `
                 <li id="menu_${key}" class="${key === currentGroup ? 'active' : ''}"
                     onclick="switchGroup('${key}', this)"
-                    oncontextmenu="deleteGroupPrompt('${key}', event)"
-                    ondblclick="renameGroup('${key}', event)"
-                    title="더블클릭: 그룹명 변경 / 우클릭: 그룹 삭제">
+                    style="${key === currentGroup ? 'background-color:' + getGroupColor(key) + ';' : ''}">
                     <span class="tab-label">${escapeHtml(groupNames[key])}</span>
                 </li>
             `).join('');
+            menu.innerHTML = allTab + groupTabs;
         }
 
         async function addNewGroup() {
@@ -2112,8 +2256,10 @@ function generateUniqueId() {
                 if (currentGroup === groupKey) {
                     currentGroup = groupOrder[0];
                 }
+                delete groupColors[groupKey];
                 renderGroupTabs();
                 renderTable();
+                renderGroupEditListIfOpen();
                 showSyncStatus('☁️ 그룹 삭제 완료');
             } catch (err) {
                 console.error(err);
@@ -2140,10 +2286,102 @@ function generateUniqueId() {
             }
         }
 
+        /* ----- 그룹편집 팝업 (새그룹 / 삭제 / 색상변경 / 이름변경) — 탭 더블클릭·우클릭을 대체함 ----- */
+        function openGroupEditModal() {
+            if (!isAdminUser()) { alert('그룹 편집은 관리자만 할 수 있어요.'); return; }
+            renderGroupEditList();
+            document.getElementById('groupEditModal').style.display = 'flex';
+        }
+
+        function closeGroupEditModal() {
+            document.getElementById('groupEditModal').style.display = 'none';
+        }
+
+        function renderGroupEditListIfOpen() {
+            const modal = document.getElementById('groupEditModal');
+            if (modal && modal.style.display === 'flex') renderGroupEditList();
+        }
+
+        function renderGroupEditList() {
+            const list = document.getElementById('groupEditList');
+            // "전체"는 항상 맨 앞에 고정이라 순서변경 목록에는 안 넣음 — 실제 그룹(groupOrder)만 순서 바꿀 수 있음
+            list.innerHTML = groupOrder.map((key, idx) => `
+                <div class="group-edit-row">
+                    <div class="group-edit-order">
+                        <button type="button" class="group-edit-order-btn" onclick="moveGroupOrder('${key}', -1)" title="위로 이동" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                        <button type="button" class="group-edit-order-btn" onclick="moveGroupOrder('${key}', 1)" title="아래로 이동" ${idx === groupOrder.length - 1 ? 'disabled' : ''}>▼</button>
+                    </div>
+                    <input type="color" class="group-edit-swatch" value="${getGroupColor(key)}"
+                        onchange="changeGroupColor('${key}', this.value)" title="그룹 색상 변경">
+                    <span class="group-edit-name" onclick="renameGroupFromModal('${key}')" title="클릭하여 이름 변경">${escapeHtml(groupNames[key])}</span>
+                    <button type="button" class="group-edit-del" onclick="deleteGroupPrompt('${key}')" title="그룹 삭제">삭제</button>
+                </div>
+            `).join('');
+        }
+
+        // 그룹편집 팝업에서 ▲▼로 그룹 탭 순서를 바꾸면, 메인 화면 탭 순서도 바로 바뀌고 Supabase sort_order에도 저장됨
+        async function moveGroupOrder(groupKey, direction) {
+            if (!isAdminUser()) { alert('그룹 순서 변경은 관리자만 할 수 있어요.'); return; }
+            const idx = groupOrder.indexOf(groupKey);
+            const newIdx = idx + direction;
+            if (idx === -1 || newIdx < 0 || newIdx >= groupOrder.length) return;
+
+            [groupOrder[idx], groupOrder[newIdx]] = [groupOrder[newIdx], groupOrder[idx]];
+            renderGroupTabs();
+            renderGroupEditList();
+
+            try {
+                await Promise.all(groupOrder.map((k, i) => sb.from('groups').update({ sort_order: i }).eq('id', k)));
+                showSyncStatus('☁️ 그룹 순서 저장 완료');
+            } catch (err) {
+                console.error(err);
+                alert('그룹 순서 저장에 실패했습니다: ' + (err.message || err));
+            }
+        }
+
+        async function changeGroupColor(groupKey, color) {
+            groupColors[groupKey] = color;
+            dashboardSettings = Object.assign({}, dashboardSettings, { groupColors });
+            if (currentGroup === groupKey) renderGroupTabs();
+            renderTable();
+            await persistAppSettings({ dashboard_settings: dashboardSettings }, '☁️ 그룹 색상 저장 완료');
+        }
+
+        async function renameGroupFromModal(groupKey) {
+            await renameGroup(groupKey);
+            renderGroupEditListIfOpen();
+        }
+
+        async function addNewGroupFromModal() {
+            if (!isAdminUser()) { alert('그룹 추가는 관리자만 할 수 있어요.'); return; }
+            const input = document.getElementById('newGroupNameInput');
+            const name = (input.value || '').trim();
+            if (!name) { alert('새 그룹 이름을 입력해주세요.'); return; }
+            const newKey = 'group_' + Date.now();
+            try {
+                const { data, error } = await sb.from('groups')
+                    .insert({ key: newKey, name: name, sort_order: groupOrder.length })
+                    .select().single();
+                if (error) throw error;
+                groupNames[data.id] = data.name;
+                groupOrder.push(data.id);
+                allGroupsData[data.id] = [];
+                input.value = '';
+                renderGroupTabs();
+                renderGroupEditList();
+                showSyncStatus('☁️ 그룹 추가 완료');
+            } catch (err) {
+                console.error(err);
+                alert('그룹을 추가하지 못했습니다: ' + (err.message || err));
+            }
+        }
+
         function switchGroup(groupKey, element) {
             currentGroup = groupKey;
-            document.querySelectorAll('.top-menu li').forEach(li => li.classList.remove('active'));
-            element.classList.add('active');
+            // 2026-09-16 버그수정: 이전엔 클릭한 탭에만 active 클래스를 더하고 예전 탭의 인라인 배경색(그룹색)은
+            // 안 지워져서, 탭을 바꿔도 예전 탭이 계속 금색으로 남아 "두 개가 눌린 것처럼" 보였음.
+            // renderGroupTabs()를 다시 호출해서 클래스+인라인 그룹색을 항상 currentGroup 기준으로 통째로 새로 그림.
+            renderGroupTabs();
             document.getElementById('searchInput').value = '';
             document.getElementById('filterRegion').value = '';
             document.getElementById('filterStatus').value = ''; // 그룹 바뀌어도 기본은 "전체"부터 보이게 통일
@@ -2156,22 +2394,45 @@ function generateUniqueId() {
             event.stopPropagation();
             const menu = document.getElementById('groupMoveMenu');
 
+            // 2026-09-16 재수정: position:fixed로 바꿔도 여전히 표 헤더(고유넘버/기기정보 등짙은 배너)에
+            // 가려서 잘려보인다는 신고가 있어서, 아예 이 메뉴를 body 바로 아래로 옮겨버림 — 그러면 표/툴바
+            // 쪽 어떤 조상 요소의 쌓임맥락(stacking context)과도 완전히 무관해져서 항상 맨 위에 그려짐.
+            if (menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+
             if (menu.classList.contains('open')) {
                 menu.classList.remove('open');
                 return;
             }
 
-            const checkedCount = (allGroupsData[currentGroup] || []).filter(i => i.checked).length;
+            const checkedCount = getCurrentViewData().filter(i => i.checked).length;
             if (checkedCount === 0) {
                 alert('이동할 업체를 먼저 체크박스로 선택해주세요.');
                 return;
             }
 
-            const otherGroups = groupOrder.filter(k => k !== currentGroup);
+            // "전체" 탭에서는 체크된 업체들이 여러 그룹에 걸쳐 있을 수 있어서 모든 그룹을 이동 대상으로 보여줌
+            const otherGroups = currentGroup === ALL_GROUP_KEY ? groupOrder : groupOrder.filter(k => k !== currentGroup);
             menu.innerHTML = otherGroups.length > 0
                 ? otherGroups.map(k => `<div class="group-move-item" onclick="moveCheckedToGroup('${k}')">${escapeHtml(groupNames[k])}로 이동</div>`).join('')
                 : `<div class="group-move-empty">이동할 다른 그룹이 없습니다</div>`;
-            menu.classList.add('open');
+
+            // 2026-09-16: 화면(카드/표) 스크롤·overflow에 눌려 드롭다운이 잘려보이던 버그 수정 —
+            // position:absolute 대신 버튼 위치를 기준으로 position:fixed 좌표를 직접 계산해서 어떤 조상 요소의
+            // overflow에도 영향받지 않게 함. 화면 오른쪽/아래로 넘치지 않게 clamp도 같이 처리.
+            const btnRect = document.getElementById('groupMoveBtn').getBoundingClientRect();
+            menu.classList.add('open'); // 너비 계산을 위해 먼저 열어서 렌더링한 뒤 위치를 잡음
+            const menuWidth = menu.offsetWidth || 160;
+            const menuHeight = menu.offsetHeight || 0;
+            let left = btnRect.right - menuWidth;
+            left = Math.max(8, Math.min(left, window.innerWidth - menuWidth - 8));
+            let top = btnRect.bottom + 6;
+            if (top + menuHeight > window.innerHeight - 8) {
+                top = Math.max(8, btnRect.top - menuHeight - 6); // 아래 공간이 부족하면 버튼 위쪽으로 띄움
+            }
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
         }
 
         document.addEventListener('click', function(e) {
@@ -2183,23 +2444,31 @@ function generateUniqueId() {
         });
 
         async function moveCheckedToGroup(targetKey) {
-            const source = allGroupsData[currentGroup] || [];
-            const moving = source.filter(i => i.checked);
-            if (moving.length === 0) return;
+            // "전체" 탭에서는 체크된 업체가 여러 그룹에 걸쳐있을 수 있으므로, 실제 소속 그룹별로 묶어서 처리
+            const bySourceGroup = {};
+            groupOrder.forEach(gk => {
+                const moving = (allGroupsData[gk] || []).filter(i => i.checked);
+                if (moving.length > 0 && gk !== targetKey) bySourceGroup[gk] = moving;
+            });
+            const allMoving = Object.values(bySourceGroup).flat();
+            if (allMoving.length === 0) return;
 
             document.getElementById('groupMoveMenu').classList.remove('open');
             try {
-                const ids = moving.map(i => i.id);
+                const ids = allMoving.map(i => i.id);
                 const { error } = await sb.from('companies').update({ group_id: targetKey }).in('id', ids);
                 if (error) throw error;
 
-                moving.forEach(i => { i.checked = false; i.groupId = targetKey; });
-                allGroupsData[currentGroup] = source.filter(i => !moving.includes(i));
+                allMoving.forEach(i => { i.checked = false; i.groupId = targetKey; });
+                Object.keys(bySourceGroup).forEach(gk => {
+                    const movingSet = bySourceGroup[gk];
+                    allGroupsData[gk] = (allGroupsData[gk] || []).filter(i => !movingSet.includes(i));
+                });
                 if (!allGroupsData[targetKey]) allGroupsData[targetKey] = [];
-                allGroupsData[targetKey].push(...moving);
+                allGroupsData[targetKey].push(...allMoving);
 
                 renderTable();
-                alert(`${moving.length}개 업체를 '${groupNames[targetKey]}' 그룹으로 이동했습니다.`);
+                alert(`${allMoving.length}개 업체를 '${groupNames[targetKey]}' 그룹으로 이동했습니다.`);
             } catch (err) {
                 console.error(err);
                 alert('그룹 이동에 실패했습니다: ' + (err.message || err));
@@ -2276,7 +2545,7 @@ function generateUniqueId() {
             const showUnsupported = document.getElementById('toggleUnsupported').checked;
 
             tableBody.innerHTML = '';
-            const currentData = [...(allGroupsData[currentGroup] || [])];
+            const currentData = getCurrentViewData();
 
             let filteredData = currentData.filter((item) => {
                 if (!showUnsupported && item.status === '종료') return false;
@@ -2362,6 +2631,7 @@ function generateUniqueId() {
 
                 tr.innerHTML = `
                     <td class="sticky-col-0">${index + 1}</td>
+                    <td class="sticky-col-group"><span class="group-name-pill" style="background-color:${getGroupColor(item.groupId)};">${escapeHtml(groupNames[item.groupId] || '-')}</span></td>
                     <td class="sticky-col-1" style="text-align: center;">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
                     </td>
@@ -2384,7 +2654,6 @@ function generateUniqueId() {
                     <td class="device-group">${escapeHtml(item.deviceType || '-')}</td>
                     <td class="device-group">${escapeHtml(item.deviceOption || '-')}</td>
                     <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.kioId || '-')}</span></td>
-                    <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.kioAdminId || '-')}</span></td>
                     <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.reaCode || '-')}</span></td>
                     <td class="rental-group">${renderDivisionBadge(item)}</td>
                     <td class="rental-group rental-expiry-cell">${renderRentalExpiry(item)}</td>
@@ -2617,7 +2886,7 @@ function generateUniqueId() {
         // 체크박스 선택 상태는 브라우저(화면)에서만 관리 - 여러 사람이 같이 쓸 때 서로 선택이 겹치지 않도록 DB에는 저장하지 않음
         /* ===================== ⑨ 체크박스 선택 상태 (브라우저 화면에서만 관리, DB 미저장) ===================== */
         function toggleCheck(id, isChecked) {
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (item) {
                 item.checked = isChecked;
             }
@@ -2637,7 +2906,7 @@ function generateUniqueId() {
         }
 
         function toggleSelectAll(isChecked) {
-            const currentData = allGroupsData[currentGroup];
+            const currentData = getCurrentViewData();
             currentData.forEach(item => {
                 item.checked = isChecked;
             });
@@ -2645,7 +2914,7 @@ function generateUniqueId() {
         }
 
         function updateSelectAllState() {
-            const currentData = allGroupsData[currentGroup] || [];
+            const currentData = getCurrentViewData();
             const selectAllCheckbox = document.getElementById('selectAllCheckbox');
             if (!selectAllCheckbox) return;
 
@@ -2790,7 +3059,7 @@ function generateUniqueId() {
 
         /* ===================== ⑪ 대시보드 통계 (상단 요약 숫자 + 임대 상태별 필터) ===================== */
         function updateStats() {
-            const currentData = allGroupsData[currentGroup] || [];
+            const currentData = getStatsViewData();
             document.getElementById('totalCount').innerText = currentData.length;
             document.getElementById('successCount').innerText = currentData.filter(i => i.status === '정상').length;
             document.getElementById('dangerCount').innerText = currentData.filter(i => i.status === '요청').length;
@@ -2812,7 +3081,7 @@ function generateUniqueId() {
         }
 
         function updateRentalStats() {
-            const currentData = allGroupsData[currentGroup] || [];
+            const currentData = getStatsViewData();
             const rentalItems = currentData.filter(i => i.division === '임대');
             let upcoming = 0, ongoing = 0, expiring = 0, expired = 0;
             rentalItems.forEach(item => {
@@ -2848,7 +3117,7 @@ function generateUniqueId() {
         /* 설치위치 단독 팝업 제어 함수 */
         /* ===================== ⑫ 설치위치 모달 (표에서 설치위치 칸만 빠르게 수정) ===================== */
         function openLocationModal(id) {
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (!item) return;
 
             document.getElementById('locationTargetId').value = id;
@@ -2863,7 +3132,7 @@ function generateUniqueId() {
 
         async function saveLocationItem() {
             const id = document.getElementById('locationTargetId').value;
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (!item) return;
 
             const newLocation = document.getElementById('locationDetailInput').value;
@@ -2885,7 +3154,7 @@ function generateUniqueId() {
 
         /* ===================== ⑬ AS 메모(이력) 관리 — 고유 id 기준으로 추가/수정/삭제 ===================== */
         function openMemoModal(id) {
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (!item) return;
 
             document.getElementById('memoTargetId').value = id;
@@ -2946,7 +3215,7 @@ function generateUniqueId() {
 
         async function updateMemoItem(memoId) {
             const id = document.getElementById('memoTargetId').value;
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (!item) return;
 
             const memoIndex = item.memoList.findIndex(m => m.id === memoId);
@@ -2977,7 +3246,7 @@ function generateUniqueId() {
 
         async function addMemoItem() {
             const id = document.getElementById('memoTargetId').value;
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (!item) return;
 
             const textVal = document.getElementById('newMemoInput').value.trim();
@@ -3003,7 +3272,7 @@ function generateUniqueId() {
 
         async function deleteMemoItem(memoId) {
             const id = document.getElementById('memoTargetId').value;
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (!item) return;
 
             const memoIndex = item.memoList.findIndex(m => m.id === memoId);
@@ -3029,6 +3298,10 @@ function generateUniqueId() {
         }
 
         function openModalForAdd() {
+            if (currentGroup === ALL_GROUP_KEY) {
+                alert('"전체" 탭에서는 새 업체를 등록할 수 없어요. 등록할 그룹 탭을 먼저 선택해주세요.');
+                return;
+            }
             document.getElementById('modalTitle').innerText = `신규 업체 등록 (${groupNames[currentGroup]})`;
             document.getElementById('dataForm').reset();
             setSelectedRegionSi('');
@@ -3049,11 +3322,12 @@ function generateUniqueId() {
         }
 
         function openDetailModal(id) {
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const loc = findItemLocation(id);
+            const item = loc.item;
             if (!item) return;
 
             document.getElementById('detailPlaceName').textContent = item.placeName || '-';
-            document.getElementById('detailGroupTag').textContent = getGroupLabel(currentGroup) || '-';
+            document.getElementById('detailGroupTag').textContent = groupNames[loc.groupKey] || '-';
             const divisionEl = document.getElementById('detailDivisionBadge');
             divisionEl.className = 'division-badge ' + (item.division === '임대' ? 'division-rental' : 'division-sale');
             divisionEl.textContent = item.division === '임대' ? '임대' : '판매';
@@ -3083,7 +3357,6 @@ function generateUniqueId() {
             document.getElementById('detailDeviceOption').innerHTML = detailValue(item.deviceOption);
 
             document.getElementById('detailKioId').innerHTML = detailValue(item.kioId);
-            document.getElementById('detailKioAdminId').innerHTML = detailValue(item.kioAdminId);
             document.getElementById('detailReaCode').innerHTML = detailValue(item.reaCode);
 
             const rentalSection = document.getElementById('detailRentalSection');
@@ -3177,7 +3450,7 @@ function generateUniqueId() {
         /* ===================== ⑭ (이어서) 업체 등록/수정 모달 — 수정 진입, 저장, 삭제 ===================== */
         function openModalForEdit(id) {
             document.getElementById('modalTitle').innerText = "업체 정보 수정 및 관리";
-            const item = allGroupsData[currentGroup].find(d => d.id === id);
+            const item = findItemLocation(id).item;
             if (!item) return;
 
             document.getElementById('editTargetId').value = id;
@@ -3220,7 +3493,10 @@ function generateUniqueId() {
             const id = document.getElementById('editTargetId').value;
             const isEdit = id !== "";
 
-            let targetItem = isEdit ? allGroupsData[currentGroup].find(d => d.id === id) : null;
+            const editLoc = isEdit ? findItemLocation(id) : null;
+            let targetItem = editLoc ? editLoc.item : null;
+            // 수정일 때는 그 업체가 실제로 속한 그룹을 그대로 유지 ("전체" 탭에서 열었어도 엉뚱한 그룹으로 옮겨가면 안 됨)
+            const targetGroupKey = isEdit ? (editLoc && editLoc.groupKey) : currentGroup;
             const existingChecked = targetItem ? targetItem.checked : false;
             const existingMemoList = targetItem ? (targetItem.memoList || []).slice() : [];
 
@@ -3266,12 +3542,13 @@ function generateUniqueId() {
 
             try {
                 if (!isEdit) {
-                    const dbRow = itemToDbRow(formItem, currentGroup);
+                    const dbRow = itemToDbRow(formItem, targetGroupKey);
                     const { data, error } = await sb.from('companies').insert(dbRow).select().single();
                     if (error) throw error;
-                    allGroupsData[currentGroup].push(dbRowToItem(data));
+                    if (!allGroupsData[targetGroupKey]) allGroupsData[targetGroupKey] = [];
+                    allGroupsData[targetGroupKey].push(dbRowToItem(data));
                 } else {
-                    const dbRow = itemToDbRow(formItem, currentGroup);
+                    const dbRow = itemToDbRow(formItem, targetGroupKey);
                     // 동시편집 충돌 감지: 이 폼을 열었을 때 봤던 updated_at이 지금도 그대로일 때만 저장을 허용.
                     // 그 사이에 다른 사람이 먼저 저장해서 updated_at이 바뀌었으면 조건이 안 맞아 0건 업데이트되고,
                     // 그걸로 "누군가 방금 먼저 고쳤구나"를 감지해서 내 수정본으로 조용히 덮어쓰는 걸 막음
@@ -3286,9 +3563,9 @@ function generateUniqueId() {
                         alert('⚠️ 다른 사람이 방금 이 업체 정보를 먼저 수정했어요.\n최신 내용을 다시 불러올게요. 방금 입력하신 내용은 다시 한번 확인 후 입력해주세요.');
                         const { data: freshRow, error: freshErr } = await sb.from('companies').select('*').eq('id', id).single();
                         if (!freshErr && freshRow) {
-                            const freshIndex = allGroupsData[currentGroup].findIndex(d => d.id === id);
-                            if (freshIndex !== -1) {
-                                allGroupsData[currentGroup][freshIndex] = Object.assign(dbRowToItem(freshRow), { checked: existingChecked });
+                            const freshLoc = findItemLocation(id);
+                            if (freshLoc.index !== -1) {
+                                freshLoc.arr[freshLoc.index] = Object.assign(dbRowToItem(freshRow), { checked: existingChecked });
                             }
                         }
                         renderTable();
@@ -3296,9 +3573,8 @@ function generateUniqueId() {
                         return;
                     }
 
-                    const index = allGroupsData[currentGroup].findIndex(d => d.id === id);
-                    if (index !== -1) {
-                        allGroupsData[currentGroup][index] = Object.assign(dbRowToItem(data[0]), { checked: existingChecked });
+                    if (editLoc && editLoc.index !== -1) {
+                        editLoc.arr[editLoc.index] = Object.assign(dbRowToItem(data[0]), { checked: existingChecked });
                     }
                 }
                 closeModal();
@@ -3325,8 +3601,8 @@ function generateUniqueId() {
                     if (!data || data.length === 0) {
                         throw new Error('삭제 권한이 없거나(RLS 정책 차단), 이미 삭제된 항목입니다. Supabase의 companies 테이블 DELETE 정책을 확인해주세요.');
                     }
-                    const index = allGroupsData[currentGroup].findIndex(d => d.id === id);
-                    if (index !== -1) allGroupsData[currentGroup].splice(index, 1);
+                    const delLoc = findItemLocation(id);
+                    if (delLoc.index !== -1) delLoc.arr.splice(delLoc.index, 1);
                     closeModal();
                     renderTable();
                     showSyncStatus('☁️ 삭제 완료');
@@ -3390,10 +3666,12 @@ function generateUniqueId() {
                 rental: document.getElementById('toggleRental').checked,
                 unsupported: document.getElementById('toggleUnsupported').checked
             };
-            dashboardSettings = settings;
+            // dashboardSettings 안에는 groupColors, kioMigrationDone처럼 이 함수가 모르는 다른 키도 같이 들어있을 수 있어서
+            // 통째로 새 객체로 바꿔치기하지 않고 병합함 (안 그러면 그룹 색상 저장한 게 컬럼 토글 한 번에 날아감)
+            dashboardSettings = Object.assign({}, dashboardSettings, settings);
             // "종료 업체 표시" 체크박스도 이 화면설정 그룹에 같이 묶여있어서, 여기 바뀔 때마다
             // 항목표시(컬럼) 설정이랑 똑같이 Supabase에 저장돼서 다음 로그인/다른 기기에서도 유지됨. (정상 동작 — 어디 저장되는지 헷갈리지 않게 메시지만 명확히)
-            persistAppSettings({ dashboard_settings: settings }, '☁️ 화면 설정 저장 완료');
+            persistAppSettings({ dashboard_settings: dashboardSettings }, '☁️ 화면 설정 저장 완료');
         }
 
         function loadSettings() {
@@ -3522,7 +3800,7 @@ function generateUniqueId() {
         }
 
         function getSelectedItemsForExport() {
-            const currentData = allGroupsData[currentGroup];
+            const currentData = getCurrentViewData();
             if (!currentData || currentData.length === 0) {
                 alert('내보낼 데이터가 없습니다.');
                 return null;
@@ -3556,7 +3834,7 @@ function generateUniqueId() {
                     return 'print-badge-success';
                 };
 
-                const groupLabel = groupNames[currentGroup];
+                const groupLabel = groupNames[currentGroup] || '전체';
                 const colWidths = computePdfColumnWidths(columns);
 
                 const theadHtml = `<tr>${columns.map((col, i) =>
@@ -3714,7 +3992,7 @@ function generateUniqueId() {
             if (!rows) return;
 
             const columns = getVisibleExportColumns();
-            const groupLabel = groupNames[currentGroup];
+            const groupLabel = groupNames[currentGroup] || '전체';
 
             const workbook = new ExcelJS.Workbook();
             const sheet = workbook.addWorksheet(`${groupLabel} 선택리스트`.slice(0, 31));
@@ -3857,6 +4135,10 @@ function generateUniqueId() {
 
         /* ===================== ⑳ 엑셀 업로드(대량등록) / 등록양식 템플릿 다운로드 ===================== */
         function triggerExcelUpload() {
+            if (currentGroup === ALL_GROUP_KEY) {
+                alert('"전체" 탭에서는 엑셀 대량등록을 할 수 없어요. 등록할 그룹 탭을 먼저 선택해주세요.');
+                return;
+            }
             document.getElementById('excelUploadInput').click();
         }
 
