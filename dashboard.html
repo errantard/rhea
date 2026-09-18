@@ -680,6 +680,14 @@
         .as-entry { background: #ffffff; border: 1px solid var(--border-warm); border-radius: 9px; padding: 8px 11px; position: relative; }
         .as-entry .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
         .as-entry .date { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+        /* 2026-09-18: 예전 별도 AS메모 모달엔 있었는데 9차 통합팝업으로 합치면서 빠졌던 "날짜 직접수정" 기능을 복원 —
+           평소엔 텍스트처럼 보이다가 클릭(focus)하면 밑줄이 생겨 수정 가능한 걸 알려줌 (장소명 인풋과 동일한 패턴) */
+        .as-entry .date-edit {
+            font-size: 10.5px; color: var(--muted); font-weight: 700; background: transparent; border: none;
+            border-bottom: 1px solid transparent; outline: none; padding: 0 1px; font-family: inherit; width: 92px;
+            transition: border-color .15s, color .15s;
+        }
+        .as-entry .date-edit:focus { border-bottom-color: var(--teal); color: #3a3830; }
         .as-entry .author { font-size: 10.5px; color: var(--coral-text); }
         .as-entry .del { position: absolute; top: 6px; right: 8px; font-size: 12px; color: #c7c2b3; cursor: pointer; opacity: 0; transition: opacity .15s; }
         .as-entry:hover .del { opacity: 1; }
@@ -3252,7 +3260,8 @@ function generateUniqueId() {
                 return `
                     <div class="as-entry">
                         <span class="del" title="삭제" onclick="deleteDetailMemoItem('${memo.id || ''}')">✕</span>
-                        <div class="meta"><span class="date">${escapeHtml(memo.date || '')}</span><span class="author">${authorLabel}</span></div>
+                        <div class="meta"><input type="text" class="date-edit" value="${escapeHtml(memo.date || '')}"
+                            onblur="updateDetailMemoDate('${memo.id || ''}', this.value)"><span class="author">${authorLabel}</span></div>
                         <textarea class="txt" rows="1" onfocus="autoGrowTextarea(this)" oninput="autoGrowTextarea(this)"
                             onblur="updateDetailMemoItem('${memo.id || ''}', this.value)">${escapeHtml(memo.text || '')}</textarea>
                     </div>`;
@@ -3310,6 +3319,30 @@ function generateUniqueId() {
                 item.memoList[memoIndex].text = prevText;
                 console.error(err);
                 alert('이력 저장에 실패했습니다: ' + (err.message || err));
+                renderDetailMemoThread(item.memoList);
+            }
+        }
+
+        async function updateDetailMemoDate(memoId, newDate) {
+            const id = document.getElementById('detailTargetId').value;
+            const item = findItemLocation(id).item;
+            if (!item || !memoId) return;
+
+            const memoIndex = item.memoList.findIndex(m => m.id === memoId);
+            if (memoIndex === -1) return;
+
+            const trimmed = newDate.trim();
+            if (!trimmed) { renderDetailMemoThread(item.memoList); return; } // 빈 값으로 지우려 한 건 무시하고 원래 값 복원
+            const prevDate = item.memoList[memoIndex].date;
+            if (trimmed === prevDate) return; // 실제로 안 바뀌었으면 저장 요청 자체를 생략
+
+            item.memoList[memoIndex].date = trimmed;
+            try {
+                await persistMemoList(item);
+            } catch (err) {
+                item.memoList[memoIndex].date = prevDate;
+                console.error(err);
+                alert('날짜 저장에 실패했습니다: ' + (err.message || err));
                 renderDetailMemoThread(item.memoList);
             }
         }
