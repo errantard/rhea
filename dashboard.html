@@ -390,7 +390,8 @@
         /* width:100%를 주면 창이 넓을 때 셀들이 억지로 늘어남 — 자연 컨텐츠 크기로 고정하고 남는 공간은 오른쪽에 여백으로 남김 */
         table { width: auto; border-collapse: separate; border-spacing: 0; text-align: left; font-size: var(--tbl-font); white-space: nowrap; }
 
-        th, td { padding: var(--tbl-pad-v) var(--tbl-pad-h); border-bottom: 1px solid #F0EDE3; border-right: 1px solid #FAF8F2; vertical-align: middle;}
+        /* 2026-09-18: 회색 그리드선(가로/세로) → 상단 헤더(--ink 네이비) 톤에 맞춘 연한 네이비 그리드선으로 교체 */
+        th, td { padding: var(--tbl-pad-v) var(--tbl-pad-h); border-bottom: 1px solid #E6EAF1; border-right: 1px solid #F1F3F8; vertical-align: middle;}
         th:last-child, td:last-child { border-right: none; }
 
         th.group-banner-region, th.group-banner-address, th.group-banner-org, th.group-banner-manager, th.group-banner-device, th.group-banner-sys, th.group-banner-rental, th.group-banner-etc {
@@ -421,7 +422,7 @@
         th.sticky-col-group, td.sticky-col-group { position: sticky; left: 34px; width: 60px; min-width: 60px; z-index: 5; background-color: #ffffff; text-align: center; padding-left: 3px !important; padding-right: 3px !important; }
         th.sticky-col-1, td.sticky-col-1 { position: sticky; left: 94px; width: 45px; min-width: 45px; z-index: 5; background-color: #ffffff; text-align: center; }
         th.sticky-col-2, td.sticky-col-2 { position: sticky; left: 139px; width: 120px; min-width: 120px; z-index: 5; background-color: #ffffff; }
-        th.sticky-col-3, td.sticky-col-3 { position: sticky; left: 259px; width: 140px; min-width: 140px; z-index: 5; background-color: #ffffff; border-right: 2px solid #dcdde1; }
+        th.sticky-col-3, td.sticky-col-3 { position: sticky; left: 259px; width: 140px; min-width: 140px; z-index: 5; background-color: #ffffff; border-right: 2px solid #CBD3E0; }
 
         /* 그룹명 컬럼 안의 색상 알약(pill) — 탭과 동일한 그룹 색상을 인라인 style로 받아서 씀 */
         .group-name-pill {
@@ -486,6 +487,18 @@
         /* 장소명 - 클릭 시 상세정보 팝업 */
         .place-name-link { cursor: pointer; transition: color 0.12s; }
         .place-name-link:hover { color: var(--coral); font-weight: 800; text-decoration: underline; }
+        /* 2026-09-19 라운드5→6: No.원형뱃지 + 장소명 빨간글씨 대신, "요청(AS 진행중)"인 행의 셀 자체를
+           쨍한 빨간 배경 + 흰 글씨로 채워서 한눈에 띄도록 변경. 라운드5에서는 지역(시/군구)+장소명 셀 둘 다
+           빨갛게 했었는데, 라운드6 피드백으로 "장소명 칸만" 빨갛게로 범위 축소. hover/checked-row가
+           !important로 배경을 덮어쓰므로 그 상태에서도 빨간색이 유지되도록 동일 우선순위로 재정의. */
+        td.region-urgent-cell,
+        tr:hover td.region-urgent-cell,
+        tr.checked-row td.region-urgent-cell {
+            background-color: #e0262d !important;
+            color: #ffffff !important;
+        }
+        td.region-urgent-cell .place-name-link { color: #ffffff !important; }
+        td.region-urgent-cell .place-name-link:hover { color: #ffe8e6 !important; text-decoration: underline; }
 
         /* 이메일/기기정보처럼 "읽기용"이 아니라 "복사용"인 값 - 무한정 늘어나 표를 밀어내지 않도록 줄바꿈 + 작은 글씨 처리 */
         td.copy-cell {
@@ -584,12 +597,15 @@
         }
         .detail-hero {
             position: relative; overflow: hidden; flex-shrink: 0;
-            padding: 20px 26px 16px;
+            padding: 20px 26px 18px; min-height: 178px;
             cursor: move; user-select: none;
             background:
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 34px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 34px),
-                linear-gradient(160deg, var(--ink) 0%, var(--ink2) 60%, var(--ink) 100%);
+                linear-gradient(90deg, rgba(8,18,32,0.88) 0%, rgba(8,18,32,0) 34%, rgba(8,18,32,0) 66%, rgba(8,18,32,0.88) 100%),
+                radial-gradient(ellipse 78% 88% at 50% 45%, rgba(10,23,41,0) 25%, rgba(10,23,41,0.5) 72%, rgba(10,23,41,0.85) 100%),
+                linear-gradient(180deg, rgba(12,16,24,0.16) 0%, rgba(12,16,24,0.32) 55%, rgba(10,13,20,0.54) 100%),
+                url('assets/login-bg-scene.webp');
+            background-size: cover;
+            background-position: center 22%;
         }
         .detail-hero-glow {
             position: absolute; top: -70px; left: -70px; width: 240px; height: 240px; border-radius: 50%;
@@ -604,69 +620,123 @@
             position: absolute; bottom: -90px; right: -50px; width: 200px; height: 200px; border-radius: 50%;
             background: radial-gradient(circle, rgba(242,201,76,0.16) 0%, rgba(242,201,76,0) 70%); pointer-events: none;
         }
+        /* 2026-09-19: 닫기 버튼을 텍스트 ×에서 아이콘(SVG)식으로 교체, 살짝 큼지막한 정사각 버튼으로 —
+           이제 절대위치가 아니라 .detail-hero-topbar-right 안 flex 흐름의 마지막 아이템 */
         .detail-close {
-            position: relative; z-index: 2; color: rgba(255,255,255,0.55); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px;
+            display: flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+            color: #ffffff; cursor: pointer;
+            background: linear-gradient(145deg, #f0565b, #c1272d);
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 8px rgba(150,20,20,0.45);
+            transition: .15s;
         }
-        .detail-close:hover { color: #ffffff; }
-        .detail-top-row { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .detail-pick-group { display: flex; gap: 8px; }
-        .detail-pick-badge { display: flex; border-radius: 7px; overflow: hidden; border: 1px solid rgba(255,255,255,0.14); }
-        .detail-pick-opt { font-size: 11px; font-weight: 700; padding: 5px 11px; cursor: pointer; color: #8ea0b4; background: rgba(255,255,255,0.03); transition: .15s; user-select: none; }
-        .detail-pick-opt:hover:not(.active) { background: rgba(255,255,255,0.08); color: #dde6ee; }
-        .detail-pick-opt.active.pick-sale { background: #2d4a6b; color: #a9d0ff; }
-        .detail-pick-opt.active.pick-rent { background: #3a2f52; color: #d3b8ff; }
-        .detail-pick-opt.active.pick-ok { background: #1f4d3a; color: #7fe0ac; }
-        .detail-pick-opt.active.pick-req { background: #5a3218; color: #ffb066; }
-        .detail-pick-opt.active.pick-end { background: #4a2c26; color: #ffab8f; }
-        .detail-group-tag {
-            display: flex; align-items: center; gap: 6px; padding: 5px 13px 5px 10px; border-radius: 8px;
-            background: linear-gradient(135deg, #3a2f14, #4a3a18); border: 1px solid rgba(242,201,76,0.35);
+        .detail-close:hover { background: linear-gradient(145deg, #f6787c, #d5323a); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 10px rgba(150,20,20,0.6); }
+        .detail-close svg { width: 18px; height: 18px; }
+        /* 2026-09-19: 상단 한 줄(.detail-hero-topbar) = 좌측[아이콘+그룹명(크게) · 정상/요청], 우측[판매/임대 · 종료 · 닫기].
+           그룹명은 장소명(아래)보다는 작지만 훨씬 눈에 띄게 키움. */
+        .detail-hero-topbar { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+        .detail-hero-topbar-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+        .detail-hero-topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        /* 2026-09-19 라운드6: 아이콘을 감싸던 사각라운드를 "직사각형 라운드"로 넓혀서 그룹명까지 한 박스 안에
+           포괄 — 결국 [아이콘 | 그룹명]이 하나의 알약형 배지가 됨. 박스 색은 아이콘 본래의 파랑 그라데이션을
+           그대로 확장, 글자색은 라운드5에서 정한 노란색을 그대로 유지("눈에 띄어서 나쁘지 않다"는 피드백). */
+        .detail-hero-group {
+            display: flex; align-items: center; gap: 10px; min-width: 0;
+            border-radius: 14px; padding: 5px 20px 5px 5px;
+            background: linear-gradient(145deg, #3a7fc4, #15385e);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 16px rgba(0,0,0,0.16), 0 4px 14px rgba(10,30,60,0.55), 0 0 18px rgba(74,158,255,0.3);
         }
-        .detail-group-tag .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
-        .detail-group-tag .name { font-size: 14px; font-weight: 800; color: var(--amber); letter-spacing: .2px; }
-        .detail-hero-titlewrap { position: relative; z-index: 1; }
+        .detail-hero-group-icon {
+            width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.16);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+        }
+        .detail-hero-group-icon svg { width: 23px; height: 23px; color: #eaf3ff; }
+        .detail-hero-group-name { font-size: 19px; font-weight: 800; color: #ffe14d; letter-spacing: .1px; text-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 14px rgba(255,210,60,0.4); white-space: nowrap; }
+        .detail-hero-titlewrap { position: relative; z-index: 1; min-width: 0; }
+        /* 2026-09-19 라운드5: 첨부 레퍼런스처럼 아이콘 + 활성 시 네온 글로우로 "눈에 확 띄게" — 세그먼트를 감싸던
+           테두리(overflow:hidden)를 없애서 글로우가 잘리지 않게 하고, 옵션 각각을 독립된 알약 버튼으로 분리. */
+        .detail-pick-badge { display: flex; gap: 6px; flex-shrink: 0; }
+        /* 2026-09-19 라운드7: 정상/요청·판매/임대가 너무 커져서 정작 제일 눈에 띄어야 할 장소명이 묻히는
+           느낌이라는 피드백 → 전체적으로 살짝만 축소(닫기 X 버튼은 크기 변경 없음). */
+        .detail-pick-opt {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 13px; font-weight: 700; padding: 7px 14px; border-radius: 9px;
+            cursor: pointer; color: #8ea0b4; background: rgba(15,18,26,0.45);
+            border: 1px solid rgba(255,255,255,0.12);
+            transition: .15s; user-select: none; white-space: nowrap;
+        }
+        .detail-pick-opt svg { width: 13px; height: 13px; flex-shrink: 0; }
+        .detail-pick-opt.pick-sale, .detail-pick-opt.pick-rent { font-size: 17px; font-weight: 800; padding: 8px 18px; }
+        .detail-pick-opt.pick-sale svg, .detail-pick-opt.pick-rent svg { width: 16px; height: 16px; }
+        .detail-pick-opt:hover:not(.active) { background: rgba(255,255,255,0.12); color: #dde6ee; }
+        .detail-pick-opt.active.pick-sale { background: linear-gradient(145deg, #55aaff, #1f6feb); color: #fff; border-color: rgba(255,255,255,0.35); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 16px rgba(70,150,255,0.65), 0 2px 8px rgba(20,80,180,0.5); }
+        .detail-pick-opt.active.pick-rent { background: linear-gradient(145deg, #b28aff, #7c4fe0); color: #fff; border-color: rgba(255,255,255,0.35); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 16px rgba(160,110,255,0.6), 0 2px 8px rgba(90,40,170,0.5); }
+        .detail-pick-opt.active.pick-ok { background: linear-gradient(145deg, #57e6a8, #17a870); color: #06331f; border-color: rgba(255,255,255,0.35); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 16px rgba(60,220,150,0.6), 0 2px 8px rgba(10,110,70,0.5); }
+        .detail-pick-opt.active.pick-req { background: linear-gradient(145deg, #ffab5c, #ff7a1f); color: #3a1400; border-color: rgba(255,255,255,0.35); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 16px rgba(255,150,60,0.6), 0 2px 8px rgba(180,70,10,0.5); }
+        .detail-pick-opt.active.pick-end { background: linear-gradient(145deg, #ff7b7f, #e0323a); color: #fff; border-color: rgba(255,255,255,0.35); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 16px rgba(255,90,90,0.6), 0 2px 8px rgba(150,20,20,0.5); }
         .detail-place-name {
-            font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;
-            line-height: 1.25; margin-bottom: 4px; word-break: keep-all;
+            font-size: 29px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;
+            line-height: 1.25; margin-bottom: 5px; word-break: keep-all;
             background: transparent; border: none; border-bottom: 1px solid transparent; outline: none;
             padding: 1px 2px; max-width: 100%; font-family: inherit; transition: border-color .15s, background .15s;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.6);
         }
         /* 2026-09-18: hover만으로 수정모드처럼 보여 팝업 드래그 시 방해된다는 피드백 → hover 강조 제거, 클릭(focus)했을 때만 표시.
            또한 폭을 100%(줄 전체)가 아니라 실제 글자 길이만큼만 차지하도록 JS(autoSizeDetailPlaceName)로 동적 계산 — 나머지 영역은 마우스가 지나가도 입력칸에 안 걸림 */
-        .detail-place-name:focus { border-bottom-color: var(--amber); background: rgba(255,255,255,0.06); }
-        .detail-address { font-size: 12.5px; color: #a9b4c4; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .detail-place-name:focus { border-bottom-color: var(--amber); background: rgba(255,255,255,0.10); }
+        .detail-address { font-size: 12.5px; color: #cbd3de; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
         .detail-address select { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: #dde6ee; font-size: 12px; border-radius: 5px; padding: 2px 5px; }
         .detail-address .loc-input {
-            background: transparent; border: none; border-bottom: 1px solid transparent; color: #a9b4c4; font-size: 12.5px;
+            background: transparent; border: none; border-bottom: 1px solid transparent; color: #cbd3de; font-size: 12.5px;
             outline: none; padding: 1px 2px; font-family: inherit; min-width: 90px; transition: border-color .15s, background .15s;
         }
         .detail-address .loc-input:hover { border-bottom-color: rgba(255,255,255,0.25); }
         .detail-address .loc-input:focus { border-bottom-color: var(--amber); color: #fff; }
-        .detail-address .navermap-link { color: #74b9ff; text-decoration: none; font-weight: 600; }
+        .detail-address .navermap-link { color: #86c2ff; text-decoration: none; font-weight: 600; }
         .detail-address .navermap-link:hover { text-decoration: underline; }
 
         .detail-body { flex: 1; display: flex; overflow: hidden; }
-        .detail-main { flex: 1.2; overflow-y: auto; padding: 12px 20px 16px; display: flex; flex-direction: column; gap: 6px; }
+        .detail-main { flex: 1.2; overflow-y: auto; padding: 8px 20px 16px; display: flex; flex-direction: column; gap: 0; background: var(--paper2); }
         .detail-side { flex: 1; overflow-y: auto; background: var(--paper2); border-left: 1px solid var(--border-warm); display: flex; flex-direction: column; }
 
-        .dtag-row { display: flex; align-items: stretch; border-radius: 8px; overflow: hidden; }
-        .dtag { width: 32px; flex-shrink: 0; display: grid; place-items: center; }
-        .dtag span {
-            writing-mode: vertical-rl; text-orientation: upright;
-            font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #fff; text-align: center; line-height: 1.35;
+        /* 2026-09-19 라운드4: 흰줄 구분은 글자가 안 띈다는 재피드백 → 라운드박스 카드 스타일로 복귀.
+           단, 아이콘은 박스 "밖"(왼쪽)에 독립적으로 두고, 라운드박스(흰배경)는 아이콘 오른쪽부터 .dfields만 감싸도록 구성. */
+        .dtag-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            margin-bottom: 10px;
         }
-        .dtag.dc-region { background: #2f6fb0; }
-        .dtag.dc-addr { background: var(--teal); }
-        .dtag.dc-org { background: #c97a2e; }
-        .dtag.dc-mgr { background: #b03470; }
-        .dtag.dc-dev { background: #3f8f4a; }
-        .dtag.dc-sw { background: #2f7fa0; }
-        .dfields { flex: 1; display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 9px 14px; align-items: flex-end; background: #FEFCF6; }
+        .dtag-row:last-child { margin-bottom: 0; }
+        .dtag {
+            width: 62px; flex-shrink: 0; border-radius: 10px; margin-top: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+            padding: 9px 4px 8px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -12px 16px rgba(0,0,0,0.14), 0 3px 8px rgba(0,0,0,0.16);
+        }
+        .dtag svg { width: 21px; height: 21px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+        .dtag span {
+            font-size: 10.5px; font-weight: 800; letter-spacing: .2px; color: #fff; text-align: center; line-height: 1.2;
+            text-shadow: 0 1px 2px rgba(0,0,0,.25);
+        }
+        .dtag.dc-region  { background: linear-gradient(160deg, #4f9fe0 0%, #2f6fb0 55%, #1c4a7d 100%); }
+        .dtag.dc-addr    { background: linear-gradient(160deg, #2bc9a8 0%, #0f8f78 55%, #0a5f50 100%); }
+        .dtag.dc-org     { background: linear-gradient(160deg, #f0a75a 0%, #c97a2e 55%, #93591f 100%); }
+        .dtag.dc-mgr     { background: linear-gradient(160deg, #e0559a 0%, #b03470 55%, #7c2350 100%); }
+        .dtag.dc-dev     { background: linear-gradient(160deg, #62c473 0%, #3f8f4a 55%, #2a6532 100%); }
+        .dtag.dc-sw      { background: linear-gradient(160deg, #4fb8d6 0%, #2f7fa0 55%, #1e5a73 100%); }
+        .dtag.dc-rental  { background: linear-gradient(160deg, #9b7fd6 0%, #6b4ea6 55%, #4a3576 100%); }
+        .dfields {
+            flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end;
+            background: #ffffff; border: none; border-radius: 12px;
+            padding: 12px 16px; box-shadow: 0 1px 6px rgba(58,56,48,0.09);
+        }
         .dfield { display: flex; flex-direction: column; gap: 2px; min-width: 130px; flex: 1; }
         .dfield.wide { flex-basis: 100%; }
         .dfield label { font-size: 9.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
         .dfield input, .dfield select {
-            background: transparent; border: none; border-bottom: 1px solid var(--border-warm); color: #3a3830; font-size: 12.5px;
+            background: transparent; border: none; border-bottom: 1px solid rgba(58,56,48,0.10); color: #2a2820; font-size: 12.5px; font-weight: 700;
             padding: 3px 2px; outline: none; transition: border-color .15s, background .15s; font-family: inherit;
         }
         .dfield input:hover, .dfield select:hover { border-bottom-color: var(--teal); background: rgba(15,110,92,0.04); }
@@ -1027,11 +1097,27 @@
 
             /* ---------- 업체 상세보기+수정+AS이력 통합 팝업: 전체화면 + 세로 스택(정보 위, AS이력 아래) ---------- */
             .detail-modal-content { width: 100%; max-width: 100vw; height: 100%; max-height: 100vh; border-radius: 0; }
-            .detail-hero { padding: 16px 16px 14px; cursor: default; }
-            .detail-place-name { font-size: 19px; }
-            .detail-group-tag .name { font-size: 12.5px; }
+            .detail-hero { padding: 16px 16px 14px; min-height: 0; cursor: default; background-position: center 30%; }
+            .detail-hero-topbar { flex-wrap: wrap; row-gap: 8px; margin-bottom: 10px; }
+            .detail-hero-topbar-left { gap: 10px; }
+            .detail-hero-group { gap: 7px; padding: 4px 14px 4px 4px; border-radius: 11px; }
+            .detail-hero-group-icon { width: 30px; height: 30px; border-radius: 8px; }
+            .detail-hero-group-icon svg { width: 17px; height: 17px; }
+            .detail-hero-group-name { font-size: 13px; }
+            .detail-pick-opt { font-size: 11px; padding: 5px 10px; gap: 4px; }
+            .detail-pick-opt svg { width: 11px; height: 11px; }
+            .detail-pick-opt.pick-sale, .detail-pick-opt.pick-rent { font-size: 13px; padding: 6px 13px; }
+            .detail-pick-opt.pick-sale svg, .detail-pick-opt.pick-rent svg { width: 13px; height: 13px; }
+            .detail-close { width: 30px; height: 30px; }
+            .detail-close svg { width: 16px; height: 16px; }
+            .detail-place-name { font-size: 21px; }
             .detail-body { flex-direction: column; overflow-y: auto; }
-            .detail-main { flex: none; padding: 12px 14px; order: 1; overflow-y: visible; max-height: none; }
+            .detail-main { flex: none; padding: 8px 14px; order: 1; overflow-y: visible; max-height: none; gap: 0; }
+            .dtag-row { gap: 8px; margin-bottom: 8px; }
+            .dtag { width: 50px; padding: 6px 3px; gap: 2px; }
+            .dtag svg { width: 17px; height: 17px; }
+            .dtag span { font-size: 9px; }
+            .dfields { padding: 10px 12px; border-radius: 10px; }
             .detail-side { flex: none; border-left: none; border-top: 1px solid var(--border-warm); order: 2; }
             .as-thread { max-height: 46vh; }
             .detail-footer { padding: 12px 16px; }
@@ -1255,14 +1341,14 @@
                 <table id="customerTable">
                     <thead>
                         <tr>
-                            <th colspan="5" class="sticky-col-0 group-banner-region" style="border-bottom: none; border-right: 2px solid #dcdde1; z-index: 20;"><span class="group-pill" data-group-label="region">지역</span></th>
+                            <th colspan="5" class="sticky-col-0 group-banner-region" style="border-bottom: none; border-right: 2px solid #CBD3E0; z-index: 20;"><span class="group-pill" data-group-label="region">지역</span></th>
                             <th colspan="2" class="group-banner-address address-group"><span class="group-pill" data-group-label="address">주소</span></th>
                             <th colspan="5" class="group-banner-org org-group"><span class="group-pill" data-group-label="org">소속</span></th>
                             <th colspan="2" class="group-banner-manager manager-group"><span class="group-pill" data-group-label="manager">담당자</span></th>
                             <th colspan="3" class="group-banner-device device-group"><span class="group-pill" data-group-label="device">기기정보</span></th>
                             <th colspan="2" class="group-banner-sys sys-group"><span class="group-pill" data-group-label="sys">고유넘버</span></th>
                             <th colspan="2" class="group-banner-rental rental-group"><span class="group-pill">임대</span></th>
-                            <th colspan="3" class="group-banner-etc"><span class="group-pill" data-group-label="etc">기타</span></th>
+                            <th colspan="1" class="group-banner-etc"><span class="group-pill" data-group-label="etc">기타</span></th>
                         </tr>
                         <tr>
                             <th class="sticky-col-0">No</th>
@@ -1289,9 +1375,10 @@
                             <th class="rental-group">구분</th>
                             <th class="rental-group">임대만료일</th>
                             <th class="sortable-th" data-field-label="memo" data-sort-key="memo">메모</th>
-                            <th style="width: 8%;" class="sortable-th" data-field-label="status" data-sort-key="status">상태</th>
-                            <th style="width: 5%; text-align: center;">수정</th>
                         </tr>
+                        <!-- 2026-09-18: "상태"/"수정" 컬럼 제거 — 수정은 장소명 클릭(상세팝업)으로 이미 가능하고,
+                             상태(판매/임대·정상/요청/종료)는 그 상세팝업 상단에 이미 표시됨. "요청"(AS 진행중) 상태만
+                             장소명 셀 배경을 빨간색으로 채워 표에서 바로 구분되게 처리(region-urgent-cell 참고, 2026-09-19 라운드6) -->
                     </thead>
                     <tbody id="tableBody">
                     </tbody>
@@ -1463,37 +1550,74 @@
                 <div class="detail-hero-glow"></div>
                 <div class="detail-hero-ring"></div>
                 <div class="detail-hero-glow-r"></div>
-                <div class="detail-top-row">
-                    <div class="detail-pick-group">
-                        <div class="detail-pick-badge">
-                            <span class="detail-pick-opt pick-sale" id="detailPickSale" onclick="setDetailDivision('판매')">판매</span>
-                            <span class="detail-pick-opt pick-rent" id="detailPickRent" onclick="setDetailDivision('임대')">임대</span>
+                <!-- 2026-09-19: 상단 한 줄에 [아이콘+그룹명(크게)][정상/요청] ... [판매/임대][종료][닫기X] 배치.
+                     정상/요청/종료 3분할이었던 상태뱃지를 "정상·요청"(좌, 그룹명 옆)과 "종료"(우, 닫기 버튼 옆)로 분리 —
+                     대장님 요청 그대로. setDetailStatus()는 id 기반이라 DOM 위치가 바뀌어도 그대로 동작함. -->
+                <div class="detail-hero-topbar">
+                    <div class="detail-hero-topbar-left">
+                        <div class="detail-hero-group">
+                            <div class="detail-hero-group-icon">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 21V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 9h6a1 1 0 0 1 1 1v11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M7 8h.01M7 11h.01M7 14h.01M7 17h.01M15 13h.01M15 16h.01M18 13h.01M18 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M2 21h20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <span class="detail-hero-group-name" id="detailGroupTag">-</span>
                         </div>
                         <div class="detail-pick-badge">
-                            <span class="detail-pick-opt pick-ok" id="detailPickOk" onclick="setDetailStatus('정상')">정상</span>
-                            <span class="detail-pick-opt pick-req" id="detailPickReq" onclick="setDetailStatus('요청')">요청</span>
-                            <span class="detail-pick-opt pick-end" id="detailPickEnd" onclick="setDetailStatus('종료')">종료</span>
+                            <span class="detail-pick-opt pick-ok" id="detailPickOk" onclick="setDetailStatus('정상')">
+                                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.3l2.6 2.6L16 9.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <span>정상</span>
+                            </span>
+                            <span class="detail-pick-opt pick-req" id="detailPickReq" onclick="setDetailStatus('요청')">
+                                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5l3.3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <span>요청</span>
+                            </span>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div class="detail-group-tag"><span class="dot"></span><span class="name" id="detailGroupTag">-</span></div>
-                        <span class="detail-close" onclick="closeDetailModal()" role="button" tabindex="0" aria-label="닫기">&times;</span>
+                    <div class="detail-hero-topbar-right">
+                        <div class="detail-pick-badge">
+                            <span class="detail-pick-opt pick-sale" id="detailPickSale" onclick="setDetailDivision('판매')">
+                                <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="20" r="1.5" fill="currentColor"/><circle cx="18" cy="20" r="1.5" fill="currentColor"/><path d="M2.5 3h2l2.3 12a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21 7.5H6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <span>판매</span>
+                            </span>
+                            <span class="detail-pick-opt pick-rent" id="detailPickRent" onclick="setDetailDivision('임대')">
+                                <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 9.5h17" stroke="currentColor" stroke-width="1.8"/><path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                <span>임대</span>
+                            </span>
+                        </div>
+                        <div class="detail-pick-badge">
+                            <span class="detail-pick-opt pick-end" id="detailPickEnd" onclick="setDetailStatus('종료')">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 5.8a8 8 0 1 0 10 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                <span>종료</span>
+                            </span>
+                        </div>
+                        <span class="detail-close" onclick="closeDetailModal()" role="button" tabindex="0" aria-label="닫기">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+                        </span>
                     </div>
                 </div>
+
                 <div class="detail-hero-titlewrap">
                     <input type="text" class="detail-place-name" id="detailPlaceName" placeholder="장소명" title="클릭해서 장소명 수정" oninput="autoSizeDetailPlaceName()">
                     <div class="detail-address">
-                        <span id="detailRegionSummary">-</span>
-                        <span>·</span>
                         <input type="text" class="loc-input" id="detailInstallLocation" placeholder="설치위치 (예: 1층 로비)" title="클릭해서 설치위치 수정">
                         <a href="#" target="_blank" rel="noopener" class="navermap-link" id="detailNaverMapLink" style="display:none;">길찾기 →</a>
+                        <!-- 2026-09-19: 지역 요약은 본문 "지역" 섹션에 이미 표시되므로 헤더에서는 숨김
+                             (syncDetailRegionSummary()가 참조하는 엘리먼트라 DOM에서 완전히 제거하지 않고 화면에서만 숨김) -->
+                        <span id="detailRegionSummary" style="display:none;">-</span>
                     </div>
                 </div>
             </div>
             <div class="detail-body">
                 <div class="detail-main">
                     <div class="dtag-row">
-                        <div class="dtag dc-region"><span>지역</span></div>
+                        <div class="dtag dc-region">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M4 21V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9h6a1 1 0 0 1 1 1v11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 8h.01M7 11h.01M7 14h.01M7 17h.01M15 13h.01M15 16h.01M18 13h.01M18 16h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M2 21h20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                            <span>지역</span>
+                        </div>
                         <div class="dfields">
                             <div class="dfield">
                                 <label>시/도</label>
@@ -1510,7 +1634,10 @@
                     </div>
 
                     <div class="dtag-row drental-row" id="detailRentalRow">
-                        <div class="dtag" style="background:#6b4ea6;"><span>임대</span></div>
+                        <div class="dtag dc-rental">
+                            <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17" stroke="currentColor" stroke-width="1.7"/><path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.5h2M11 16.5h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                            <span>임대</span>
+                        </div>
                         <div class="dfields">
                             <div class="dfield"><label>기기도입일</label><input type="date" id="detailInstallDate" onchange="handleDetailRentalDateChange()"></div>
                             <div class="dfield">
@@ -1525,14 +1652,20 @@
                     </div>
 
                     <div class="dtag-row">
-                        <div class="dtag dc-addr"><span>주소</span></div>
+                        <div class="dtag dc-addr">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="9.3" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>
+                            <span>주소</span>
+                        </div>
                         <div class="dfields">
                             <div class="dfield wide"><label>설치주소</label><input type="text" id="detailInstallAddress" oninput="syncDetailNaverMapLink()"></div>
                         </div>
                     </div>
 
                     <div class="dtag-row">
-                        <div class="dtag dc-org"><span>소속</span></div>
+                        <div class="dtag dc-org">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7.5" r="3.3" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                            <span>소속</span>
+                        </div>
                         <div class="dfields">
                             <div class="dfield"><label>부서</label><input type="text" id="detailOrgDept"></div>
                             <div class="dfield"><label>성명</label><input type="text" id="detailOrgName"></div>
@@ -1543,7 +1676,10 @@
                     </div>
 
                     <div class="dtag-row">
-                        <div class="dtag dc-mgr"><span>담당자</span></div>
+                        <div class="dtag dc-mgr">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="2.8" stroke="currentColor" stroke-width="1.7"/><circle cx="16.3" cy="9" r="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M3.3 20c.8-3.6 3-5.6 5.7-5.6s4.9 2 5.7 5.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M14.8 14.9c2.1.2 3.8 1.9 4.4 4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                            <span>담당자</span>
+                        </div>
                         <div class="dfields">
                             <div class="dfield"><label>담당자 연락처</label><input type="text" id="detailManagerContact"></div>
                             <div class="dfield"><label>담당자 이메일</label><input type="text" id="detailManagerEmail"></div>
@@ -1552,7 +1688,10 @@
                     </div>
 
                     <div class="dtag-row">
-                        <div class="dtag dc-dev"><span>기기</span></div>
+                        <div class="dtag dc-dev">
+                            <svg viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 18h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                            <span>기기</span>
+                        </div>
                         <div class="dfields">
                             <div class="dfield"><label>모델명</label><input type="text" id="detailDeviceModel"></div>
                             <div class="dfield"><label>유형</label><input type="text" id="detailDeviceType"></div>
@@ -1561,7 +1700,10 @@
                     </div>
 
                     <div class="dtag-row">
-                        <div class="dtag dc-sw"><span>고유넘버</span></div>
+                        <div class="dtag dc-sw">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M6 3.5h9l3 3V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14.5 3.5V7h3.5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 12h8M8 15h8M8 9h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                            <span>고유넘버</span>
+                        </div>
                         <div class="dfields">
                             <div class="dfield"><label>키오에듀ID</label><input type="text" id="detailKioId"></div>
                             <div class="dfield"><label>레아코드</label><input type="text" id="detailReaCode"></div>
@@ -2676,12 +2818,9 @@ function generateUniqueId() {
                 const tr = document.createElement('tr');
                 if (item.checked) tr.classList.add('checked-row');
 
-                let badgeClass = 'badge-success';
-                if (item.status === '요청') {
-                    badgeClass = 'badge-danger';
-                } else if (item.status === '종료') {
-                    badgeClass = 'badge-dark';
-                }
+                // 2026-09-18: "상태" 컬럼(뱃지) 자체를 표에서 없애면서 이 변수는 더 안 씀 — 대신 아래
+                // isUrgent만으로 No./장소명 색을 바꿔 "요청(AS 진행중)"만 눈에 띄게 표시.
+                const isUrgent = item.status === '요청';
 
                 const siVal = item.regionSi || '';
                 const guVal = item.regionGu || '';
@@ -2706,7 +2845,7 @@ function generateUniqueId() {
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
                     </td>
                     <td class="sticky-col-2 region-group">${escapeHtml(siVal)} ${escapeHtml(guVal)}</td>
-                    <td class="sticky-col-3 region-group"><b class="place-name-link" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기">${escapeHtml(item.placeName || '-')}</b></td>
+                    <td class="sticky-col-3 region-group${isUrgent ? ' region-urgent-cell' : ''}"><b class="place-name-link" onclick="openDetailModal('${item.id}')" title="${isUrgent ? 'AS 요청중 · ' : ''}클릭하여 업체 상세정보 보기">${escapeHtml(item.placeName || '-')}</b></td>
                     <td class="address-group">${escapeHtml(item.installAddress || '-')}</td>
                     <td class="address-group">
                         <div class="location-cell" title="${escapeHtml(locationVal)}" onclick="openLocationModal('${item.id}')">
@@ -2731,10 +2870,6 @@ function generateUniqueId() {
                         <div class="memo-cell" title="${escapeHtml(fullTooltipText)}" onclick="openDetailModal('${item.id}')">
                             ${escapeHtml(latestMemoText)}
                         </div>
-                    </td>
-                    <td><span class="badge ${badgeClass}">${item.status}</span></td>
-                    <td style="text-align: center;">
-                        <button class="btn-icon-edit" onclick="openDetailModal('${item.id}')" title="수정" aria-label="수정">✏️</button>
                     </td>
                 `;
                 tableBody.appendChild(tr);
