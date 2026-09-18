@@ -571,76 +571,137 @@
         .section-tab.section-sys { background: #00a8b5; }
         .section-tab.section-etc { background: #636e72; }
 
+        /* ===================== 2026-09-18 9차: 업체 상세보기+수정+AS이력을 하나로 통합한 팝업 =====================
+           예전엔 상세보기(읽기전용)/수정(별도 폼 모달)/AS이력(또 다른 별도 모달) 3개로 나뉘어 있어서
+           메모 하나 남기려 해도 업체 정보를 보면서 동시에 할 수 없었음 — 이제 이 팝업 하나에서 전부 처리:
+           모든 필드를 클릭하면 바로 그 자리에서 값을 바꿀 수 있고(별도 팝업 없음), 상단 판매/임대·정상/요청/종료도
+           배지를 클릭해서 바로 바꾸고, 오른쪽 AS이력은 오래된순으로 쌓이는 대화창 스타일 + 맨 아래 고정 입력창. */
         .detail-modal-content {
-            width: 960px; max-width: 94vw; max-height: 88vh;
+            width: 1020px; max-width: 95vw; max-height: 90vh;
             padding: 0; border-radius: var(--r-lg); overflow: hidden;
             display: flex; flex-direction: column;
+            background: var(--paper);
         }
         .detail-hero {
-            position: relative; overflow: hidden;
-            background: linear-gradient(120deg, #1c212b 0%, #2f3640 55%, #232833 100%);
-            padding: 26px 30px 22px; flex-shrink: 0;
+            position: relative; overflow: hidden; flex-shrink: 0;
+            padding: 20px 26px 16px;
             cursor: move; user-select: none;
+            background:
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 34px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 34px),
+                linear-gradient(160deg, var(--ink) 0%, var(--ink2) 60%, var(--ink) 100%);
         }
-        .detail-hero::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, #74b9ff 0%, #0984e3 45%, #6c5ce7 100%);
+        .detail-hero-glow {
+            position: absolute; top: -70px; left: -70px; width: 240px; height: 240px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(74,158,255,0.30) 0%, rgba(74,158,255,0) 68%); pointer-events: none;
         }
-        .detail-hero::after {
-            content: ''; position: absolute; right: -60px; top: -80px; width: 220px; height: 220px;
-            border-radius: 50%; border: 20px solid rgba(116,185,255,0.08);
+        .detail-hero-ring {
+            position: absolute; top: -70px; left: -70px; width: 240px; height: 240px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.10); pointer-events: none;
+        }
+        .detail-hero-ring::before { content: ''; position: absolute; inset: 20px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.07); }
+        .detail-hero-glow-r {
+            position: absolute; bottom: -90px; right: -50px; width: 200px; height: 200px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(242,201,76,0.16) 0%, rgba(242,201,76,0) 70%); pointer-events: none;
         }
         .detail-close {
-            position: absolute; top: 14px; right: 16px; z-index: 2;
-            color: rgba(255,255,255,0.6); font-size: 22px; cursor: pointer; line-height: 1;
+            position: relative; z-index: 2; color: rgba(255,255,255,0.55); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px;
         }
         .detail-close:hover { color: #ffffff; }
-        /* 이 업체가 속한 그룹명 - 헤로 영역 우측 상단 여백에 은은하게 배치 (너무 튀지 않게, 배지/제목보다 뒤로) */
+        .detail-top-row { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .detail-pick-group { display: flex; gap: 8px; }
+        .detail-pick-badge { display: flex; border-radius: 7px; overflow: hidden; border: 1px solid rgba(255,255,255,0.14); }
+        .detail-pick-opt { font-size: 11px; font-weight: 700; padding: 5px 11px; cursor: pointer; color: #8ea0b4; background: rgba(255,255,255,0.03); transition: .15s; user-select: none; }
+        .detail-pick-opt:hover:not(.active) { background: rgba(255,255,255,0.08); color: #dde6ee; }
+        .detail-pick-opt.active.pick-sale { background: #2d4a6b; color: #a9d0ff; }
+        .detail-pick-opt.active.pick-rent { background: #3a2f52; color: #d3b8ff; }
+        .detail-pick-opt.active.pick-ok { background: #1f4d3a; color: #7fe0ac; }
+        .detail-pick-opt.active.pick-req { background: #5a3218; color: #ffb066; }
+        .detail-pick-opt.active.pick-end { background: #4a2c26; color: #ffab8f; }
         .detail-group-tag {
-            position: absolute; top: 42px; right: 20px; z-index: 1;
-            font-size: 12.5px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
-            color: rgba(247, 216, 116, 0.5);
-            text-align: right; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            display: flex; align-items: center; gap: 6px; padding: 5px 13px 5px 10px; border-radius: 8px;
+            background: linear-gradient(135deg, #3a2f14, #4a3a18); border: 1px solid rgba(242,201,76,0.35);
         }
-        .detail-drag-hint { position: relative; font-size: 10.5px; color: #6b7685; margin-top: 2px; }
-        .detail-badges { position: relative; display: flex; gap: var(--sp-2); margin-bottom: 10px; }
+        .detail-group-tag .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+        .detail-group-tag .name { font-size: 14px; font-weight: 800; color: var(--amber); letter-spacing: .2px; }
+        .detail-hero-titlewrap { position: relative; z-index: 1; }
         .detail-place-name {
-            position: relative;
-            font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;
-            line-height: 1.25; margin-bottom: 6px; word-break: keep-all;
+            font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;
+            line-height: 1.25; margin-bottom: 4px; word-break: keep-all;
+            background: transparent; border: none; border-bottom: 1px solid transparent; outline: none;
+            padding: 1px 2px; max-width: 100%; font-family: inherit; transition: border-color .15s, background .15s;
         }
-        .detail-address { position: relative; font-size: 13px; color: #a9b4c4; }
-        .detail-address .loc { color: #74b9ff; margin-left: 6px; }
+        /* 2026-09-18: hover만으로 수정모드처럼 보여 팝업 드래그 시 방해된다는 피드백 → hover 강조 제거, 클릭(focus)했을 때만 표시.
+           또한 폭을 100%(줄 전체)가 아니라 실제 글자 길이만큼만 차지하도록 JS(autoSizeDetailPlaceName)로 동적 계산 — 나머지 영역은 마우스가 지나가도 입력칸에 안 걸림 */
+        .detail-place-name:focus { border-bottom-color: var(--amber); background: rgba(255,255,255,0.06); }
+        .detail-address { font-size: 12.5px; color: #a9b4c4; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .detail-address select { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: #dde6ee; font-size: 12px; border-radius: 5px; padding: 2px 5px; }
+        .detail-address .loc-input {
+            background: transparent; border: none; border-bottom: 1px solid transparent; color: #a9b4c4; font-size: 12.5px;
+            outline: none; padding: 1px 2px; font-family: inherit; min-width: 90px; transition: border-color .15s, background .15s;
+        }
+        .detail-address .loc-input:hover { border-bottom-color: rgba(255,255,255,0.25); }
+        .detail-address .loc-input:focus { border-bottom-color: var(--amber); color: #fff; }
+        .detail-address .navermap-link { color: #74b9ff; text-decoration: none; font-weight: 600; }
+        .detail-address .navermap-link:hover { text-decoration: underline; }
 
         .detail-body { flex: 1; display: flex; overflow: hidden; }
-        .detail-main { flex: 1.15; overflow-y: auto; padding: 20px 26px 16px; border-right: 1px solid #eef0f3; }
-        .detail-side { flex: 1; overflow-y: auto; padding: 20px 26px 16px; background: #fafbfc; display: flex; flex-direction: column; }
-        .detail-section { margin-bottom: 18px; }
-        .detail-section-title {
-            display: inline-flex; align-items: center; gap: var(--sp-2);
-            font-size: 11.5px; font-weight: bold; color: #ffffff;
-            padding: 3px 11px; border-radius: var(--r-xs); margin-bottom: 10px;
-        }
-        .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-4) var(--sp-7); }
-        .detail-item { display: flex; flex-direction: column; gap: var(--sp-0); min-width: 0; }
-        .detail-item.full { grid-column: span 2; }
-        .detail-label { font-size: 11px; color: #a0a4ab; }
-        .detail-value { font-size: 14px; color: #2d3436; font-weight: 600; word-break: break-word; }
-        .detail-value.empty { color: #c3c7cd; font-weight: 400; }
-        .detail-value.mono { font-family: 'Consolas', 'SFMono-Regular', monospace; font-size: 12.5px; font-weight: 500; }
+        .detail-main { flex: 1.2; overflow-y: auto; padding: 12px 20px 16px; display: flex; flex-direction: column; gap: 6px; }
+        .detail-side { flex: 1; overflow-y: auto; background: var(--paper2); border-left: 1px solid var(--border-warm); display: flex; flex-direction: column; }
 
-        .detail-memo-box {
-            background: #ffffff; border: 1px solid #eef0f3; border-radius: var(--r-sm);
-            padding: 10px 14px; font-size: 13px; color: #2d3436; line-height: 1.55;
-            margin-bottom: 8px; word-break: break-word;
+        .dtag-row { display: flex; align-items: stretch; border-radius: 8px; overflow: hidden; }
+        .dtag { width: 32px; flex-shrink: 0; display: grid; place-items: center; }
+        .dtag span {
+            writing-mode: vertical-rl; text-orientation: upright;
+            font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #fff; text-align: center; line-height: 1.35;
         }
-        .detail-memo-box .memo-date { display: block; font-size: 11px; color: #a0a4ab; margin-bottom: 3px; }
-        .detail-memo-empty { font-size: 13px; color: #c3c7cd; }
-        .detail-memo-count { font-size: 11px; color: #a0a4ab; font-weight: normal; margin-left: 4px; }
+        .dtag.dc-region { background: #2f6fb0; }
+        .dtag.dc-addr { background: var(--teal); }
+        .dtag.dc-org { background: #c97a2e; }
+        .dtag.dc-mgr { background: #b03470; }
+        .dtag.dc-dev { background: #3f8f4a; }
+        .dtag.dc-sw { background: #2f7fa0; }
+        .dfields { flex: 1; display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 9px 14px; align-items: flex-end; background: #FEFCF6; }
+        .dfield { display: flex; flex-direction: column; gap: 2px; min-width: 130px; flex: 1; }
+        .dfield.wide { flex-basis: 100%; }
+        .dfield label { font-size: 9.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+        .dfield input, .dfield select {
+            background: transparent; border: none; border-bottom: 1px solid var(--border-warm); color: #3a3830; font-size: 12.5px;
+            padding: 3px 2px; outline: none; transition: border-color .15s, background .15s; font-family: inherit;
+        }
+        .dfield input:hover, .dfield select:hover { border-bottom-color: var(--teal); background: rgba(15,110,92,0.04); }
+        .dfield input:focus, .dfield select:focus { border-bottom-color: var(--teal); background: rgba(15,110,92,0.07); }
+        .drental-row { display: none; }
+        .drental-row.show { display: flex; }
+
+        .as-header { padding: 14px 18px 8px; font-size: 12.5px; font-weight: 800; color: #4a463a; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .as-count { font-size: 11px; color: var(--muted); font-weight: 600; }
+        .as-thread { flex: 1; overflow-y: auto; padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
+        .as-entry { background: #ffffff; border: 1px solid var(--border-warm); border-radius: 9px; padding: 8px 11px; position: relative; }
+        .as-entry .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+        .as-entry .date { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+        .as-entry .author { font-size: 10.5px; color: var(--coral-text); }
+        .as-entry .del { position: absolute; top: 6px; right: 8px; font-size: 12px; color: #c7c2b3; cursor: pointer; opacity: 0; transition: opacity .15s; }
+        .as-entry:hover .del { opacity: 1; }
+        .as-entry .del:hover { color: var(--coral-text); }
+        .as-entry .txt {
+            font-size: 12.5px; color: #3a3830; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+            background: transparent; border: none; outline: none; width: 100%; resize: none; font-family: inherit; overflow: hidden;
+        }
+        .as-empty { text-align: center; font-size: 12.5px; color: #c4beac; padding: 20px 0; }
+        .as-input-wrap { border-top: 1px solid var(--border-warm); padding: 10px 16px 14px; flex-shrink: 0; }
+        .as-input-row { display: flex; gap: 8px; }
+        .as-input-row textarea {
+            flex: 1; height: 42px; max-height: 90px; resize: vertical; background: #fff; border: 1px solid var(--border-warm); border-radius: 8px;
+            color: #3a3830; font-size: 12.5px; padding: 8px 10px; outline: none; font-family: inherit;
+        }
+        .as-input-row textarea:focus { border-color: var(--teal); }
+        .as-send { align-self: flex-end; background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 0 16px; height: 42px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+        .as-send:hover { background: var(--teal-dark); }
 
         .detail-footer {
             flex-shrink: 0; display: flex; gap: var(--sp-4); justify-content: flex-end;
-            padding: 14px 30px; border-top: 1px solid #eef0f3; background: #fbfbfc;
+            padding: 14px 26px; border-top: 1px solid var(--border-warm); background: var(--paper2);
         }
 
         .section-fields {
@@ -678,14 +739,8 @@
 
         .modal-footer { margin-top: 20px; text-align: right; display: flex; justify-content: space-between; grid-column: span 2; }
 
-        .memo-modal-content { width: 1000px; max-width: 95vw; }
-        .memo-split-container { display: flex; gap: var(--sp-7); margin-top: 10px; }
-        .memo-left-panel { width: 52%; display: flex; flex-direction: column; gap: var(--sp-3); border-right: 1px solid #e9ecef; padding-right: 15px; }
-        .memo-right-panel { width: 48%; display: flex; flex-direction: column; gap: var(--sp-4); }
-
-        .memo-add-box { background: #f8f9fa; padding: 15px; border-radius: var(--r-sm); border: 1px solid #e1e8ed; height: 100%; display: flex; flex-direction: column; }
-        .memo-timeline { display: flex; flex-direction: column; gap: var(--sp-5); max-height: 560px; overflow-y: auto; padding-right: 5px; }
-        .memo-item { display: flex; flex-direction: column; gap: var(--sp-2); background: #fff; padding: 12px 15px; border-radius: var(--r-sm); border: 1px solid #e9ecef; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        /* 2026-09-18: 별도 AS이력 전용 모달(memoModal)이 상세보기 팝업 안으로 통합되면서 그 모달 전용 CSS(메모
+           타임라인 좌우분할 레이아웃 등)는 전부 사용처가 없어져 삭제 — 새 스타일은 위 .as-thread 계열 참고. */
         .memo-header-inputs { display: flex; gap: var(--sp-3); align-items: center; justify-content: space-between; }
         .memo-date-input { width: 140px; padding: 4px 8px; border: 1px solid #ced4da; border-radius: var(--r-xs); font-size: 11px; font-weight: bold; color: #495057; }
         .memo-header-left { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
@@ -945,9 +1000,8 @@
             .mc-memo-text { font-size: 12.5px; color: #4a4638; line-height: 1.42; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
             .mc-actions { display: flex; gap: var(--sp-3); margin-top: 12px; }
             .mc-btn { flex: 1; border: none; border-radius: var(--r-md); padding: 11px 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-            .mc-btn-memo { background: var(--teal); color: #fff; }
-            .mc-btn-detail { background: var(--paper2); color: var(--ink); border: 1px solid var(--border-warm); }
-            .mc-btn-edit { flex: 0 0 44px; background: #fff; color: var(--ink); border: 1px solid var(--border-warm); font-size: 15px; }
+            .mc-btn-detail { background: var(--teal); color: #fff; } /* 2026-09-18: 상세/수정/AS이력이 한 팝업으로 합쳐지면서
+               모바일 카드 버튼도 3개(mc-btn-memo/mc-btn-detail/mc-btn-edit) → 1개로 정리, 나머지 두 클래스는 삭제 */
 
             /* ---------- 팝업(모달) 공통: 화면 폭을 넘지 않도록 캡 ---------- */
             .modal-content { width: auto; max-width: 92vw; padding: 20px 16px; }
@@ -963,28 +1017,16 @@
             .form-group.full-width, .form-group.span-2 { grid-column: span 1; }
             .modal-footer { flex-wrap: wrap; row-gap: var(--sp-4); }
 
-            /* ---------- 업체 상세정보 팝업: 전체화면 + AS메모를 위로 (현장 사용 우선순위) ---------- */
+            /* ---------- 업체 상세보기+수정+AS이력 통합 팝업: 전체화면 + 세로 스택(정보 위, AS이력 아래) ---------- */
             .detail-modal-content { width: 100%; max-width: 100vw; height: 100%; max-height: 100vh; border-radius: 0; }
-            .detail-hero { padding: 18px 16px 16px; cursor: default; }
-            .detail-drag-hint { display: none; }
-            .detail-group-tag { display: none; }
+            .detail-hero { padding: 16px 16px 14px; cursor: default; }
             .detail-place-name { font-size: 19px; }
+            .detail-group-tag .name { font-size: 12.5px; }
             .detail-body { flex-direction: column; overflow-y: auto; }
-            .detail-main { flex: none; border-right: none; border-top: 1px solid #eef0f3; padding: 16px; order: 2; overflow-y: visible; }
-            .detail-side { flex: none; padding: 16px; order: 1; overflow-y: visible; }
-            .detail-grid { grid-template-columns: 1fr; }
-            .detail-item.full { grid-column: span 1; }
+            .detail-main { flex: none; padding: 12px 14px; order: 1; overflow-y: visible; max-height: none; }
+            .detail-side { flex: none; border-left: none; border-top: 1px solid var(--border-warm); order: 2; }
+            .as-thread { max-height: 46vh; }
             .detail-footer { padding: 12px 16px; }
-
-            /* ---------- AS 메모 이력 팝업: 위아래로 쌓기 (확인/등록 둘 다 스크롤로 바로 접근) ---------- */
-            .memo-modal-content { width: 100%; max-width: 100vw; height: 100%; max-height: 100vh; border-radius: 0; }
-            .memo-split-container { flex-direction: column; gap: var(--sp-6); }
-            .memo-left-panel, .memo-right-panel { width: 100%; border-right: none; padding-right: 0; }
-            .memo-timeline { max-height: 46vh; }
-            #newMemoInput { min-height: 130px !important; }
-            .memo-header-inputs { flex-wrap: wrap; row-gap: var(--sp-2); }
-            .memo-date-input { width: 118px; }
-
         }
     
     </style>
@@ -1351,7 +1393,8 @@
                     <div class="section-tab section-manager" data-group-label="manager">담당자</div>
                     <div class="section-fields">
                         <div class="form-group"><label><span data-field-label="managerContact">담당자 연락처</span></label><input type="text" id="managerContact"></div>
-                        <div class="form-group span-2"><label><span data-field-label="managerEmail">담당자 이메일</span></label><input type="text" id="managerEmail"></div>
+                        <div class="form-group"><label><span data-field-label="managerEmail">담당자 이메일</span></label><input type="text" id="managerEmail"></div>
+                        <div class="form-group"><label><span data-field-label="managerNote">비고</span></label><input type="text" id="managerNote"></div>
                     </div>
                 </div>
 
@@ -1392,7 +1435,6 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" id="deleteBtn" class="btn btn-danger" style="display:none;" onclick="deleteData()">삭제</button>
                     <div style="margin-left: auto;">
                         <button type="button" class="btn" style="background: #dfe6e9; color: #2d3436; margin-right:10px;" onclick="closeModal()">취소</button>
                         <button type="submit" class="btn btn-primary">저장</button>
@@ -1403,121 +1445,138 @@
         </div>
     </div>
 
-    <!-- 업체 상세정보 팝업 (읽기 전용, 한눈에 보기) -->
+    <!-- 업체 상세보기 + 수정 + AS이력을 하나로 합친 통합 팝업 (2026-09-18 9차) -->
     <div id="detailModal" class="modal">
         <div class="modal-content detail-modal-content">
+            <input type="hidden" id="detailTargetId" value="">
+            <input type="hidden" id="detailDivisionValue" value="판매">
+            <input type="hidden" id="detailStatusValue" value="정상">
             <div class="detail-hero" id="detailHeroDragHandle">
-                <span class="detail-close" onclick="closeDetailModal()">&times;</span>
-                <div class="detail-group-tag" id="detailGroupTag">-</div>
-                <div class="detail-badges">
-                    <span class="division-badge" id="detailDivisionBadge">판매</span>
-                    <span id="detailStatusBadge"></span>
+                <div class="detail-hero-glow"></div>
+                <div class="detail-hero-ring"></div>
+                <div class="detail-hero-glow-r"></div>
+                <div class="detail-top-row">
+                    <div class="detail-pick-group">
+                        <div class="detail-pick-badge">
+                            <span class="detail-pick-opt pick-sale" id="detailPickSale" onclick="setDetailDivision('판매')">판매</span>
+                            <span class="detail-pick-opt pick-rent" id="detailPickRent" onclick="setDetailDivision('임대')">임대</span>
+                        </div>
+                        <div class="detail-pick-badge">
+                            <span class="detail-pick-opt pick-ok" id="detailPickOk" onclick="setDetailStatus('정상')">정상</span>
+                            <span class="detail-pick-opt pick-req" id="detailPickReq" onclick="setDetailStatus('요청')">요청</span>
+                            <span class="detail-pick-opt pick-end" id="detailPickEnd" onclick="setDetailStatus('종료')">종료</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="detail-group-tag"><span class="dot"></span><span class="name" id="detailGroupTag">-</span></div>
+                        <span class="detail-close" onclick="closeDetailModal()" role="button" tabindex="0" aria-label="닫기">&times;</span>
+                    </div>
                 </div>
-                <div class="detail-place-name" id="detailPlaceName">-</div>
-                <div class="detail-address">
-                    <span id="detailRegion">-</span><span class="loc" id="detailInstallLocation"></span>
+                <div class="detail-hero-titlewrap">
+                    <input type="text" class="detail-place-name" id="detailPlaceName" placeholder="장소명" title="클릭해서 장소명 수정" oninput="autoSizeDetailPlaceName()">
+                    <div class="detail-address">
+                        <span id="detailRegionSummary">-</span>
+                        <span>·</span>
+                        <input type="text" class="loc-input" id="detailInstallLocation" placeholder="설치위치 (예: 1층 로비)" title="클릭해서 설치위치 수정">
+                        <a href="#" target="_blank" rel="noopener" class="navermap-link" id="detailNaverMapLink" style="display:none;">길찾기 →</a>
+                    </div>
                 </div>
-                <div class="detail-drag-hint">✥ 이 영역을 드래그하면 팝업을 옮길 수 있습니다</div>
             </div>
             <div class="detail-body">
                 <div class="detail-main">
-                    <div class="detail-section" id="detailRentalSection" style="display:none;">
-                        <div class="detail-section-title" style="background:#6c5ce7;">임대 정보</div>
-                        <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">기기도입일</span><span class="detail-value" id="detailInstallDate">-</span></div>
-                            <div class="detail-item"><span class="detail-label">임대 종료일</span><span class="detail-value rental-expiry-cell" id="detailRentalEnd">-</span></div>
+                    <div class="dtag-row">
+                        <div class="dtag dc-region"><span>지역</span></div>
+                        <div class="dfields">
+                            <div class="dfield">
+                                <label>시/도</label>
+                                <select id="detailRegionSi" onchange="syncDetailRegionSummary()">
+                                    <option value="">선택 안 함</option>
+                                    <option>서울</option><option>경기</option><option>인천</option><option>강원</option>
+                                    <option>충북</option><option>충남</option><option>세종</option><option>대전</option>
+                                    <option>전북</option><option>전남</option><option>광주</option><option>경북</option>
+                                    <option>경남</option><option>대구</option><option>울산</option><option>부산</option><option>제주</option>
+                                </select>
+                            </div>
+                            <div class="dfield"><label>시/군/구</label><input type="text" id="detailRegionGu" placeholder="예: 동작구, 원주시" oninput="syncDetailRegionSummary()"></div>
                         </div>
                     </div>
 
-                    <div class="detail-section">
-                        <div class="detail-section-title" style="background:#00b894;">설치주소</div>
-                        <div class="detail-grid">
-                            <div class="detail-item full"><span class="detail-label">주소</span><span class="detail-value" id="detailInstallAddress">-</span></div>
+                    <div class="dtag-row drental-row" id="detailRentalRow">
+                        <div class="dtag" style="background:#6b4ea6;"><span>임대</span></div>
+                        <div class="dfields">
+                            <div class="dfield"><label>기기도입일</label><input type="date" id="detailInstallDate" onchange="handleDetailRentalDateChange()"></div>
+                            <div class="dfield">
+                                <label>임대 기간</label>
+                                <select id="detailRentalPeriod" onchange="handleDetailRentalDateChange()">
+                                    <option value="1개월">1개월</option><option value="15일">15일</option>
+                                    <option value="1주일">1주일</option><option value="1일">1일</option>
+                                </select>
+                            </div>
+                            <div class="dfield"><label>임대 종료일 (자동계산, 직접수정 가능)</label><input type="date" id="detailRentalEndDate"></div>
                         </div>
                     </div>
 
-                    <div class="detail-section">
-                        <div class="detail-section-title" style="background:#e17055;">소속 정보</div>
-                        <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">부서 / 성명</span><span class="detail-value" id="detailOrgDeptName">-</span></div>
-                            <div class="detail-item"><span class="detail-label">직책</span><span class="detail-value" id="detailOrgTitle">-</span></div>
-                            <div class="detail-item"><span class="detail-label">연락처</span><span class="detail-value" id="detailOrgContact">-</span></div>
-                            <div class="detail-item"><span class="detail-label">이메일</span><span class="detail-value" id="detailOrgEmail">-</span></div>
+                    <div class="dtag-row">
+                        <div class="dtag dc-addr"><span>주소</span></div>
+                        <div class="dfields">
+                            <div class="dfield wide"><label>설치주소</label><input type="text" id="detailInstallAddress" oninput="syncDetailNaverMapLink()"></div>
                         </div>
                     </div>
 
-                    <div class="detail-section">
-                        <div class="detail-section-title" style="background:#e84393;">담당자 정보</div>
-                        <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">연락처</span><span class="detail-value" id="detailManagerContact">-</span></div>
-                            <div class="detail-item"><span class="detail-label">이메일</span><span class="detail-value" id="detailManagerEmail">-</span></div>
+                    <div class="dtag-row">
+                        <div class="dtag dc-org"><span>소속</span></div>
+                        <div class="dfields">
+                            <div class="dfield"><label>부서</label><input type="text" id="detailOrgDept"></div>
+                            <div class="dfield"><label>성명</label><input type="text" id="detailOrgName"></div>
+                            <div class="dfield"><label>직책</label><input type="text" id="detailOrgTitle"></div>
+                            <div class="dfield"><label>연락처</label><input type="text" id="detailOrgContact"></div>
+                            <div class="dfield"><label>이메일</label><input type="text" id="detailOrgEmail"></div>
                         </div>
                     </div>
 
-                    <div class="detail-section">
-                        <div class="detail-section-title" style="background:#6ab04c;">기기</div>
-                        <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">모델명</span><span class="detail-value" id="detailDeviceModel">-</span></div>
-                            <div class="detail-item"><span class="detail-label">유형</span><span class="detail-value" id="detailDeviceType">-</span></div>
-                            <div class="detail-item full"><span class="detail-label">옵션</span><span class="detail-value" id="detailDeviceOption">-</span></div>
+                    <div class="dtag-row">
+                        <div class="dtag dc-mgr"><span>담당자</span></div>
+                        <div class="dfields">
+                            <div class="dfield"><label>담당자 연락처</label><input type="text" id="detailManagerContact"></div>
+                            <div class="dfield"><label>담당자 이메일</label><input type="text" id="detailManagerEmail"></div>
+                            <div class="dfield wide"><label>비고</label><input type="text" id="detailManagerNote"></div>
                         </div>
                     </div>
 
-                    <div class="detail-section">
-                        <div class="detail-section-title" style="background:#00a8b5;">기기SW</div>
-                        <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">키오에듀ID</span><span class="detail-value mono" id="detailKioId">-</span></div>
-                            <div class="detail-item full"><span class="detail-label">레아코드</span><span class="detail-value mono" id="detailReaCode">-</span></div>
+                    <div class="dtag-row">
+                        <div class="dtag dc-dev"><span>기기</span></div>
+                        <div class="dfields">
+                            <div class="dfield"><label>모델명</label><input type="text" id="detailDeviceModel"></div>
+                            <div class="dfield"><label>유형</label><input type="text" id="detailDeviceType"></div>
+                            <div class="dfield"><label>옵션</label><input type="text" id="detailDeviceOption"></div>
+                        </div>
+                    </div>
+
+                    <div class="dtag-row">
+                        <div class="dtag dc-sw"><span>고유넘버</span></div>
+                        <div class="dfields">
+                            <div class="dfield"><label>키오에듀ID</label><input type="text" id="detailKioId"></div>
+                            <div class="dfield"><label>레아코드</label><input type="text" id="detailReaCode"></div>
+                            <div class="dfield"><label>그외</label><input type="text" id="detailKioAdminId"></div>
                         </div>
                     </div>
                 </div>
                 <div class="detail-side">
-                    <div class="detail-section-title" style="background:#636e72;">AS 이력 · 메모<span class="detail-memo-count" id="detailMemoCount"></span></div>
-                    <div id="detailMemoList"></div>
-                </div>
-            </div>
-            <div class="detail-footer">
-                <button type="button" class="btn" style="background: #dfe6e9; color: #2d3436;" onclick="closeDetailModal()">닫기</button>
-                <button type="button" class="btn btn-primary" id="detailEditBtn">수정하기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- AS 메모 이력 관리 전용 모달 -->
-    <div id="memoModal" class="modal">
-        <div class="modal-content memo-modal-content">
-            <div class="modal-header">
-                <div>
-                    <span id="memoModalTitle" style="font-size: 18px; font-weight: bold; color: #2d3436;">AS 현황 메모 이력</span>
-                    <div id="memoModalSub" style="font-size: 12px; color: #636e72; margin-top: 2px;"></div>
-                </div>
-                <span class="close" onclick="closeMemoModal()" role="button" tabindex="0" aria-label="닫기" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">&times;</span>
-            </div>
-
-            <input type="hidden" id="memoTargetId" value="">
-
-            <div class="memo-split-container">
-                <div class="memo-left-panel">
-                    <label style="font-size: 13px; font-weight: bold; color: #2d3436;">📜 이전 AS 이력 타임라인</label>
-                    <div class="memo-timeline" id="memoTimelineList"></div>
-                </div>
-
-                <div class="memo-right-panel">
-                    <div class="memo-add-box">
-                        <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
-                            <label style="font-weight: bold; color: #0984e3; font-size: 14px; margin-bottom: 8px;">+ 새 AS 이력 작성</label>
-                            <textarea id="newMemoInput" style="flex: 1; min-height: 280px; padding: 12px; font-size: 13px; line-height: 1.5; border: 1px solid #ced4da; border-radius: 6px; resize: vertical;" placeholder="상세 처리 내용이나 AS 진행 현황을 자유롭게 입력하세요..."></textarea>
-                        </div>
-                        <div style="text-align: right; margin-top: 12px;">
-                            <button type="button" class="btn btn-primary" onclick="addMemoItem()">이력 등록</button>
+                    <div class="as-header">AS 이력 · 메모 <span class="as-count" id="detailMemoCount"></span></div>
+                    <div class="as-thread" id="detailMemoList"></div>
+                    <div class="as-input-wrap">
+                        <div class="as-input-row">
+                            <textarea id="detailNewMemoInput" placeholder="새 메모/AS 이력 입력... (Ctrl+Enter로 등록)" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addDetailMemoItem();}"></textarea>
+                            <button type="button" class="as-send" onclick="addDetailMemoItem()">등록</button>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="modal-footer" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef;">
-                <div style="margin-left: auto;">
-                    <button type="button" class="btn btn-primary" onclick="closeMemoModal()">닫기</button>
+            <div class="detail-footer">
+                <button type="button" class="btn btn-danger" id="detailDeleteBtn" style="display:none;" onclick="deleteDetailItem()">삭제</button>
+                <div style="margin-left: auto; display:flex; gap:10px;">
+                    <button type="button" class="btn" style="background: var(--paper2); color: var(--ink); border:1px solid var(--border-warm);" onclick="closeDetailModal()">닫기</button>
+                    <button type="button" class="btn btn-primary" id="detailSaveBtn" onclick="saveDetailEdit()">저장</button>
                 </div>
             </div>
         </div>
@@ -1747,6 +1806,7 @@ function showSyncStatus(msg, isError) {
             orgEmail: '소속 이메일',
             managerContact: '담당자 연락처',
             managerEmail: '담당자 이메일',
+            managerNote: '비고',
             deviceModel: '모델명',
             deviceType: '유형',
             deviceOption: '옵션',
@@ -1759,7 +1819,7 @@ function showSyncStatus(msg, isError) {
         const LEGACY_HEADER_ALIASES = {
             orgDept: ['소속부서'], orgName: ['소속성명'], orgTitle: ['소속직책'],
             orgContact: ['소속연락처'], orgEmail: ['소속이메일'],
-            managerContact: ['담당자연락처'], managerEmail: ['담당자이메일'],
+            managerContact: ['담당자연락처'], managerEmail: ['담당자이메일'], managerNote: ['담당자비고'],
             kioId: ['키오에듀번호'], kioAdminId: ['키오드민번호']
         };
         const DEFAULT_GROUP_LABELS = {
@@ -1902,6 +1962,7 @@ function showSyncStatus(msg, isError) {
                 orgEmail: row.org_email || '',
                 managerContact: row.manager_contact || '',
                 managerEmail: row.manager_email || '',
+                managerNote: row.manager_note || '',
                 deviceModel: row.device_model || '',
                 deviceType: row.device_type || '',
                 deviceOption: row.device_option || '',
@@ -1934,6 +1995,7 @@ function showSyncStatus(msg, isError) {
                 org_email: item.orgEmail || null,
                 manager_contact: item.managerContact || null,
                 manager_email: item.managerEmail || null,
+                manager_note: item.managerNote || null,
                 device_model: item.deviceModel || null,
                 device_type: item.deviceType || null,
                 device_option: item.deviceOption || null,
@@ -2553,7 +2615,7 @@ function generateUniqueId() {
                 const searchFields = [
                     item.regionSi, item.regionGu, item.placeName, item.installAddress,
                     item.installLocation, item.orgDept, item.orgName, item.orgTitle,
-                    item.orgContact, item.orgEmail, item.managerContact, item.managerEmail,
+                    item.orgContact, item.orgEmail, item.managerContact, item.managerEmail, item.managerNote,
                     item.kioId, item.kioAdminId, item.reaCode
                 ];
 
@@ -2658,13 +2720,13 @@ function generateUniqueId() {
                     <td class="rental-group">${renderDivisionBadge(item)}</td>
                     <td class="rental-group rental-expiry-cell">${renderRentalExpiry(item)}</td>
                     <td>
-                        <div class="memo-cell" title="${escapeHtml(fullTooltipText)}" onclick="openMemoModal('${item.id}')">
+                        <div class="memo-cell" title="${escapeHtml(fullTooltipText)}" onclick="openDetailModal('${item.id}')">
                             ${escapeHtml(latestMemoText)}
                         </div>
                     </td>
                     <td><span class="badge ${badgeClass}">${item.status}</span></td>
                     <td style="text-align: center;">
-                        <button class="btn-icon-edit" onclick="openModalForEdit('${item.id}')" title="수정" aria-label="수정">✏️</button>
+                        <button class="btn-icon-edit" onclick="openDetailModal('${item.id}')" title="수정" aria-label="수정">✏️</button>
                     </td>
                 `;
                 tableBody.appendChild(tr);
@@ -2682,8 +2744,8 @@ function generateUniqueId() {
         /* ===================== 모바일 카드 리스트 (2026-08-29 추가, 880px 이하에서만 화면에 보임) =====================
            renderTable()이 이미 계산해둔 필터링/정렬 결과(filteredData)를 그대로 받아서 카드로 그려주기만 함.
            업체 데이터를 다시 읽거나 다시 필터링하지 않으므로, PC 표와 모바일 카드는 항상 100% 같은 목록을 보여줌.
-           클릭 동작(상세보기/AS메모/수정)은 전부 기존 함수(openDetailModal/openMemoModal/openModalForEdit)를
-           그대로 재사용 — 모바일 전용으로 새로 만든 로직이 아니라서 동작 방식이 PC와 항상 동일하게 유지됨. */
+           클릭 동작(상세보기/수정/AS이력)은 전부 기존 함수(openDetailModal 하나로 통합됨)를 그대로
+           재사용 — 모바일 전용으로 새로 만든 로직이 아니라서 동작 방식이 PC와 항상 동일하게 유지됨. */
         function renderMobileCards(filteredData) {
             const wrap = document.getElementById('mobileCardList');
             if (!wrap) return;
@@ -2730,14 +2792,12 @@ function generateUniqueId() {
                     ${rentalRow}
                     <div class="mc-row"><span class="mc-row-label">소속</span><span class="mc-row-value">${escapeHtml(orgLine || '-')}</span></div>
                     <div class="mc-row"><span class="mc-row-label">담당자</span><span class="mc-row-value">${escapeHtml(item.managerContact || item.orgContact || '-')}</span></div>
-                    <div class="mc-memo-box" onclick="openMemoModal('${item.id}')">
+                    <div class="mc-memo-box" onclick="openDetailModal('${item.id}')">
                         <div class="mc-memo-head"><span>📋 AS 메모</span>${memoDateBadge}</div>
                         <div class="mc-memo-text">${escapeHtml(latestMemoText)}</div>
                     </div>
                     <div class="mc-actions">
-                        <button type="button" class="mc-btn mc-btn-memo" onclick="openMemoModal('${item.id}')">메모 확인/등록</button>
-                        <button type="button" class="mc-btn mc-btn-detail" onclick="openDetailModal('${item.id}')">상세보기</button>
-                        <button type="button" class="mc-btn mc-btn-edit" onclick="openModalForEdit('${item.id}')" title="수정" aria-label="수정">✏️</button>
+                        <button type="button" class="mc-btn mc-btn-detail" onclick="openDetailModal('${item.id}')">상세보기 · 수정 · AS이력</button>
                     </div>
                 </div>`;
             }).join('');
@@ -3140,8 +3200,10 @@ function generateUniqueId() {
             item.installLocation = newLocation;
 
             try {
-                const { error } = await sb.from('companies').update({ install_location: newLocation, updated_at: new Date().toISOString() }).eq('id', id);
+                const now = new Date().toISOString();
+                const { error } = await sb.from('companies').update({ install_location: newLocation, updated_at: now }).eq('id', id);
                 if (error) throw error;
+                item.updatedAt = now; // 동시편집 충돌 감지용 캐시 동기화 (persistMemoList와 동일한 이유)
                 showSyncStatus('☁️ 설치위치 저장 완료');
             } catch (err) {
                 item.installLocation = prevLocation;
@@ -3153,104 +3215,63 @@ function generateUniqueId() {
         }
 
         /* ===================== ⑬ AS 메모(이력) 관리 — 고유 id 기준으로 추가/수정/삭제 ===================== */
-        function openMemoModal(id) {
-            const item = findItemLocation(id).item;
-            if (!item) return;
-
-            document.getElementById('memoTargetId').value = id;
-            document.getElementById('memoModalSub').innerText = `${item.placeName} (${item.regionSi || ''} ${item.regionGu || ''})`;
-            document.getElementById('newMemoInput').value = '';
-
-            renderMemoTimeline(item.memoList || []);
-            document.getElementById('memoModal').style.display = 'flex';
+        /* 2026-09-18 9차: 별도 "AS 메모 이력 관리" 모달(memoModal) 자체를 없애고, 상세보기 팝업의
+           AS이력 패널이 이 역할까지 전부 흡수함 — 보던 화면 그대로 메모를 남길 수 있게. 타임라인은
+           오래된 기록이 위, 최신 기록이 아래(대화창처럼)로 쌓이고, 각 카드 높이는 내용 길이에 맞게
+           자동으로 늘어남(textarea에 auto-resize 적용). */
+        async function persistMemoList(item) {
+            const now = new Date().toISOString();
+            const { error } = await sb.from('companies')
+                .update({ memo_list: item.memoList, updated_at: now })
+                .eq('id', item.id);
+            if (error) throw error;
+            // 2026-09-18: 메모 저장은 여기서 updated_at을 바꾸는데 화면에 캐시된 item.updatedAt은 그대로라
+            // 곧바로 상세팝업 "저장"을 누르면 동시편집 충돌로 오인되는 문제가 있었음 → 여기서도 동기화해줌
+            item.updatedAt = now;
         }
 
-        function closeMemoModal() {
-            document.getElementById('memoModal').style.display = 'none';
-            renderTable();
+        function autoGrowTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight + 2) + 'px';
         }
 
-        function renderMemoTimeline(memoList) {
-            const listContainer = document.getElementById('memoTimelineList');
-            listContainer.innerHTML = '';
+        function renderDetailMemoThread(memoList) {
+            const listEl = document.getElementById('detailMemoList');
+            const countEl = document.getElementById('detailMemoCount');
+            const list = memoList || [];
+            countEl.textContent = list.length ? `${list.length}건 · 오래된순` : '';
 
-            if (!memoList || memoList.length === 0) {
-                listContainer.innerHTML = `<div style="text-align: center; color: #b2bec3; padding: 25px; font-size: 13px;">등록된 AS 이력이 없습니다.</div>`;
+            if (!list.length) {
+                listEl.innerHTML = '<div class="as-empty">등록된 AS 이력이 없습니다.</div>';
                 return;
             }
-
-            const sortedList = [...memoList].reverse();
-            sortedList.forEach((memo) => {
-                const memoId = memo.id;
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'memo-item';
-                const authorLabel = memo.author
-                    ? `<span class="memo-author-tag">✍ ${escapeHtml(memo.author)}</span>`
-                    : `<span class="memo-author-tag unknown">작성자 미기록</span>`;
-                itemDiv.innerHTML = `
-                    <div class="memo-header-inputs">
-                        <div class="memo-header-left">
-                            <input type="text" class="memo-date-input" id="memoDate_${memoId}" value="${escapeHtml(memo.date)}">
-                            ${authorLabel}
-                        </div>
-                        <div class="memo-btn-group">
-                            <button type="button" class="btn-memo-action" onclick="updateMemoItem('${memoId}')">수정</button>
-                            <button type="button" class="btn-memo-del" onclick="deleteMemoItem('${memoId}')">삭제</button>
-                        </div>
-                    </div>
-                    <div>
-                        <textarea class="memo-text-input" id="memoText_${memoId}" rows="2">${escapeHtml(memo.text)}</textarea>
-                    </div>
-                `;
-                listContainer.appendChild(itemDiv);
+            // memoList는 등록순(오래된 게 먼저)으로 저장되므로 그대로 위→아래 렌더링하면 "오래된 기록이 위,
+            // 최신 기록이 아래"가 자연스럽게 됨 — 별도 reverse() 불필요.
+            listEl.innerHTML = list.map((memo) => {
+                const authorLabel = memo.author ? ` · ✍ ${escapeHtml(memo.author)}` : '';
+                return `
+                    <div class="as-entry">
+                        <span class="del" title="삭제" onclick="deleteDetailMemoItem('${memo.id || ''}')">✕</span>
+                        <div class="meta"><span class="date">${escapeHtml(memo.date || '')}</span><span class="author">${authorLabel}</span></div>
+                        <textarea class="txt" rows="1" onfocus="autoGrowTextarea(this)" oninput="autoGrowTextarea(this)"
+                            onblur="updateDetailMemoItem('${memo.id || ''}', this.value)">${escapeHtml(memo.text || '')}</textarea>
+                    </div>`;
+            }).join('');
+            // 렌더 직후 각 textarea 높이를 내용에 맞게 한 번씩 맞춰줌 + 맨 아래(최신) 기록이 보이도록 스크롤
+            requestAnimationFrame(() => {
+                listEl.querySelectorAll('.txt').forEach(autoGrowTextarea);
+                listEl.scrollTop = listEl.scrollHeight;
             });
         }
 
-        async function persistMemoList(item) {
-            const { error } = await sb.from('companies')
-                .update({ memo_list: item.memoList, updated_at: new Date().toISOString() })
-                .eq('id', item.id);
-            if (error) throw error;
-        }
-
-        async function updateMemoItem(memoId) {
-            const id = document.getElementById('memoTargetId').value;
+        async function addDetailMemoItem() {
+            const id = document.getElementById('detailTargetId').value;
             const item = findItemLocation(id).item;
             if (!item) return;
 
-            const memoIndex = item.memoList.findIndex(m => m.id === memoId);
-            if (memoIndex === -1) { alert('이력을 찾을 수 없습니다. (이미 삭제되었거나 변경되었을 수 있어요)'); renderMemoTimeline(item.memoList); return; }
-
-            const newDate = document.getElementById(`memoDate_${memoId}`).value.trim();
-            const newText = document.getElementById(`memoText_${memoId}`).value.trim();
-
-            if (!newDate) { alert('날짜를 입력해주세요.'); return; }
-            if (!newText) { alert('상담 이력 내용을 입력해주세요.'); return; }
-
-            const prevDate = item.memoList[memoIndex].date;
-            const prevText = item.memoList[memoIndex].text;
-            item.memoList[memoIndex].date = newDate;
-            item.memoList[memoIndex].text = newText;
-
-            try {
-                await persistMemoList(item);
-                alert('이력이 성공적으로 수정되었습니다.');
-            } catch (err) {
-                item.memoList[memoIndex].date = prevDate;
-                item.memoList[memoIndex].text = prevText;
-                console.error(err);
-                alert('이력 저장에 실패했습니다: ' + (err.message || err));
-            }
-            renderMemoTimeline(item.memoList);
-        }
-
-        async function addMemoItem() {
-            const id = document.getElementById('memoTargetId').value;
-            const item = findItemLocation(id).item;
-            if (!item) return;
-
-            const textVal = document.getElementById('newMemoInput').value.trim();
-            if (!textVal) { alert('추가할 AS 이력 내용을 입력해주세요.'); return; }
+            const inputEl = document.getElementById('detailNewMemoInput');
+            const textVal = inputEl.value.trim();
+            if (!textVal) return;
 
             const now = new Date();
             const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -3260,9 +3281,8 @@ function generateUniqueId() {
 
             try {
                 await persistMemoList(item);
-                document.getElementById('newMemoInput').value = '';
-                renderMemoTimeline(item.memoList);
-                alert('새 AS 이력이 추가되었습니다.');
+                inputEl.value = '';
+                renderDetailMemoThread(item.memoList);
             } catch (err) {
                 item.memoList.pop();
                 console.error(err);
@@ -3270,24 +3290,47 @@ function generateUniqueId() {
             }
         }
 
-        async function deleteMemoItem(memoId) {
-            const id = document.getElementById('memoTargetId').value;
+        async function updateDetailMemoItem(memoId, newText) {
+            const id = document.getElementById('detailTargetId').value;
             const item = findItemLocation(id).item;
-            if (!item) return;
+            if (!item || !memoId) return;
 
             const memoIndex = item.memoList.findIndex(m => m.id === memoId);
-            if (memoIndex === -1) { alert('이력을 찾을 수 없습니다. (이미 삭제되었을 수 있어요)'); renderMemoTimeline(item.memoList); return; }
+            if (memoIndex === -1) return;
 
-            if (confirm("이 AS 이력을 삭제하시겠습니까?")) {
-                const removed = item.memoList.splice(memoIndex, 1);
-                try {
-                    await persistMemoList(item);
-                    renderMemoTimeline(item.memoList);
-                } catch (err) {
-                    item.memoList.splice(memoIndex, 0, removed[0]);
-                    console.error(err);
-                    alert('삭제 저장에 실패했습니다: ' + (err.message || err));
-                }
+            const trimmed = newText.trim();
+            if (!trimmed) { renderDetailMemoThread(item.memoList); return; } // 빈 값으로 지우려 한 건 무시하고 원래 값 복원
+            const prevText = item.memoList[memoIndex].text;
+            if (trimmed === prevText) return; // 실제로 안 바뀌었으면 저장 요청 자체를 생략
+
+            item.memoList[memoIndex].text = trimmed;
+            try {
+                await persistMemoList(item);
+            } catch (err) {
+                item.memoList[memoIndex].text = prevText;
+                console.error(err);
+                alert('이력 저장에 실패했습니다: ' + (err.message || err));
+                renderDetailMemoThread(item.memoList);
+            }
+        }
+
+        async function deleteDetailMemoItem(memoId) {
+            const id = document.getElementById('detailTargetId').value;
+            const item = findItemLocation(id).item;
+            if (!item || !memoId) return;
+
+            const memoIndex = item.memoList.findIndex(m => m.id === memoId);
+            if (memoIndex === -1) return;
+
+            if (!confirm('이 AS 이력을 삭제하시겠습니까?')) return;
+            const removed = item.memoList.splice(memoIndex, 1);
+            try {
+                await persistMemoList(item);
+                renderDetailMemoThread(item.memoList);
+            } catch (err) {
+                item.memoList.splice(memoIndex, 0, removed[0]);
+                console.error(err);
+                alert('삭제 저장에 실패했습니다: ' + (err.message || err));
             }
         }
 
@@ -3306,7 +3349,6 @@ function generateUniqueId() {
             document.getElementById('dataForm').reset();
             setSelectedRegionSi('');
             document.getElementById('editTargetId').value = "";
-            document.getElementById('deleteBtn').style.display = "none";
             document.querySelector('input[name="division"][value="판매"]').checked = true;
             document.getElementById('installDate').value = '';
             document.getElementById('rentalPeriod').value = '1개월';
@@ -3316,9 +3358,64 @@ function generateUniqueId() {
         }
 
         /* ===================== ⑮ 업체 상세정보 팝업 (읽기 전용, 한눈에 보기) ===================== */
-        function detailValue(text) {
-            const v = (text || '').toString().trim();
-            return v ? escapeHtml(v) : '<span class="empty">-</span>';
+        /* 2026-09-18 9차: 읽기전용 상세보기 + 별도 수정폼 + 별도 AS이력 모달, 이렇게 3개로 나뉘어 있던 걸
+           이 팝업 하나로 통합 — 모든 값이 처음부터 input/select라서 클릭하면 그 자리에서 바로 고칠 수 있고,
+           상단 판매/임대·정상/요청/종료도 배지 클릭 한 번으로 바뀜. */
+        function setDetailDivision(val) {
+            document.getElementById('detailDivisionValue').value = val;
+            document.getElementById('detailPickSale').classList.toggle('active', val === '판매');
+            document.getElementById('detailPickRent').classList.toggle('active', val === '임대');
+            const rentalRow = document.getElementById('detailRentalRow');
+            rentalRow.classList.toggle('show', val === '임대');
+            if (val === '임대') handleDetailRentalDateChange();
+        }
+
+        function setDetailStatus(val) {
+            document.getElementById('detailStatusValue').value = val;
+            document.getElementById('detailPickOk').classList.toggle('active', val === '정상');
+            document.getElementById('detailPickReq').classList.toggle('active', val === '요청');
+            document.getElementById('detailPickEnd').classList.toggle('active', val === '종료');
+        }
+
+        function handleDetailRentalDateChange() {
+            const installDate = document.getElementById('detailInstallDate').value;
+            const period = document.getElementById('detailRentalPeriod').value;
+            document.getElementById('detailRentalEndDate').value = calcRentalEndDate(installDate, period);
+        }
+
+        function syncDetailRegionSummary() {
+            const si = document.getElementById('detailRegionSi').value;
+            const gu = document.getElementById('detailRegionGu').value;
+            document.getElementById('detailRegionSummary').textContent = `${si} ${gu}`.trim() || '지역 미입력';
+        }
+
+        function syncDetailNaverMapLink() {
+            const addr = document.getElementById('detailInstallAddress').value.trim();
+            const linkEl = document.getElementById('detailNaverMapLink');
+            if (addr) {
+                linkEl.href = 'https://map.naver.com/p/search/' + encodeURIComponent(addr);
+                linkEl.style.display = '';
+            } else {
+                linkEl.href = '#';
+                linkEl.style.display = 'none';
+            }
+        }
+
+        /* 2026-09-18: 장소명 입력칸이 줄 전체(100%)를 차지해서, 팝업을 드래그하려고 마우스를 근처에 가져다 대기만 해도
+           hover 스타일이 걸려 "수정모드"처럼 보인다는 피드백 → 실제 글자 길이만큼만 폭을 차지하도록 캔버스로 텍스트 폭을 측정해서
+           input의 width를 동적으로 맞춤(값이 바뀔 때마다 oninput으로 재계산). 나머지 헤더 영역은 입력칸과 무관해져서 자유롭게 드래그 가능 */
+        function autoSizeDetailPlaceName() {
+            const el = document.getElementById('detailPlaceName');
+            if (!el) return;
+            if (!autoSizeDetailPlaceName._canvas) autoSizeDetailPlaceName._canvas = document.createElement('canvas');
+            const ctx = autoSizeDetailPlaceName._canvas.getContext('2d');
+            const cs = getComputedStyle(el);
+            ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+            const text = el.value || el.placeholder || '';
+            const textWidth = ctx.measureText(text).width;
+            const maxWidth = el.parentElement ? el.parentElement.clientWidth : 400;
+            const width = Math.min(Math.max(textWidth + 14, 40), maxWidth);
+            el.style.width = width + 'px';
         }
 
         function openDetailModal(id) {
@@ -3326,63 +3423,51 @@ function generateUniqueId() {
             const item = loc.item;
             if (!item) return;
 
-            document.getElementById('detailPlaceName').textContent = item.placeName || '-';
+            document.getElementById('detailTargetId').value = id;
             document.getElementById('detailGroupTag').textContent = groupNames[loc.groupKey] || '-';
-            const divisionEl = document.getElementById('detailDivisionBadge');
-            divisionEl.className = 'division-badge ' + (item.division === '임대' ? 'division-rental' : 'division-sale');
-            divisionEl.textContent = item.division === '임대' ? '임대' : '판매';
 
-            const statusClass = item.status === '요청' ? 'badge badge-danger' : (item.status === '종료' ? 'badge badge-dark' : 'badge badge-success');
-            const statusEl = document.getElementById('detailStatusBadge');
-            statusEl.className = statusClass;
-            statusEl.textContent = item.status || '정상';
+            setDetailDivision(item.division === '임대' ? '임대' : '판매');
+            setDetailStatus(item.status === '요청' ? '요청' : (item.status === '종료' ? '종료' : '정상'));
 
-            const region = `${item.regionSi || ''} ${item.regionGu || ''}`.trim();
-            document.getElementById('detailRegion').textContent = region || '-';
-            document.getElementById('detailInstallLocation').textContent = item.installLocation ? `· ${item.installLocation}` : '';
+            document.getElementById('detailPlaceName').value = item.placeName || '';
+            document.getElementById('detailRegionSi').value = item.regionSi || '';
+            document.getElementById('detailRegionGu').value = item.regionGu || '';
+            syncDetailRegionSummary();
+            document.getElementById('detailInstallLocation').value = item.installLocation || '';
 
-            document.getElementById('detailInstallAddress').innerHTML = detailValue(item.installAddress);
+            document.getElementById('detailInstallAddress').value = item.installAddress || '';
+            syncDetailNaverMapLink();
 
-            const orgDeptName = [item.orgDept, item.orgName].filter(Boolean).join(' · ');
-            document.getElementById('detailOrgDeptName').innerHTML = detailValue(orgDeptName);
-            document.getElementById('detailOrgTitle').innerHTML = detailValue(item.orgTitle);
-            document.getElementById('detailOrgContact').innerHTML = detailValue(item.orgContact);
-            document.getElementById('detailOrgEmail').innerHTML = detailValue(item.orgEmail);
+            document.getElementById('detailOrgDept').value = item.orgDept || '';
+            document.getElementById('detailOrgName').value = item.orgName || '';
+            document.getElementById('detailOrgTitle').value = item.orgTitle || '';
+            document.getElementById('detailOrgContact').value = item.orgContact || '';
+            document.getElementById('detailOrgEmail').value = item.orgEmail || '';
 
-            document.getElementById('detailManagerContact').innerHTML = detailValue(item.managerContact);
-            document.getElementById('detailManagerEmail').innerHTML = detailValue(item.managerEmail);
+            document.getElementById('detailManagerContact').value = item.managerContact || '';
+            document.getElementById('detailManagerEmail').value = item.managerEmail || '';
+            document.getElementById('detailManagerNote').value = item.managerNote || '';
 
-            document.getElementById('detailDeviceModel').innerHTML = detailValue(item.deviceModel);
-            document.getElementById('detailDeviceType').innerHTML = detailValue(item.deviceType);
-            document.getElementById('detailDeviceOption').innerHTML = detailValue(item.deviceOption);
+            document.getElementById('detailDeviceModel').value = item.deviceModel || '';
+            document.getElementById('detailDeviceType').value = item.deviceType || '';
+            document.getElementById('detailDeviceOption').value = item.deviceOption || '';
 
-            document.getElementById('detailKioId').innerHTML = detailValue(item.kioId);
-            document.getElementById('detailReaCode').innerHTML = detailValue(item.reaCode);
+            document.getElementById('detailKioId').value = item.kioId || '';
+            document.getElementById('detailReaCode').value = item.reaCode || '';
+            document.getElementById('detailKioAdminId').value = item.kioAdminId || '';
 
-            const rentalSection = document.getElementById('detailRentalSection');
-            if (item.division === '임대') {
-                rentalSection.style.display = '';
-                document.getElementById('detailInstallDate').innerHTML = detailValue(item.installDate);
-                document.getElementById('detailRentalEnd').innerHTML = renderRentalExpiry(item) === '-'
-                    ? '<span class="empty">종료일 미입력</span>'
-                    : renderRentalExpiry(item);
-            } else {
-                rentalSection.style.display = 'none';
-            }
+            document.getElementById('detailInstallDate').value = item.installDate || '';
+            document.getElementById('detailRentalPeriod').value = item.rentalPeriod || '1개월';
+            document.getElementById('detailRentalEndDate').value = item.rentalEndDate || '';
 
-            const memoListEl = document.getElementById('detailMemoList');
-            const memos = (item.memoList || []).slice().reverse();
-            memoListEl.innerHTML = memos.length
-                ? memos.map(m => `<div class="detail-memo-box"><span class="memo-date">${escapeHtml(m.date || '')}${m.author ? ' · ✍ ' + escapeHtml(m.author) : ''}</span>${escapeHtml(m.text || '')}</div>`).join('')
-                : '<div class="detail-memo-empty">등록된 메모가 없습니다.</div>';
-            document.getElementById('detailMemoCount').textContent = memos.length ? `(${memos.length}건)` : '';
+            document.getElementById('detailNewMemoInput').value = '';
+            renderDetailMemoThread(item.memoList || []);
 
-            document.getElementById('detailEditBtn').onclick = () => {
-                closeDetailModal();
-                openModalForEdit(id);
-            };
+            document.getElementById('detailDeleteBtn').style.display = isAdminUser() ? 'inline-block' : 'none';
 
             document.getElementById('detailModal').style.display = 'flex';
+            // 모달이 display:flex로 실제 레이아웃을 갖춘 "이후"에 측정해야 부모 폭(clientWidth)이 0으로 잡히는 걸 방지함(display:none 상태에서 측정하면 0으로 측정됨)
+            autoSizeDetailPlaceName();
 
             // 2026-08-29: 팝업을 안 옮긴 상태(가운데 고정)에서도 배경(반투명 오버레이)이 클릭을 다 막고 있어서
             // 다른 행의 장소명을 눌러도 반응이 없던 문제 수정. 배경은 클릭이 그대로 통과하게 하고,
@@ -3391,6 +3476,103 @@ function generateUniqueId() {
             const contentEl = document.querySelector('#detailModal .detail-modal-content');
             modalEl.style.pointerEvents = 'none';
             if (contentEl) contentEl.style.pointerEvents = 'auto';
+        }
+
+        async function saveDetailEdit() {
+            const id = document.getElementById('detailTargetId').value;
+            const loc = findItemLocation(id);
+            const targetItem = loc.item;
+            if (!targetItem) return;
+            const targetGroupKey = loc.groupKey;
+
+            const formItem = {
+                regionSi: document.getElementById('detailRegionSi').value,
+                regionGu: document.getElementById('detailRegionGu').value,
+                placeName: document.getElementById('detailPlaceName').value,
+                installAddress: document.getElementById('detailInstallAddress').value,
+                installLocation: document.getElementById('detailInstallLocation').value,
+                orgDept: document.getElementById('detailOrgDept').value,
+                orgName: document.getElementById('detailOrgName').value,
+                orgTitle: document.getElementById('detailOrgTitle').value,
+                orgContact: document.getElementById('detailOrgContact').value,
+                orgEmail: document.getElementById('detailOrgEmail').value,
+                managerContact: document.getElementById('detailManagerContact').value,
+                managerEmail: document.getElementById('detailManagerEmail').value,
+                managerNote: document.getElementById('detailManagerNote').value,
+                deviceModel: document.getElementById('detailDeviceModel').value,
+                deviceType: document.getElementById('detailDeviceType').value,
+                deviceOption: document.getElementById('detailDeviceOption').value,
+                kioId: document.getElementById('detailKioId').value,
+                kioAdminId: document.getElementById('detailKioAdminId').value,
+                reaCode: document.getElementById('detailReaCode').value,
+                division: document.getElementById('detailDivisionValue').value,
+                installDate: document.getElementById('detailInstallDate').value,
+                rentalPeriod: document.getElementById('detailRentalPeriod').value,
+                rentalEndDate: document.getElementById('detailRentalEndDate').value,
+                memoList: targetItem.memoList || [], // AS이력은 이미 각자 즉시 저장되므로 현재 메모리 상태 그대로 실어보냄
+                status: document.getElementById('detailStatusValue').value,
+                checked: targetItem.checked
+            };
+            if (!formItem.placeName.trim()) { alert('장소명을 입력해주세요.'); return; }
+
+            const saveBtn = document.getElementById('detailSaveBtn');
+            saveBtn.disabled = true; saveBtn.textContent = '저장 중...';
+
+            try {
+                const dbRow = itemToDbRow(formItem, targetGroupKey);
+                // saveData()의 수정 분기와 동일한 동시편집 충돌 감지 패턴: 열었을 때의 updated_at이 그대로일 때만 저장 허용
+                let updateQuery = sb.from('companies').update(dbRow).eq('id', id);
+                if (targetItem.updatedAt) updateQuery = updateQuery.eq('updated_at', targetItem.updatedAt);
+                const { data, error } = await updateQuery.select();
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    alert('⚠️ 다른 사람이 방금 이 업체 정보를 먼저 수정했어요.\n최신 내용을 다시 불러올게요. 방금 입력하신 내용은 다시 한번 확인 후 입력해주세요.');
+                    const { data: freshRow, error: freshErr } = await sb.from('companies').select('*').eq('id', id).single();
+                    if (!freshErr && freshRow && loc.index !== -1) {
+                        loc.arr[loc.index] = Object.assign(dbRowToItem(freshRow), { checked: targetItem.checked });
+                    }
+                    renderTable();
+                    if (freshRow) openDetailModal(id); // 최신 값으로 팝업을 다시 채워서 이어서 작업할 수 있게
+                    return;
+                }
+
+                if (loc.index !== -1) {
+                    loc.arr[loc.index] = Object.assign(dbRowToItem(data[0]), { checked: targetItem.checked });
+                }
+                closeDetailModal();
+                renderTable();
+                showSyncStatus('☁️ 저장 완료');
+            } catch (err) {
+                console.error(err);
+                alert('저장에 실패했습니다: ' + (err.message || err));
+            } finally {
+                saveBtn.disabled = false; saveBtn.textContent = '저장';
+            }
+        }
+
+        async function deleteDetailItem() {
+            if (!isAdminUser()) { alert('업체 삭제는 관리자만 할 수 있어요.'); return; }
+            const id = document.getElementById('detailTargetId').value;
+            if (!id || !confirm('정말 이 업체를 삭제하시겠습니까?')) return;
+            try {
+                // .select()를 붙여서 "실제로 몇 건이 지워졌는지"를 응답으로 받음.
+                // RLS 정책에 막히면 Supabase는 에러 없이 0건 삭제로 조용히 "성공" 처리하기 때문에,
+                // error만 확인해서는 이 경우를 못 잡아냄 → data.length로 직접 확인해야 함.
+                const { data, error } = await sb.from('companies').delete().eq('id', id).select();
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    throw new Error('삭제 권한이 없거나(RLS 정책 차단), 이미 삭제된 항목입니다. Supabase의 companies 테이블 DELETE 정책을 확인해주세요.');
+                }
+                const delLoc = findItemLocation(id);
+                if (delLoc.index !== -1) delLoc.arr.splice(delLoc.index, 1);
+                closeDetailModal();
+                renderTable();
+                showSyncStatus('☁️ 삭제 완료');
+            } catch (err) {
+                console.error(err);
+                alert('삭제에 실패했습니다: ' + (err.message || err));
+            }
         }
 
         function closeDetailModal() {
@@ -3413,6 +3595,19 @@ function generateUniqueId() {
             content.style.boxShadow = '';
         }
 
+        // 2026-09-18: 상세팝업 안 입력칸(장소명/주소/부서/연락처 등)에서 작성 후 Enter를 쳐도 아무 반응이 없다는 피드백
+        // → Enter 입력 시 해당 칸의 편집을 "완료"한 것으로 보고 포커스를 해제(blur)함. 줄바꿈이 필요한 textarea(AS이력 메모칸,
+        // 새 메모 입력칸)는 각자 자기 줄바꿈/등록 단축키(Ctrl+Enter 등)가 이미 있으므로 이 동작에서 제외.
+        document.getElementById('detailModal').addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            const t = e.target;
+            if (t.tagName === 'TEXTAREA') return;
+            if (t.tagName === 'INPUT' || t.tagName === 'SELECT') {
+                e.preventDefault();
+                t.blur();
+            }
+        });
+
         (function initDetailModalDrag() {
             const handle = document.getElementById('detailHeroDragHandle');
             const content = document.querySelector('#detailModal .detail-modal-content');
@@ -3420,7 +3615,10 @@ function generateUniqueId() {
             let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
 
             handle.addEventListener('mousedown', (e) => {
-                if (e.target.closest('.detail-close')) return;
+                // 2026-09-18: 헤더 안에 클릭 가능한 요소(판매/임대·정상/요청/종료 배지, 장소명/설치위치 입력창,
+                // 길찾기 링크, 닫기)가 늘어나서, 그것들을 누를 때도 드래그가 같이 시작돼버리면 입력이 안 먹힘
+                // → 이런 요소 위에서 누른 경우엔 드래그를 시작하지 않고 그냥 클릭/포커스가 정상 동작하게 비켜줌.
+                if (e.target.closest('.detail-close, input, select, a, .detail-pick-opt')) return;
                 const rect = content.getBoundingClientRect();
                 startX = e.clientX;
                 startY = e.clientY;
@@ -3448,68 +3646,26 @@ function generateUniqueId() {
         })();
 
         /* ===================== ⑭ (이어서) 업체 등록/수정 모달 — 수정 진입, 저장, 삭제 ===================== */
-        function openModalForEdit(id) {
-            document.getElementById('modalTitle').innerText = "업체 정보 수정 및 관리";
-            const item = findItemLocation(id).item;
-            if (!item) return;
-
-            document.getElementById('editTargetId').value = id;
-            setSelectedRegionSi(item.regionSi || '');
-            document.getElementById('regionGu').value = item.regionGu || '';
-            document.getElementById('placeName').value = item.placeName || '';
-            document.getElementById('installAddress').value = item.installAddress || '';
-            document.getElementById('installLocation').value = item.installLocation || '';
-            document.getElementById('orgDept').value = item.orgDept || '';
-            document.getElementById('orgName').value = item.orgName || '';
-            document.getElementById('orgTitle').value = item.orgTitle || '';
-            document.getElementById('orgContact').value = item.orgContact || '';
-            document.getElementById('orgEmail').value = item.orgEmail || '';
-            document.getElementById('managerContact').value = item.managerContact || '';
-            document.getElementById('managerEmail').value = item.managerEmail || '';
-            document.getElementById('deviceModel').value = item.deviceModel || '';
-            document.getElementById('deviceType').value = item.deviceType || '';
-            document.getElementById('deviceOption').value = item.deviceOption || '';
-            document.getElementById('kioId').value = item.kioId || '';
-            document.getElementById('kioAdminId').value = item.kioAdminId || '';
-            document.getElementById('reaCode').value = item.reaCode || '';
-            document.getElementById('version').value = '';
-            document.getElementById('status').value = item.status || '정상';
-            document.querySelector(`input[name="division"][value="${item.division === '임대' ? '임대' : '판매'}"]`).checked = true;
-            document.getElementById('installDate').value = item.installDate || '';
-            document.getElementById('rentalPeriod').value = item.rentalPeriod || '1개월';
-            document.getElementById('rentalEndDate').value = item.rentalEndDate || '';
-            handleDivisionChange();
-
-            document.getElementById('deleteBtn').style.display = isAdminUser() ? "inline-block" : "none";
-            document.getElementById('modal').style.display = "flex";
-        }
-
+        /* 2026-09-18 9차: 기존엔 이 등록/수정 모달(#modal)이 신규 등록과 기존 업체 수정을 둘 다 맡고 있었는데,
+           기존 업체를 "보면서" 메모까지 같이 남기기 불편하다는 피드백으로 수정/AS이력 기능을 전부
+           위 상세보기 통합 팝업(openDetailModal/saveDetailEdit/deleteDetailItem)으로 옮김 — 그래서 이제 이
+           #modal은 "신규 업체 등록" 전용으로만 쓰임(openModalForEdit, 수정모달 전용 deleteData는 삭제).
+           그만큼 saveData()도 수정 분기 없이 등록 하나만 처리하도록 단순화함. */
         function closeModal() {
             document.getElementById('modal').style.display = "none";
         }
 
         async function saveData(event) {
             event.preventDefault();
-            const id = document.getElementById('editTargetId').value;
-            const isEdit = id !== "";
-
-            const editLoc = isEdit ? findItemLocation(id) : null;
-            let targetItem = editLoc ? editLoc.item : null;
-            // 수정일 때는 그 업체가 실제로 속한 그룹을 그대로 유지 ("전체" 탭에서 열었어도 엉뚱한 그룹으로 옮겨가면 안 됨)
-            const targetGroupKey = isEdit ? (editLoc && editLoc.groupKey) : currentGroup;
-            const existingChecked = targetItem ? targetItem.checked : false;
-            const existingMemoList = targetItem ? (targetItem.memoList || []).slice() : [];
+            const targetGroupKey = currentGroup;
+            const memoList = [];
 
             const initVersionText = document.getElementById('version').value.trim();
             if (initVersionText) {
-                existingMemoList.push({
-                    date: !isEdit ? "초기 등록" : "수정 시 추가",
-                    text: initVersionText
-                });
+                memoList.push({ id: generateUniqueId(), date: '초기 등록', text: initVersionText });
             }
 
             const formItem = {
-                id: isEdit ? id : undefined,
                 regionSi: getSelectedRegionSi(),
                 regionGu: document.getElementById('regionGu').value,
                 placeName: document.getElementById('placeName').value,
@@ -3522,6 +3678,7 @@ function generateUniqueId() {
                 orgEmail: document.getElementById('orgEmail').value,
                 managerContact: document.getElementById('managerContact').value,
                 managerEmail: document.getElementById('managerEmail').value,
+                managerNote: document.getElementById('managerNote').value,
                 deviceModel: document.getElementById('deviceModel').value,
                 deviceType: document.getElementById('deviceType').value,
                 deviceOption: document.getElementById('deviceOption').value,
@@ -3532,51 +3689,21 @@ function generateUniqueId() {
                 installDate: document.getElementById('installDate').value,
                 rentalPeriod: document.getElementById('rentalPeriod').value,
                 rentalEndDate: document.getElementById('rentalEndDate').value,
-                memoList: existingMemoList,
+                memoList: memoList,
                 status: document.getElementById('status').value,
-                checked: existingChecked
+                checked: false
             };
 
             const submitBtn = event.target.querySelector('button[type="submit"]');
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '저장 중...'; }
 
             try {
-                if (!isEdit) {
-                    const dbRow = itemToDbRow(formItem, targetGroupKey);
-                    const { data, error } = await sb.from('companies').insert(dbRow).select().single();
-                    if (error) throw error;
-                    if (!allGroupsData[targetGroupKey]) allGroupsData[targetGroupKey] = [];
-                    allGroupsData[targetGroupKey].push(dbRowToItem(data));
-                } else {
-                    const dbRow = itemToDbRow(formItem, targetGroupKey);
-                    // 동시편집 충돌 감지: 이 폼을 열었을 때 봤던 updated_at이 지금도 그대로일 때만 저장을 허용.
-                    // 그 사이에 다른 사람이 먼저 저장해서 updated_at이 바뀌었으면 조건이 안 맞아 0건 업데이트되고,
-                    // 그걸로 "누군가 방금 먼저 고쳤구나"를 감지해서 내 수정본으로 조용히 덮어쓰는 걸 막음
-                    let updateQuery = sb.from('companies').update(dbRow).eq('id', id);
-                    if (targetItem && targetItem.updatedAt) {
-                        updateQuery = updateQuery.eq('updated_at', targetItem.updatedAt);
-                    }
-                    const { data, error } = await updateQuery.select();
-                    if (error) throw error;
+                const dbRow = itemToDbRow(formItem, targetGroupKey);
+                const { data, error } = await sb.from('companies').insert(dbRow).select().single();
+                if (error) throw error;
+                if (!allGroupsData[targetGroupKey]) allGroupsData[targetGroupKey] = [];
+                allGroupsData[targetGroupKey].push(dbRowToItem(data));
 
-                    if (!data || data.length === 0) {
-                        alert('⚠️ 다른 사람이 방금 이 업체 정보를 먼저 수정했어요.\n최신 내용을 다시 불러올게요. 방금 입력하신 내용은 다시 한번 확인 후 입력해주세요.');
-                        const { data: freshRow, error: freshErr } = await sb.from('companies').select('*').eq('id', id).single();
-                        if (!freshErr && freshRow) {
-                            const freshLoc = findItemLocation(id);
-                            if (freshLoc.index !== -1) {
-                                freshLoc.arr[freshLoc.index] = Object.assign(dbRowToItem(freshRow), { checked: existingChecked });
-                            }
-                        }
-                        renderTable();
-                        if (freshRow) openModalForEdit(id); // 최신 값으로 폼을 다시 채워서 이어서 작업할 수 있게
-                        return;
-                    }
-
-                    if (editLoc && editLoc.index !== -1) {
-                        editLoc.arr[editLoc.index] = Object.assign(dbRowToItem(data[0]), { checked: existingChecked });
-                    }
-                }
                 closeModal();
                 renderTable();
                 showSyncStatus('☁️ 저장 완료');
@@ -3585,31 +3712,6 @@ function generateUniqueId() {
                 alert('저장에 실패했습니다: ' + (err.message || err));
             } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '저장'; }
-            }
-        }
-
-        async function deleteData() {
-            if (!isAdminUser()) { alert('업체 삭제는 관리자만 할 수 있어요.'); return; }
-            const id = document.getElementById('editTargetId').value;
-            if (id && confirm("정말 이 업체를 삭제하시겠습니까?")) {
-                try {
-                    // .select()를 붙여서 "실제로 몇 건이 지워졌는지"를 응답으로 받음.
-                    // RLS 정책에 막히면 Supabase는 에러 없이 0건 삭제로 조용히 "성공" 처리하기 때문에,
-                    // error만 확인해서는 이 경우를 못 잡아냄 → data.length로 직접 확인해야 함.
-                    const { data, error } = await sb.from('companies').delete().eq('id', id).select();
-                    if (error) throw error;
-                    if (!data || data.length === 0) {
-                        throw new Error('삭제 권한이 없거나(RLS 정책 차단), 이미 삭제된 항목입니다. Supabase의 companies 테이블 DELETE 정책을 확인해주세요.');
-                    }
-                    const delLoc = findItemLocation(id);
-                    if (delLoc.index !== -1) delLoc.arr.splice(delLoc.index, 1);
-                    closeModal();
-                    renderTable();
-                    showSyncStatus('☁️ 삭제 완료');
-                } catch (err) {
-                    console.error(err);
-                    alert('삭제에 실패했습니다: ' + (err.message || err));
-                }
             }
         }
 
@@ -3651,7 +3753,9 @@ function generateUniqueId() {
             if (orgBanner) { orgBanner.style.display = showOrg ? '' : 'none'; orgBanner.colSpan = 5; }
             if (managerBanner) { managerBanner.style.display = showManager ? '' : 'none'; managerBanner.colSpan = 2; }
             if (deviceBanner) { deviceBanner.style.display = showDevice ? '' : 'none'; deviceBanner.colSpan = 3; }
-            if (sysBanner) { sysBanner.style.display = showSys ? '' : 'none'; sysBanner.colSpan = 3; }
+            if (sysBanner) { sysBanner.style.display = showSys ? '' : 'none'; sysBanner.colSpan = 2; } /* 2026-09-18: 고유넘버 그룹은 실제로 키오에듀ID/레아코드 2칸뿐인데
+               여기서 3으로 잘못 지정돼 있어서 헤더가 다음 그룹(임대) 첫 칸까지 삼켜버리던 버그 수정 — 그 뒤로 모든 헤더가 한 칸씩
+               밀리면서 메모가 임대정보 체크 여부에 따라 임대/고유넘버 그룹 밑에 잘못 걸쳐 보이던 원인이 바로 이 오타였음. */
             if (rentalBanner) { rentalBanner.style.display = showRental ? '' : 'none'; rentalBanner.colSpan = 2; }
         }
 
@@ -3713,6 +3817,7 @@ function generateUniqueId() {
             { key: 'orgEmail',        label: '소속이메일', group: 'org-group',     width: 20, pdfWeight: 9,  compact: true },
             { key: 'managerContact',  label: '담당자연락처', group: 'manager-group', width: 14, pdfWeight: 10 },
             { key: 'managerEmail',    label: '담당자이메일', group: 'manager-group', width: 20, pdfWeight: 9,  compact: true },
+            { key: 'managerNote',     label: '담당자비고',  group: 'manager-group', width: 16, pdfWeight: 8,  compact: true },
             { key: 'deviceModel',     label: '모델명',     group: 'device-group',  width: 14, pdfWeight: 8  },
             { key: 'deviceType',      label: '유형',       group: 'device-group',  width: 10, pdfWeight: 6  },
             { key: 'deviceOption',    label: '옵션',       group: 'device-group',  width: 12, pdfWeight: 7  },
@@ -3785,6 +3890,7 @@ function generateUniqueId() {
                     orgEmail: item.orgEmail || '-',
                     managerContact: item.managerContact || '-',
                     managerEmail: item.managerEmail || '-',
+                    managerNote: item.managerNote || '-',
                     deviceModel: item.deviceModel || '-',
                     deviceType: item.deviceType || '-',
                     deviceOption: item.deviceOption || '-',
@@ -4178,6 +4284,7 @@ function generateUniqueId() {
                                 orgEmail: readField(row, "orgEmail"),
                                 managerContact: readField(row, "managerContact"),
                                 managerEmail: readField(row, "managerEmail"),
+                                managerNote: readField(row, "managerNote"),
                                 deviceModel: readField(row, "deviceModel"),
                                 deviceType: readField(row, "deviceType"),
                                 deviceOption: readField(row, "deviceOption"),
