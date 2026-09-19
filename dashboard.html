@@ -102,7 +102,14 @@
         }
 
         .navbar {
-            background: var(--navy-grid-bg);
+            /* 2026-09-19: 격자 네이비 단색 대신, 성채 원경 사진을 배경으로 깔고 왼쪽(브랜드/메뉴/통계 텍스트
+               영역)은 원래의 다크네이비로 진하게 눌러서 가독성을 지키고, 오른쪽으로 갈수록 옅어지며
+               이미지가 자연스럽게 드러나도록 하는 좌→우 그라데이션 적용. */
+            background:
+                linear-gradient(90deg, rgba(13,32,54,0.97) 0%, rgba(13,32,54,0.93) 32%, rgba(13,32,54,0.62) 56%, rgba(13,32,54,0.18) 80%, rgba(13,32,54,0) 100%),
+                url('assets/navbar-castle-vista.webp');
+            background-size: cover;
+            background-position: center 38%;
             color: #fff; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; min-height: 112px; flex-shrink: 0; position: relative; z-index: 2; border-bottom-left-radius: 10px;
         }
         /* 상단 헤더와 같은 격자+네이비 톤으로 화면 왼쪽 끝을 처음부터 끝까지 이어지는 세로 액센트바로 통일.
@@ -599,13 +606,15 @@
             position: relative; overflow: hidden; flex-shrink: 0;
             padding: 20px 26px 18px; min-height: 178px;
             cursor: move; user-select: none;
+            /* 2026-09-19: 배경을 새 성채 클로즈업 이미지로 교체하면서, 좌우 대칭 비네트 대신
+               왼쪽(그룹명/장소명/상태뱃지 텍스트 영역)은 다크네이비로 진하게, 오른쪽으로 갈수록
+               옅어지는 좌→우 그라데이션으로 변경 — 텍스트 가독성 + 이미지 노출을 동시에 확보. */
             background:
-                linear-gradient(90deg, rgba(8,18,32,0.88) 0%, rgba(8,18,32,0) 34%, rgba(8,18,32,0) 66%, rgba(8,18,32,0.88) 100%),
-                radial-gradient(ellipse 78% 88% at 50% 45%, rgba(10,23,41,0) 25%, rgba(10,23,41,0.5) 72%, rgba(10,23,41,0.85) 100%),
-                linear-gradient(180deg, rgba(12,16,24,0.16) 0%, rgba(12,16,24,0.32) 55%, rgba(10,13,20,0.54) 100%),
-                url('assets/login-bg-scene.webp');
+                linear-gradient(90deg, rgba(8,16,28,0.94) 0%, rgba(8,16,28,0.88) 24%, rgba(8,16,28,0.5) 48%, rgba(8,16,28,0.12) 72%, rgba(8,16,28,0) 92%),
+                linear-gradient(180deg, rgba(8,14,24,0.20) 0%, rgba(8,14,24,0.10) 40%, rgba(6,10,18,0.40) 100%),
+                url('assets/detail-hero-castle-v2.webp');
             background-size: cover;
-            background-position: center 22%;
+            background-position: center 30%;
         }
         .detail-hero-glow {
             position: absolute; top: -70px; left: -70px; width: 240px; height: 240px; border-radius: 50%;
