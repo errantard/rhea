@@ -32,6 +32,10 @@
             --paper: #FBFAF6;    /* 배경 */
             --paper2: #F5F2EA;   /* 스트립/표시 영역 */
             --border-warm: #E7E3D9;
+            /* 2026-09-20: 표 맨 위 대장타이틀 줄이 네이비 톤으로 바뀌면서, 거기 걸쳐있는 표 바깥 테두리/
+               세로 구분선에 예전 밝은 베이지·하늘색 라인을 그대로 쓰면 어두운 배경 위에서 겉돌아 보임 →
+               같은 계열의 어두운 남색으로 통일 (대장님이 준 색상 샘플과 동일한 값) */
+            --border-navy-dark: #0E2138;
             --muted: #8a8578;
             --muted-light: #787360; /* 2026-08-29: 명암비 개선 — 기존 #a29c8a(흰 배경 위 2.7:1)는 WCAG AA(4.5:1) 미달이라 살짝 더 진한 톤으로 조정(4.75:1) */
             /* ---- 디자인 토큰 확장 (2026-08-29): 반경/간격 스케일화 + 경고색 통합 + 표 밀도 프리셋 ---- */
@@ -44,12 +48,11 @@
             --coral-dark-bg-active: rgba(255,158,118,0.22);
             /* 표 밀도 프리셋 기본값(=기본 밀도). #customerTable.density-compact / .density-comfortable 가 아래서 재정의 */
             --tbl-font: 11.7px; --tbl-pad-v: 6px; --tbl-pad-h: 10px;
-            /* 네이비+격자 배경 패턴 (navbar·hero·toggles·side-accent 4곳에서 공통으로 사용).
-               색/격자 간격을 바꾸고 싶으면 여기 한 곳만 고치면 4곳 전부 반영됨 */
-            --navy-grid-bg:
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 46px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 46px),
-                linear-gradient(160deg, #0D2036 0%, #17293F 55%, #0D2036 100%);
+            /* 네이비 배경 패턴 (hero·toggles·side-accent 3곳에서 공통으로 사용).
+               2026-09-20: 원래 있던 46px 격자무늬(repeating-linear-gradient 2겹)가 히어로 영역(.container::before)을 통해
+               검색줄(.filter-box) 반투명 배경 아래로 계속 비쳐서 "격자 흰선"으로 보이는 문제가 있어 걷어내고
+               순수 대각선 그라데이션만 남김 — 색/톤을 바꾸고 싶으면 여기 한 곳만 고치면 전부 반영됨 */
+            --navy-grid-bg: linear-gradient(160deg, #0D2036 0%, #17293F 55%, #0D2036 100%);
             /* 2026-09-06 5차: 로그인 화면이 "핫스팟 좌표매핑"(원화 자체가 카드) 방식으로 완전히
                바뀌면서, 예전 CSS로 그리던 로그인 카드 팔레트 변수들(로즈골드 1번/글로우/패널
                배경/테두리/잉크 톤, 룬석벽 리스킨용 파란 악센트 등)이 전부 미사용 상태가 되어
@@ -101,16 +104,24 @@
             .dl-knight, .dl-dots span { animation: none; }
         }
 
-        .navbar {
-            /* 2026-09-19: 격자 네이비 단색 대신, 성채 원경 사진을 배경으로 깔고 왼쪽(브랜드/메뉴/통계 텍스트
-               영역)은 원래의 다크네이비로 진하게 눌러서 가독성을 지키고, 오른쪽으로 갈수록 옅어지며
-               이미지가 자연스럽게 드러나도록 하는 좌→우 그라데이션 적용. */
+        .header-fixed {
+            /* 2026-09-20 9차: 대장님 피드백 — 네브바/검색줄이 각자 따로 배경을 그리다 보니 그 사이
+               margin(16px) 틈에는 배경을 그려주는 요소 자체가 없어서 그 틈만 하얗게 뚫려 보였음("빵꾸").
+               둘을 물리적으로 이 박스 하나로 묶어서 성채 사진을 "한 번만" 그리면 그 틈까지 포함해
+               통째로 한 장의 사진이 되므로, 이어붙인 티도 뚫린 틈도 원천적으로 생길 수 없음.
+               (박스가 하나뿐이라 background-attachment:fixed로 뷰포트에 맞출 필요도 더 이상 없음) */
             background:
                 linear-gradient(90deg, rgba(13,32,54,0.97) 0%, rgba(13,32,54,0.93) 32%, rgba(13,32,54,0.62) 56%, rgba(13,32,54,0.18) 80%, rgba(13,32,54,0) 100%),
                 url('assets/navbar-castle-vista.webp');
             background-size: cover;
             background-position: center 38%;
-            color: #fff; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; min-height: 112px; flex-shrink: 0; position: relative; z-index: 2; border-bottom-left-radius: 10px;
+            background-color: #0D2036;
+            display: flex; flex-direction: column; flex-shrink: 0; position: relative; z-index: 2;
+        }
+        .navbar {
+            /* 2026-09-20 9차: 배경(성채 사진+그라데이션)은 이제 부모 .header-fixed가 통째로 그려주므로
+               여기서는 지움 — 네브바는 그 위에 얹히는 투명한 콘텐츠 레이어일 뿐 */
+            color: #fff; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; min-height: 112px; flex-shrink: 0;
         }
         /* 상단 헤더와 같은 격자+네이비 톤으로 화면 왼쪽 끝을 처음부터 끝까지 이어지는 세로 액센트바로 통일.
            (예전엔 헤더 높이만큼만 칠했는데, 업체 리스트를 스크롤하면 리스트 쪽 .container는 내부에서 스크롤되는
@@ -172,7 +183,7 @@
             align-items: center;
             gap: var(--sp-2);
             white-space: nowrap;
-            background-color: rgba(255,255,255,0.05);
+            background-color: var(--ink2);
             color: #DCE9E2;
             border: 1px solid rgba(255,255,255,0.22);
             padding: 5px 12px;
@@ -183,25 +194,24 @@
             transition: all 0.2s ease;
         }
         .action-btn:hover {
-            background-color: rgba(255,255,255,0.14);
+            background-color: #22405F;
             color: #ffffff;
             border-color: rgba(255,255,255,0.4);
         }
         .btn-icon { width: 14px; height: 14px; }
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .container { padding: 16px 30px 30px; overflow-y: auto; height: 100%; position: relative; }
-        /* 로그인 화면과 톤을 통일하는 상단 다크 히어로 배경 (항목그룹표시 패널 세로 중간 지점까지) */
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 116px;
-            background: var(--navy-grid-bg);
-            z-index: 0;
-            pointer-events: none;
-        }
-        .filter-box, .toggles { position: relative; z-index: 1; }
+        /* 2026-09-20 9차: 검색줄(.filter-box)이 이제 .header-fixed(네브바와 한 몸)로 완전히 옮겨가서,
+           .main-content는 .container 하나만 자식으로 둠. .container는 표 영역만 담당.
+           예전엔 표가 가로로 넓어서 .table-container 자체에 overflow-x:auto를 줬었는데, 그러면 표 헤더
+           (thead, position:sticky)의 "가장 가까운 스크롤 조상"이 실제로 스크롤되는 이 .container가 아니라
+           안쪽 table-container가 되어버려서 — table-container 자신은 세로로 넘치질 않으니 그 안 sticky는
+           사실상 아무 효과가 없어짐(스크롤해도 안 붙고 그냥 같이 흘러가버림). 그래서 가로 스크롤도 이 .container가
+           직접 담당하도록 overflow(양쪽)로 둠.
+           height:100% 대신 flex:1 + min-height:0을 쓰는 이유: 자식이 하나뿐이어도 flex 컨테이너 안에서
+           "남는 공간 전부"를 안전하게 차지하는 방식이고, min-height:0은 flex 아이템이 내용물 크기 때문에
+           줄어들지 않으려는 기본 동작을 막아서 overflow:auto 스크롤이 실제로 걸리게 해주는 필수 보정값. */
+        .container { padding: 0 30px 30px; overflow: auto; flex: 1; min-height: 0; position: relative; }
 
         /* ===== Ledger Strip: 큰 카드 대신 얇은 한 줄 지표 스트립 (이제 네브바 안, 브랜드명 아래에 위치) ===== */
         .cards {
@@ -260,6 +270,10 @@
         .backup-notice.overdue { color: var(--coral-dark); font-weight: bold; } /* 2026-08-29: 다크 네이비 배경 위에서 var(--coral)는 3.9:1로 기준 미달이라, 같은 배경에서 이미 검증된 --coral-dark(8.9:1)로 교체 */
 
         .rental-panel { gap: var(--sp-6); }
+        /* 2026-09-20 10차: "판매"도 임대처럼 눌러서 필터링되도록 바뀜(대장님 요청) — 예전엔 순수 표시용이라
+           .rental-static(cursor:default)로 눌러도 반응 없게 막아뒀었는데, 이제 다른 rental-mini 버튼들과
+           동일하게 클릭 가능해서 그 클래스는 삭제. 오른쪽 세로 구분선(.rental-divider)은 그대로 유지 */
+        .rental-divider { width: 1px; align-self: stretch; background: #E1DCCB; margin: 2px 0; }
         /* 2026-08-29: 예정/종료 2개만 남아서 좌우 2열 대신 위아래 1열(세로)로 쌓음 — "한 열로" 배치 */
         .rental-stats-grid { display: grid; grid-template-columns: auto; row-gap: var(--sp-0); }
         .rental-label-btn {
@@ -312,11 +326,35 @@
         th.sortable-th:hover { text-decoration: underline dotted; }
         .sort-arrow { font-size: 10px; margin-left: 3px; opacity: 0.75; }
 
-        .filter-box { background: rgba(255,255,255,0.04); padding: 12px 20px; border-radius: var(--r-lg); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border-warm); }
+        .filter-box {
+            /* 2026-09-20 9차: 대장님 피드백 — 이 박스가 자기만의 사진 조각을 따로 그리다 보니 네브바와의
+               사이 여백(margin 16px)에는 배경을 그려주는 요소가 없어서 그 틈이 하얗게 뚫려 보였음("빵꾸").
+               사진은 이제 부모 .header-fixed 하나가 네브바~검색줄 전체를 통째로 그려주고, 이 박스는
+               그 위에 얹히는 "테두리 + 아주 옅은 유리질감"만 남은 순수 디자인 프레임으로 바뀜 —
+               사진을 따로 자르지 않으니 이어붙인 티도, 뚫린 틈도 날 일이 없어짐.
+               10차: 둥근 모서리가 안 어울리고 손댈 때마다 정렬 문제만 생겨서, 대장님 요청으로 완전히
+               각진 사각형으로 정리(border-radius 제거) */
+            background: rgba(255,255,255,0.05);
+            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+            margin: 16px 30px 10px; border: 1px solid var(--border-navy-dark);
+            flex-shrink: 0;
+        }
         .filter-controls { display: flex; gap: var(--sp-4); align-items: center; flex-wrap: wrap; }
         .filter-controls input, .filter-controls select { padding: 8px 12px; border: 1px solid #E2DDD0; border-radius: var(--r-sm); font-size: 13px; width: 170px; background: var(--paper2);}
+        /* 2026-09-20: 항목그룹표시 체크박스가 검색줄로 들어오면서 위 input/select 공용 규칙(고정폭 170px 등)을
+           그대로 물려받으면 체크박스가 네모난 인풋처럼 깨져 보여서, 체크박스만 원래 모습으로 되돌림 */
+        .filter-controls input[type="checkbox"] { width: auto; padding: 0; border: none; background: none; accent-color: var(--teal); }
+        /* "항목그룹 표시" 체크박스 묶음 — 원래 .toggles 바에 있던 걸 검색줄 안으로 옮겨온 것 */
+        .col-toggle-group { display: inline-flex; align-items: center; gap: var(--sp-5); flex-wrap: wrap; font-size: 12.5px; color: #C3D6E6; }
+        .col-toggle-group label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+        .col-toggle-title { white-space: nowrap; }
+        /* 상태필터/정렬 드롭다운 — 화면에는 안 보이지만 값은 그대로 살아있어야 상단 상태카드 클릭, 표 헤더 클릭 정렬이 계속 동작함 */
+        .visually-hidden-controls { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
         .btn-group { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
+        /* 검색줄 오른쪽으로 옮겨온 그룹이동/종료업체표시/행간격 묶음 */
+        .filter-side-tools { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; flex-shrink: 0; }
+        .terminated-toggle-label { display: inline-flex; align-items: center; gap: 4px; color: #EAF1F8; font-weight: bold; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
         .btn { border: none; padding: 10px 16px; border-radius: var(--r-sm); cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13.5px;}
 
         .btn-primary { background: var(--teal); color: #fff; }
@@ -339,10 +377,10 @@
         .density-switch { display: inline-flex; align-items: center; gap: 6px; }
         .density-switch .density-label { color: #C3D6E6; }
         .density-btn {
-            font-size: 12px; color: #C3D6E6; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.22);
+            font-size: 12px; color: #C3D6E6; background: var(--ink2); border: 1px solid rgba(255,255,255,0.22);
             border-radius: var(--r-sm); padding: 3px 10px; cursor: pointer; transition: background .15s, color .15s;
         }
-        .density-btn:hover { background: rgba(255,255,255,0.14); }
+        .density-btn:hover { background: #22405F; }
         .density-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 700; }
         #customerTable.density-compact { --tbl-font: 11px; --tbl-pad-v: 3px; --tbl-pad-h: 8px; }
         #customerTable.density-comfortable { --tbl-font: 11.7px; --tbl-pad-v: 11px; --tbl-pad-h: 10px; }
@@ -351,7 +389,7 @@
         .group-move-wrap { position: relative; }
         .icon-btn-move {
             display: flex; align-items: center; gap: var(--sp-2);
-            background: rgba(255,255,255,0.08); color: #EAF1F8; border: 1px solid rgba(255,255,255,0.22);
+            background: var(--ink2); color: #EAF1F8; border: 1px solid rgba(255,255,255,0.22);
             padding: 6px 12px; border-radius: var(--r-lg); font-size: 12px; font-weight: bold;
             cursor: pointer; transition: 0.2s;
         }
@@ -393,7 +431,17 @@
         .group-edit-add-row { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #dfe6e9; }
         .group-edit-add-row input { flex: 1; padding: 8px 10px; border: 1px solid #dfe6e9; border-radius: var(--r-sm); font-size: 13px; }
 
-        .table-container { background: #ffffff; border-radius: var(--r-lg); border: 1px solid var(--border-warm); overflow-x: auto; margin-bottom: 50px; padding-bottom: 12px; position: relative;}
+        /* 2026-09-20 10차: 라운드 코너를 맞추려고 여기(border→box-shadow), group-banner 첫/끝 칸,
+           tbody 마지막 행 첫/끝 칸까지 손대야 했고, 매번 조금씩 어긋나는 문제가 반복됨 — 대장님 요청으로
+           아예 다 각진 사각형으로 정리(border-radius 전부 제거). box-shadow는 1px 테두리 용도로만 유지.
+           2026-09-20 10차 추가수정: display:block(기본값)인 채로 두면 이 박스의 너비가 표 내용과 무관하게
+           항상 부모(.container)의 뷰포트 너비에 딱 맞춰져 버림 — 그래서 표가 화면보다 넓어서 가로 스크롤이
+           생기는 경우, 표는 계속 오른쪽으로 이어지는데 이 박스의 테두리(box-shadow)는 원래 뷰포트 너비
+           지점에서 뚝 끊겨버려서, 오른쪽으로 스크롤할수록 "테두리 선이 표 중간 어딘가에 혼자 떨어져 있고
+           그 뒤로는 테두리 없는 칸들만 계속되는" 현상이 생겼음(대장님이 짚어준 문제).
+           display:inline-block으로 바꾸면 이 박스가 "내용(표)의 실제 너비만큼만" 스스로 크기를 맞추므로,
+           표가 넓어지면 이 박스도 같이 넓어져서 테두리가 항상 표의 진짜 끝까지 따라감 */
+        .table-container { display: inline-block; vertical-align: top; background: #ffffff; box-shadow: 0 0 0 1px var(--border-navy-dark); margin-bottom: 50px; padding-bottom: 12px;}
         /* width:100%를 주면 창이 넓을 때 셀들이 억지로 늘어남 — 자연 컨텐츠 크기로 고정하고 남는 공간은 오른쪽에 여백으로 남김 */
         table { width: auto; border-collapse: separate; border-spacing: 0; text-align: left; font-size: var(--tbl-font); white-space: nowrap; }
 
@@ -401,17 +449,37 @@
         th, td { padding: var(--tbl-pad-v) var(--tbl-pad-h); border-bottom: 1px solid #E6EAF1; border-right: 1px solid #F1F3F8; vertical-align: middle;}
         th:last-child, td:last-child { border-right: none; }
 
+        /* 2026-09-20: "지역/주소/소속/..." 대장타이틀 — 예전엔 바깥 th(--paper2, 베이지)와 안쪽 알약(--ink)
+           사이에 여백이 남아 이중 테두리처럼 보였음. th 자체를 검색줄/네브바와 같은 톤으로 꽉 채우고,
+           알약은 배경 없이 글자만 얹어서 바깥-안쪽이 하나로 이어지게 함 (대장님 요청)
+           2026-09-20 수정1: 순수 --navy-grid-bg만 쓰면 검색줄(.filter-box, 위에 4% 흰색틴트가 한 겹 더 있음)보다
+           살짝 더 어둡게 떠서 두 톤이 미세하게 안 맞았음 → 검색줄과 완전히 같은 레이어 구성으로 맞춤.
+           2026-09-20 수정2: --navy-grid-bg에 들어있는 46px 격자무늬(repeating-linear-gradient)가 이 좁은
+           칸 안에서는 얼룩/세제자국처럼 보이고, 세로 구분선과 격자선이 겹치면서 선이 삐뚤빼뚤해 보이는
+           원인이었음 → 격자무늬 두 겹은 빼고, 대각선 톤(diagonal base)만 남긴 민무늬 배경으로 교체.
+           세로 구분선(th border-right)도 예전 밝은 하늘색 대신 같은 계열의 어두운 남색 1px로 통일 */
         th.group-banner-region, th.group-banner-address, th.group-banner-org, th.group-banner-manager, th.group-banner-device, th.group-banner-sys, th.group-banner-rental, th.group-banner-etc {
-            background-color: var(--paper2) !important; text-align: center; padding: 4px 1px; border-top: none;
+            background: linear-gradient(rgba(255,255,255,0.04), rgba(255,255,255,0.04)), linear-gradient(160deg, #0D2036 0%, #17293F 55%, #0D2036 100%) !important;
+            text-align: center; padding: 0; border-top: none; border-right: 1px solid var(--border-navy-dark);
+            /* 2026-09-20 10차: "지역" 칸만 인라인으로 border-bottom:none을 따로 줘서, 얘만 밑줄이 없고
+               나머지(주소/소속/.../기타)는 일반 th,td 규칙의 밝은 회색 1px 밑줄이 그대로 남아있었음 —
+               한 줄로 쭉 이어져야 할 헤더 밑선이 칸마다 있다 없다 해서 삐뚤빼뚤해 보였던 원인.
+               여기서 전부 통일해서 없앰(대장님 피드백) */
+            border-bottom: none;
         }
+        /* 2026-09-20 10차: 위 group-banner 첫/끝 칸, tbody 마지막 행 첫/끝 칸에 각각 라운드를 주던 코드는
+           전부 삭제 — table-container가 완전히 각진 사각형이 됐으므로 더 이상 필요 없음.
+           border-bottom:none만 유지(표 맨 아래 줄과 table-container 하단 테두리가 겹쳐 두 줄로 보이는 것 방지) */
+        #customerTable tbody tr:last-child td.sticky-col-0 { border-bottom: none; }
+        #customerTable tbody tr:last-child td:last-child { border-bottom: none; }
         .group-pill {
             display: block;
-            background-color: var(--ink);
+            background: transparent;
             color: #ffffff;
             font-weight: bold;
-            padding: 7px 0;
-            margin: 0 0.5px;
-            border-radius: var(--r-sm);
+            padding: 10px 0;
+            margin: 0;
+            border-radius: 0;
             letter-spacing: 0.5px;
         }
 
@@ -423,13 +491,24 @@
         td.sys-group { background-color: #F9FBF9; }
 
         thead th { background: var(--paper2); color: var(--ink); font-weight: 700; position: sticky; top: 0; z-index: 10; font-size: 10.5px; letter-spacing: .3px; }
+        /* 2026-09-20 8차: 검색줄(.filter-box)이 .container 밖(고정 영역)으로 옮겨가면서, 이 안에서는 표 헤더
+           두 줄(그룹명 줄/컬럼명 줄)끼리만 순서대로 쌓으면 됨 — 검색줄 높이는 더 이상 신경 쓸 필요 없음.
+           1번째 줄은 top:0(컨테이너 맨 위), 2번째 줄은 1번째 줄 높이(JS가 실측해서 --sticky-r1-h로 넣어줌)
+           만큼 아래로. 둘 다 top:0이면 스크롤을 끝까지 내렸을 때 2번째 줄이 1번째 줄 위에 겹쳐 보이는
+           버그가 생겨서 이렇게 나눔. var()의 기본값은 JS가 아직 못 돌았을 때 쓰는 안전값 */
+        thead tr:nth-child(2) th { top: var(--sticky-r1-h, 35px); }
 
         /* 고정 셀 position 정의 — No 바로 뒤에 그룹명 칸(sticky-col-group)이 추가되면서 뒤 칸들의 left 값이 밀림 */
         th.sticky-col-0, td.sticky-col-0 { position: sticky; left: 0; width: 34px; min-width: 34px; z-index: 5; background-color: #ffffff; padding-left: 4px !important; padding-right: 2px !important; text-align: center; }
         th.sticky-col-group, td.sticky-col-group { position: sticky; left: 34px; width: 60px; min-width: 60px; z-index: 5; background-color: #ffffff; text-align: center; padding-left: 3px !important; padding-right: 3px !important; }
         th.sticky-col-1, td.sticky-col-1 { position: sticky; left: 94px; width: 45px; min-width: 45px; z-index: 5; background-color: #ffffff; text-align: center; }
         th.sticky-col-2, td.sticky-col-2 { position: sticky; left: 139px; width: 120px; min-width: 120px; z-index: 5; background-color: #ffffff; }
-        th.sticky-col-3, td.sticky-col-3 { position: sticky; left: 259px; width: 140px; min-width: 140px; z-index: 5; background-color: #ffffff; border-right: 2px solid #CBD3E0; }
+        /* 2026-09-20 10차: 여기 border-right가 밝은 회색(#CBD3E0)이었는데, 바로 위 헤더의 "지역" 그룹 경계선
+           (group-banner-region, 남색)과 색이 안 맞아서 헤더→바디로 내려오면서 선 색이 뚝 바뀌어 보였음
+           (대장님이 짚어준 "장소명 오른쪽 선"). 헤더와 같은 남색으로 통일.
+           10차 추가수정: 처음엔 2px로 맞췄는데, 다른 그룹 경계선(주소→소속, 소속→담당자 등)은 전부
+           1px라서 여기만 유독 두꺼워 보였음 — 다른 경계선들과 같은 1px로 통일 */
+        th.sticky-col-3, td.sticky-col-3 { position: sticky; left: 259px; width: 140px; min-width: 140px; z-index: 5; background-color: #ffffff; border-right: 1px solid var(--border-navy-dark); }
 
         /* 그룹명 컬럼 안의 색상 알약(pill) — 탭과 동일한 그룹 색상을 인라인 style로 받아서 씀 */
         .group-name-pill {
@@ -446,6 +525,12 @@
 
         tr.checked-row td { background-color: #FBEEC7 !important; }
         tr.checked-row td.sticky-col-0, tr.checked-row td.sticky-col-group, tr.checked-row td.sticky-col-1, tr.checked-row td.sticky-col-2, tr.checked-row td.sticky-col-3 { background-color: #FBEEC7 !important; }
+
+        /* 2026-09-20: 종료된 업체(status === '종료' — 임대만료 자동종료 포함)는 지역 섹션
+           (No/그룹/체크박스/시도/장소명, sticky-col-0~3) 배경 전체를 회색으로 칠해서 목록에서 바로 구분되게 함 */
+        tr.row-terminated td.sticky-col-0, tr.row-terminated td.sticky-col-group, tr.row-terminated td.sticky-col-1, tr.row-terminated td.sticky-col-2, tr.row-terminated td.sticky-col-3 { background-color: #D9D5C9 !important; }
+        tr.row-terminated:hover td.sticky-col-0, tr.row-terminated:hover td.sticky-col-group, tr.row-terminated:hover td.sticky-col-1, tr.row-terminated:hover td.sticky-col-2, tr.row-terminated:hover td.sticky-col-3 { background-color: #CFCABC !important; }
+        tr.row-terminated.checked-row td.sticky-col-0, tr.row-terminated.checked-row td.sticky-col-group, tr.row-terminated.checked-row td.sticky-col-1, tr.row-terminated.checked-row td.sticky-col-2, tr.row-terminated.checked-row td.sticky-col-3 { background-color: #FBEEC7 !important; }
 
         .badge { padding: 4px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
         .badge-success { background: #E1F0EA; color: var(--teal); }
@@ -1032,10 +1117,9 @@
             .side-accent { width: 6px; height: 100vh; height: 100dvh; }
             .modal { height: 100vh; height: 100dvh; }
             .container { padding: 10px 12px 24px; }
-            .container::before { height: 230px; }
 
             /* ---------- 네브바: 세로로 쌓기 + 불필요한 요소 숨김 ---------- */
-            .navbar { flex-direction: column; align-items: stretch; min-height: auto; padding: 12px 12px 10px; gap: var(--sp-4); border-bottom-left-radius: 0; }
+            .navbar { flex-direction: column; align-items: stretch; min-height: auto; padding: 12px 12px 10px; gap: var(--sp-4); }
             /* 좁은 화면에서 flex 자식이 내용 크기 때문에 안 줄어들고 옆으로 삐져나가는 걸 막는 안전장치
                (flex item의 기본 min-width:auto를 0으로 풀어줘야 진짜로 화면 폭에 맞춰 줄어들거나 스크롤됨) */
             .navbar, .navbar-left, .navbar-left-stack, .navbar-line-top, .navbar-line-stats,
@@ -1064,6 +1148,16 @@
             .filter-controls input, .filter-controls select { flex: 1 1 140px; width: auto; min-width: 0; }
             .btn-group { width: 100%; }
             .btn-group .btn { flex: 1; }
+            /* 2026-09-20: 항목그룹표시/그룹이동/종료업체표시/행간격은 PC 표 전용 기능이라 카드 리스트인
+               모바일에서는 원래(.toggles)처럼 계속 숨김 처리. 단, "+ 신규등록"만은 여기 안으로 옮겨왔어도
+               모바일에서 업체 등록이 아예 안 되면 안 되니 이것만 예외로 계속 보여줌(원래 자리에 있던 것처럼 전체 너비로) */
+            .col-toggle-group { display: none; }
+            .filter-side-tools { display: flex; width: 100%; }
+            .filter-side-tools > .icon-btn-move { width: 100%; justify-content: center; }
+            .filter-side-tools .group-move-wrap,
+            .filter-side-tools .toggle-divider,
+            .filter-side-tools .terminated-toggle-label,
+            .filter-side-tools .density-switch { display: none; }
 
             /* ---------- PC 표는 숨기고, 카드 리스트로 전환 ---------- */
             .toggles { display: none; }
@@ -1151,6 +1245,7 @@
     <div id="syncStatus"></div>
 
     <div class="side-accent"></div>
+    <div class="header-fixed">
     <div class="navbar">
         <div class="navbar-left">
             <div class="brand-logo-wrap">
@@ -1196,13 +1291,20 @@
                             </div>
                         </div>
                     </div>
-                    <div class="cards rental-panel" title="임대 계약 현황 (클릭하면 해당 조건으로 목록이 필터링됩니다)">
-                        <button type="button" class="rental-mini rental-label-btn" data-rental-key="all" onclick="filterRentalStat('all')">
-                            🏷️ 임대<span class="rental-mini-value" id="rentalAllCount" style="display:none;">0</span>
+                    <div class="cards rental-panel" title="판매/임대 현황 (클릭하면 해당 조건으로 목록이 필터링됩니다)">
+                        <!-- 2026-09-20: "🏷️ 임대"(전체 임대 보기)는 없애고, 전체 그룹을 통틀어 항상 다 세는
+                             "판매" 총 대수로 교체. 숫자 자체는 나머지 카드들("지금 보고 있는 탭 기준")과 달리
+                             예외로 탭에 상관없이 항상 전체 합계임 (대장님 요청).
+                             2026-09-20 10차: 클릭해도 반응 없던 걸(순수 표시용) 대장님이 임대처럼 눌러서
+                             필터되게 해달라고 해서, 다른 rental-mini 버튼들과 똑같이 button+onclick으로 바꿈 -->
+                        <button type="button" class="rental-mini rental-label-btn" data-rental-key="sale" onclick="filterRentalStat('sale')" title="판매 업체만 보기 (숫자는 탭과 무관하게 항상 전체 기준)">
+                            <span class="rental-mini-label">판매</span><span class="rental-mini-value" id="saleAllCount">0</span>
                         </button>
-                        <!-- 2026-08-29: 사용중/종료예정은 "임대"와 같은 굵은 강조 크기로 승격, 예정/종료는 기존 작은 크기 그대로 한 열(세로)로 배치 -->
+                        <span class="rental-divider"></span>
+                        <!-- 2026-08-29: 사용중/종료예정은 "임대"와 같은 굵은 강조 크기로 승격, 예정/종료는 기존 작은 크기 그대로 한 열(세로)로 배치
+                             2026-09-20: 라벨만 "사용중" → "임대"로 변경 (집계 방식/클릭 동작은 그대로 유지) -->
                         <button type="button" class="rental-mini rental-label-btn" data-rental-key="ongoing" onclick="filterRentalStat('ongoing')">
-                            <span class="rental-mini-label">사용중</span><span class="rental-mini-value" id="rentalOngoingCount">0</span>
+                            <span class="rental-mini-label">임대</span><span class="rental-mini-value" id="rentalOngoingCount">0</span>
                         </button>
                         <button type="button" class="rental-mini rental-label-btn" data-rental-key="expiring" onclick="filterRentalStat('expiring')">
                             <span class="rental-mini-label">종료예정</span><span class="rental-mini-value" id="rentalExpiringCount">0</span>
@@ -1268,9 +1370,11 @@
         </div>
     </div>
 
-    <div class="main-content">
-        <div class="container">
-            <div class="filter-box">
+        <div class="filter-box">
+            <!-- 2026-09-20: 검색줄 + 항목그룹표시줄 두 줄이었던 걸 한 줄로 통합 (대장님 레이아웃 요청)
+                 - 상태필터/정렬 드롭다운은 화면에서는 뺐지만, 상단 상태카드 클릭 필터·표 헤더 클릭 정렬이 내부적으로
+                   이 값들을 그대로 읽어서 쓰기 때문에 완전히 지우지 않고 화면 밖(hidden)에 값만 유지해둠.
+                   (지우면 renderTable()이 매번 이 값을 읽다가 에러나서 표 자체가 안 그려짐) -->
                 <div class="filter-controls">
                     <input type="text" id="searchInput" placeholder="종합검색...">
                     <select id="filterRegion">
@@ -1293,64 +1397,63 @@
                         <option value="충북">충북</option>
                         <option value="충남">충남</option>
                     </select>
-                    <select id="filterStatus">
-                        <option value="">상태 필터: 전체</option>
-                        <option value="정상">정상</option>
-                        <option value="요청">요청</option>
-                        <option value="종료">종료</option>
-                    </select>
-                    <select id="sortSelect">
-                        <option value="region">정렬: 지역순</option>
-                        <option value="name">정렬: 가나다순</option>
-                        <option value="latest">정렬: 최근등록순</option>
-                        <option value="first">정렬: 처음등록순</option>
-                    </select>
+                    <span class="col-toggle-group">
+                        <span class="col-toggle-title"><b>⚙️ 항목그룹 표시:</b></span>
+                        <label><input type="checkbox" id="toggleAddress" checked onchange="handleColumnToggle('address-group', this.checked)"> <span data-group-label="address">주소</span></label>
+                        <label><input type="checkbox" id="toggleOrg" checked onchange="handleColumnToggle('org-group', this.checked)"> 1. <span data-group-label="org">소속</span></label>
+                        <label><input type="checkbox" id="toggleManager" checked onchange="handleColumnToggle('manager-group', this.checked)"> 2. <span data-group-label="manager">담당자</span></label>
+                        <label><input type="checkbox" id="toggleDevice" checked onchange="handleColumnToggle('device-group', this.checked)"> <span data-group-label="device">기기정보</span></label>
+                        <label><input type="checkbox" id="toggleSys" checked onchange="handleColumnToggle('sys-group', this.checked)"> <span data-group-label="sys">고유넘버</span></label>
+                        <label><input type="checkbox" id="toggleRental" checked onchange="handleColumnToggle('rental-group', this.checked)"> 임대정보</label>
+                    </span>
+                    <span class="visually-hidden-controls" aria-hidden="true">
+                        <select id="filterStatus" tabindex="-1">
+                            <option value="">상태 필터: 전체</option>
+                            <option value="정상">정상</option>
+                            <option value="요청">요청</option>
+                            <option value="종료">종료</option>
+                        </select>
+                        <select id="sortSelect" tabindex="-1">
+                            <option value="region">정렬: 지역순</option>
+                            <option value="name">정렬: 가나다순</option>
+                            <option value="latest">정렬: 최근등록순</option>
+                            <option value="first">정렬: 처음등록순</option>
+                        </select>
+                    </span>
                 </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="openModalForAdd()">+ 신규 업체 등록</button>
-                </div>
-            </div>
-
-            <div class="toggles">
-                <span><b>⚙️ 항목그룹 표시:</b></span>
-                <span class="toggle-divider">|</span>
-                <label><input type="checkbox" id="toggleRegionGroup" checked onchange="handleColumnToggle('region-group', this.checked)"> <span data-group-label="region">지역</span></label>
-                <span class="toggle-divider">|</span>
-                <label><input type="checkbox" id="toggleAddress" checked onchange="handleColumnToggle('address-group', this.checked)"> <span data-group-label="address">주소</span></label>
-                <span class="toggle-divider">|</span>
-                <label><input type="checkbox" id="toggleOrg" checked onchange="handleColumnToggle('org-group', this.checked)"> 1. <span data-group-label="org">소속</span></label>
-                <span class="toggle-divider">|</span>
-                <label><input type="checkbox" id="toggleManager" checked onchange="handleColumnToggle('manager-group', this.checked)"> 2. <span data-group-label="manager">담당자</span></label>
-                <span class="toggle-divider">|</span>
-                <label><input type="checkbox" id="toggleDevice" checked onchange="handleColumnToggle('device-group', this.checked)"> <span data-group-label="device">기기정보</span></label>
-                <span class="toggle-divider">|</span>
-                <label><input type="checkbox" id="toggleSys" checked onchange="handleColumnToggle('sys-group', this.checked)"> <span data-group-label="sys">고유넘버</span></label>
-                <span class="toggle-divider">|</span>
-                <label><input type="checkbox" id="toggleRental" checked onchange="handleColumnToggle('rental-group', this.checked)"> 임대정보</label>
-                <span class="toggle-divider" style="margin-left: auto;">|</span>
-                <div class="group-move-wrap">
-                    <button class="icon-btn-move" id="groupMoveBtn" onclick="toggleGroupMoveMenu(event)" title="선택된 업체를 다른 그룹으로 이동">
-                        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
-                        <span>그룹이동</span>
+                <div class="filter-side-tools">
+                    <!-- 2026-09-20: "+ 신규 업체 등록"을 그룹이동 바로 왼쪽으로 이동, 그룹이동과 같은 크기/디자인으로 축소 (대장님 요청) -->
+                    <button class="icon-btn-move" onclick="openModalForAdd()" title="신규 업체 등록">
+                        <span>+ 신규등록</span>
                     </button>
-                    <div id="groupMoveMenu" class="group-move-menu"></div>
-                </div>
-                <span class="toggle-divider">|</span>
-                <label style="color: #EAF1F8; font-weight: bold;"><input type="checkbox" id="toggleUnsupported" onchange="handleUnsupportedToggle(this.checked)"> 종료 업체 표시</label>
-                <span class="toggle-divider">|</span>
-                <div class="density-switch" id="densitySwitch" role="group" aria-label="표 행간격 설정">
-                    <span class="density-label">행간격:</span>
-                    <button type="button" class="density-btn" data-density="compact" onclick="setTableDensity('compact')">컴팩트</button>
-                    <button type="button" class="density-btn" data-density="default" onclick="setTableDensity('default')">기본</button>
-                    <button type="button" class="density-btn" data-density="comfortable" onclick="setTableDensity('comfortable')">여유</button>
+                    <div class="group-move-wrap">
+                        <button class="icon-btn-move" id="groupMoveBtn" onclick="toggleGroupMoveMenu(event)" title="선택된 업체를 다른 그룹으로 이동">
+                            <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
+                            <span>그룹이동</span>
+                        </button>
+                        <div id="groupMoveMenu" class="group-move-menu"></div>
+                    </div>
+                    <span class="toggle-divider">|</span>
+                    <label class="terminated-toggle-label"><input type="checkbox" id="toggleUnsupported" onchange="handleUnsupportedToggle(this.checked)"> 종료 업체 표시</label>
+                    <span class="toggle-divider">|</span>
+                    <div class="density-switch" id="densitySwitch" role="group" aria-label="표 행간격 설정">
+                        <span class="density-label">행간격:</span>
+                        <button type="button" class="density-btn" data-density="compact" onclick="setTableDensity('compact')">컴팩트</button>
+                        <button type="button" class="density-btn" data-density="default" onclick="setTableDensity('default')">기본</button>
+                        <button type="button" class="density-btn" data-density="comfortable" onclick="setTableDensity('comfortable')">여유</button>
+                    </div>
                 </div>
             </div>
 
+    </div>
+
+    <div class="main-content">
+        <div class="container">
             <div class="table-container">
                 <table id="customerTable">
                     <thead>
                         <tr>
-                            <th colspan="5" class="sticky-col-0 group-banner-region" style="border-bottom: none; border-right: 2px solid #CBD3E0; z-index: 20;"><span class="group-pill" data-group-label="region">지역</span></th>
+                            <th colspan="5" class="sticky-col-0 group-banner-region" style="z-index: 20;"><span class="group-pill" data-group-label="region">지역</span></th>
                             <th colspan="2" class="group-banner-address address-group"><span class="group-pill" data-group-label="address">주소</span></th>
                             <th colspan="5" class="group-banner-org org-group"><span class="group-pill" data-group-label="org">소속</span></th>
                             <th colspan="2" class="group-banner-manager manager-group"><span class="group-pill" data-group-label="manager">담당자</span></th>
@@ -2000,6 +2103,44 @@ function showSyncStatus(msg, isError) {
             }
             return allGroupsData[currentGroup] || [];
         }
+
+        // 2026-09-20: 지금 어느 탭을 보고 있든 상관없이 "전체" 데이터를 항상 통째로 합쳐서 반환.
+        // "판매" 총 대수 카드는 다른 통계 카드와 달리 탭을 바꿔도 항상 전체 기준으로 고정 표시해야 해서 별도로 둠.
+        function getAllGroupsFlatData() {
+            return groupOrder.reduce((acc, k) => acc.concat(allGroupsData[k] || []), []);
+        }
+
+        // 2026-09-20 8차: 검색줄(.filter-box)이 이제 .container 밖 고정 영역으로 옮겨가서, 표 헤더 두 줄은
+        // 서로에 대해서만 쌓으면 됨 — 1번째 줄(그룹명 줄)의 실제 렌더 높이를 재서 --sticky-r1-h로 넣어주면
+        // 2번째 줄(컬럼명 줄)이 그만큼 아래에서 시작해 딱 붙음. 밀도(컴팩트/기본/여유) 전환으로 줄 높이가
+        // 바뀌므로 하드코딩 대신 실측함.
+        // (페인트가 끝난 뒤(rAF 두 번) + 폰트/이미지까지 다 실린 뒤(load 이벤트)에 한 번 더 재측정)
+        function updateStickyOffsets() {
+            const headRow1 = document.querySelector('#customerTable thead tr:first-child');
+            if (!headRow1) return;
+            const r1H = headRow1.offsetHeight;
+            // 레이아웃이 아직 안 잡혀서 0으로 측정되는 경우 등은 반영하지 않고 CSS의 안전한 기본값을 유지
+            if (r1H > 0) document.documentElement.style.setProperty('--sticky-r1-h', r1H + 'px');
+        }
+        (function setupStickyOffsetWatcher() {
+            const scheduleMeasure = () => requestAnimationFrame(() => requestAnimationFrame(updateStickyOffsets));
+            const start = () => {
+                scheduleMeasure();
+                const hr = document.querySelector('#customerTable thead tr:first-child');
+                if (typeof ResizeObserver !== 'undefined' && hr) {
+                    const ro = new ResizeObserver(() => updateStickyOffsets());
+                    ro.observe(hr);
+                }
+                window.addEventListener('resize', updateStickyOffsets);
+                // 폰트/이미지까지 전부 로드된 뒤 높이가 미세하게 달라질 수 있어 한 번 더 재측정
+                window.addEventListener('load', scheduleMeasure);
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', start);
+            } else {
+                start();
+            }
+        })();
 
         // 2026-09-16: 상단 통계 카드(전체/정상/요청 등) 전용 — "전체" 탭에서는 상태가 "종료"인 업체는 카운트에서 제외함
         // ("종료 업체 표시" 체크박스로 표에서 숨기는 것과 같은 "종료"). 표 자체에는 영향 없고 통계 숫자에서만 빠짐.
@@ -2789,6 +2930,10 @@ function generateUniqueId() {
                 let rentalMatch = true;
                 if (rentalFilter === 'all') {
                     rentalMatch = item.division === '임대';
+                } else if (rentalFilter === 'sale') {
+                    // 2026-09-20 10차: "판매" 카드도 임대처럼 눌러서 필터링되도록 추가 — 구분이 임대가
+                    // 아니면 판매로 취급(saleAllCount 집계와 동일한 기준)
+                    rentalMatch = item.division !== '임대';
                 } else if (rentalFilter === 'ongoing') {
                     // "사용중" 카드 클릭 시: 상단 카운트가 진행중+종료예정을 합쳐서 보여주는 것과 동일하게,
                     // 진행중(ongoing)뿐 아니라 종료예정(expiring, D-7 이내)도 아직 사용중이므로 같이 포함해서 필터링
@@ -2826,6 +2971,7 @@ function generateUniqueId() {
             filteredData.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 if (item.checked) tr.classList.add('checked-row');
+                if (item.status === '종료') tr.classList.add('row-terminated');
 
                 // 2026-09-18: "상태" 컬럼(뱃지) 자체를 표에서 없애면서 이 변수는 더 안 씀 — 대신 아래
                 // isUrgent만으로 No./장소명 색을 바꿔 "요청(AS 진행중)"만 눈에 띄게 표시.
@@ -3303,7 +3449,9 @@ function generateUniqueId() {
                 else if (cat === 'ongoing') ongoing++;
                 else if (cat === 'upcoming') upcoming++;
             });
-            document.getElementById('rentalAllCount').innerText = rentalItems.length;
+            // "판매" 합계는 탭 무관하게 항상 전체 그룹 기준 (종료 업체는 전체탭 통계와 동일하게 제외)
+            const saleCount = getAllGroupsFlatData().filter(i => i.division !== '임대' && i.status !== '종료').length;
+            document.getElementById('saleAllCount').innerText = saleCount;
             document.getElementById('rentalUpcomingCount').innerText = upcoming;
             // "사용중" 카운트는 진짜 진행중(ongoing) + 종료예정(expiring, D-7 이내)까지 합산해서 보여줌.
             // 종료예정도 아직 만료 전이라 실사용 중인 상태이기 때문 (2026-08-31 요청 반영). 필터 클릭 동작은 기존처럼
@@ -3387,6 +3535,17 @@ function generateUniqueId() {
             el.style.height = (el.scrollHeight + 2) + 'px';
         }
 
+        // 2026-09-19: 예전엔 memo.date에 "YYYY-MM-DD HH:MM"까지 시간이 붙어서 저장된 경우가 있었는데,
+        // 고정폭 date-edit 인풋에서 이런 항목만 시간 부분이 잘려 보이는 문제가 있었음.
+        // 새 항목은 이제 날짜까지만 저장하지만(addDetailMemoItem), 이미 저장된 예전 항목도 화면엔
+        // 날짜까지만 보이도록 잘라서 표시함(저장값 자체는 그대로 두고, 이 항목을 수정해서 blur가
+        // 발생하는 순간 날짜만 남은 값으로 자동 정리됨).
+        function stripMemoTime(dateStr) {
+            if (!dateStr) return '';
+            const m = String(dateStr).match(/^(\d{4}-\d{2}-\d{2})/);
+            return m ? m[1] : String(dateStr);
+        }
+
         function renderDetailMemoThread(memoList) {
             const listEl = document.getElementById('detailMemoList');
             const countEl = document.getElementById('detailMemoCount');
@@ -3404,7 +3563,7 @@ function generateUniqueId() {
                 return `
                     <div class="as-entry">
                         <span class="del" title="삭제" onclick="deleteDetailMemoItem('${memo.id || ''}')">✕</span>
-                        <div class="meta"><input type="text" class="date-edit" value="${escapeHtml(memo.date || '')}"
+                        <div class="meta"><input type="text" class="date-edit" value="${escapeHtml(stripMemoTime(memo.date))}"
                             onblur="updateDetailMemoDate('${memo.id || ''}', this.value)"><span class="author">${authorLabel}</span></div>
                         <textarea class="txt" rows="1" onfocus="autoGrowTextarea(this)" oninput="autoGrowTextarea(this)"
                             onblur="updateDetailMemoItem('${memo.id || ''}', this.value)">${escapeHtml(memo.text || '')}</textarea>
@@ -3427,7 +3586,9 @@ function generateUniqueId() {
             if (!textVal) return;
 
             const now = new Date();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            // 2026-09-19: 시간까지 기록하면 AS 이력 카드의 날짜 인풋(고정 폭)에서 문자열 길이가
+            // 들쭉날쭉해져 일부만 잘려 보이는 문제가 있었음 → 시간은 기록하지 않고 날짜까지만 저장
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
             if (!item.memoList) item.memoList = [];
             item.memoList.push({ id: generateUniqueId(), date: dateStr, text: textVal, author: currentUserDisplayName() });
@@ -3938,7 +4099,6 @@ function generateUniqueId() {
 
         function saveSettings() {
             const settings = {
-                region: document.getElementById('toggleRegionGroup').checked,
                 org: document.getElementById('toggleOrg').checked,
                 address: document.getElementById('toggleAddress').checked,
                 manager: document.getElementById('toggleManager').checked,
@@ -3958,7 +4118,6 @@ function generateUniqueId() {
         function loadSettings() {
             const savedSettings = dashboardSettings;
             if (savedSettings) {
-                if (savedSettings.region !== undefined) document.getElementById('toggleRegionGroup').checked = savedSettings.region;
                 document.getElementById('toggleOrg').checked = savedSettings.org;
                 document.getElementById('toggleAddress').checked = savedSettings.address;
                 document.getElementById('toggleManager').checked = savedSettings.manager;
@@ -3970,7 +4129,6 @@ function generateUniqueId() {
         }
 
         function applyColumnVisibilities() {
-            toggleColumnGroup('region-group', document.getElementById('toggleRegionGroup').checked);
             toggleColumnGroup('org-group', document.getElementById('toggleOrg').checked);
             toggleColumnGroup('address-group', document.getElementById('toggleAddress').checked);
             toggleColumnGroup('manager-group', document.getElementById('toggleManager').checked);
@@ -4019,7 +4177,6 @@ function generateUniqueId() {
         }
 
         const GROUP_TOGGLE_ID = {
-            'region-group': 'toggleRegionGroup',
             'org-group': 'toggleOrg',
             'address-group': 'toggleAddress',
             'manager-group': 'toggleManager',
