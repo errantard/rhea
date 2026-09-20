@@ -240,6 +240,12 @@
         }
         /* .card:first-child이 padding-left:0을 강제해서 "전체" 카드만 좌우 여백이 안 맞았던 것 보정 */
         .card.status-filter-card:first-child { padding-left: 16px; }
+        /* 2026-09-20: 위 규칙(오른쪽 모서리 각짐)은 status-filter-card끼리 서로 붙어있을 때만 유효한
+           방지책인데, 맨 마지막 "요청" 카드는 오른쪽이 다른 status-filter-card가 아니라 별개인
+           .backup-card(저장소)라서 저 방지책이 필요 없음 — 오히려 롤오버/선택 하이라이트가 양쪽 다
+           각진 사각형으로 보여서 왼쪽 카드들(둥근 느낌)과 다르게 튀어 보였음. 마지막 카드만 다시
+           양쪽 다 둥글게(대장님 피드백) */
+        .status-filter-card:last-of-type { border-radius: var(--r-sm); }
         /* 2026-08-29: "임대"쪽 사용중/종료예정과 같은 크기로 승격 — 색상은 손대지 않아서 전체/정상/요청 각자
            원래 색(기본/민트그린/코랄) 그대로 유지됨 */
         .status-filter-card .card-title,
@@ -483,11 +489,13 @@
             letter-spacing: 0.5px;
         }
 
-        /* 기본 셀 배경색 (일반 상태일 때만 적용되도록 설정) */
+        /* 기본 셀 배경색 (일반 상태일 때만 적용되도록 설정)
+           2026-09-20: 주소/소속/담당자 칸만 다른 컬럼(흰색)과 다르게 누리끼리한 톤이 남아있다는
+           피드백 — 세 그룹 전부 흰색으로 통일(sys-group은 언급 없어 그대로 유지) */
         td.region-group { background-color: var(--paper2); }
-        td.address-group { background-color: #FAF9F3; }
-        td.org-group { background-color: #FEFCF5; }
-        td.manager-group { background-color: #FDFAF4; }
+        td.address-group { background-color: #ffffff; }
+        td.org-group { background-color: #ffffff; }
+        td.manager-group { background-color: #ffffff; }
         td.sys-group { background-color: #F9FBF9; }
 
         thead th { background: var(--paper2); color: var(--ink); font-weight: 700; position: sticky; top: 0; z-index: 10; font-size: 10.5px; letter-spacing: .3px; }
@@ -510,9 +518,11 @@
            1px라서 여기만 유독 두꺼워 보였음 — 다른 경계선들과 같은 1px로 통일 */
         th.sticky-col-3, td.sticky-col-3 { position: sticky; left: 259px; width: 140px; min-width: 140px; z-index: 5; background-color: #ffffff; border-right: 1px solid var(--border-navy-dark); }
 
-        /* 그룹명 컬럼 안의 색상 알약(pill) — 탭과 동일한 그룹 색상을 인라인 style로 받아서 씀 */
+        /* 그룹명 컬럼 안의 색상 알약(pill) — 탭과 동일한 그룹 색상을 인라인 style로 받아서 씀
+           2026-09-20: 완전 캡슐(999px)이 너무 둥글다는 피드백 — 상단 그룹탭(.top-menu li)과 같은
+           둥근 정도(var(--r-sm))로 맞춤 */
         .group-name-pill {
-            display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 800;
+            display: inline-block; padding: 2px 7px; border-radius: var(--r-sm); font-size: 10px; font-weight: 800;
             color: var(--ink); white-space: nowrap; line-height: 1.5;
         }
 
@@ -579,18 +589,13 @@
         /* 장소명 - 클릭 시 상세정보 팝업 */
         .place-name-link { cursor: pointer; transition: color 0.12s; }
         .place-name-link:hover { color: var(--coral); font-weight: 800; text-decoration: underline; }
-        /* 2026-09-19 라운드5→6: No.원형뱃지 + 장소명 빨간글씨 대신, "요청(AS 진행중)"인 행의 셀 자체를
-           쨍한 빨간 배경 + 흰 글씨로 채워서 한눈에 띄도록 변경. 라운드5에서는 지역(시/군구)+장소명 셀 둘 다
-           빨갛게 했었는데, 라운드6 피드백으로 "장소명 칸만" 빨갛게로 범위 축소. hover/checked-row가
-           !important로 배경을 덮어쓰므로 그 상태에서도 빨간색이 유지되도록 동일 우선순위로 재정의. */
-        td.region-urgent-cell,
-        tr:hover td.region-urgent-cell,
-        tr.checked-row td.region-urgent-cell {
-            background-color: #e0262d !important;
-            color: #ffffff !important;
-        }
-        td.region-urgent-cell .place-name-link { color: #ffffff !important; }
-        td.region-urgent-cell .place-name-link:hover { color: #ffe8e6 !important; text-decoration: underline; }
+        /* 2026-09-20 라운드12: 라운드11의 No.·그룹 칸 빨간배경 방식은 "안 이쁘다"는 피드백으로 폐기,
+           그룹 칸은 완전히 원래대로(강조 없음), No. 칸은 배경색 대신 번호 자리에 사용자가 직접 만든
+           경고 아이콘(assets/urgent-request-icon.webp)을 넣는 방식으로 교체.
+           라운드13: 숫자 크기(16px)에 맞췄더니 너무 작다는 피드백 — 18px(약 12.5% 확대)까지는
+           행 높이가 늘어나지 않는 걸 실측 확인(19px부터 행이 커짐), 그 한계값으로 키워서 셀을
+           최대한 꽉 채우면서도 표 행 높이는 그대로 유지. */
+        .urgent-no-icon { width: 18px; height: 18px; vertical-align: middle; display: inline-block; }
 
         /* 이메일/기기정보처럼 "읽기용"이 아니라 "복사용"인 값 - 무한정 늘어나 표를 밀어내지 않도록 줄바꿈 + 작은 글씨 처리 */
         td.copy-cell {
@@ -1490,7 +1495,9 @@
                         </tr>
                         <!-- 2026-09-18: "상태"/"수정" 컬럼 제거 — 수정은 장소명 클릭(상세팝업)으로 이미 가능하고,
                              상태(판매/임대·정상/요청/종료)는 그 상세팝업 상단에 이미 표시됨. "요청"(AS 진행중) 상태만
-                             장소명 셀 배경을 빨간색으로 채워 표에서 바로 구분되게 처리(region-urgent-cell 참고, 2026-09-19 라운드6) -->
+                             No. 칸의 번호를 사용자 제작 경고 아이콘(urgent-no-icon, assets/urgent-request-icon.webp)으로
+                             바꿔서 표에서 바로 구분되게 처리 (2026-09-20 라운드12 — 라운드11의 No.·그룹 빨간배경 방식은
+                             "안 이쁘다"는 피드백으로 폐기, 그룹 칸은 강조 없이 원래대로) -->
                     </thead>
                     <tbody id="tableBody">
                     </tbody>
@@ -2994,13 +3001,13 @@ function generateUniqueId() {
                 const locationVal = item.installLocation || '-';
 
                 tr.innerHTML = `
-                    <td class="sticky-col-0">${index + 1}</td>
+                    <td class="sticky-col-0">${isUrgent ? '<img class="urgent-no-icon" src="assets/urgent-request-icon.webp" alt="AS 요청중" title="AS 요청중">' : (index + 1)}</td>
                     <td class="sticky-col-group"><span class="group-name-pill" style="background-color:${getGroupColor(item.groupId)};">${escapeHtml(groupNames[item.groupId] || '-')}</span></td>
                     <td class="sticky-col-1" style="text-align: center;">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
                     </td>
                     <td class="sticky-col-2 region-group">${escapeHtml(siVal)} ${escapeHtml(guVal)}</td>
-                    <td class="sticky-col-3 region-group${isUrgent ? ' region-urgent-cell' : ''}"><b class="place-name-link" onclick="openDetailModal('${item.id}')" title="${isUrgent ? 'AS 요청중 · ' : ''}클릭하여 업체 상세정보 보기">${escapeHtml(item.placeName || '-')}</b></td>
+                    <td class="sticky-col-3 region-group"><b class="place-name-link" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기">${escapeHtml(item.placeName || '-')}</b></td>
                     <td class="address-group">${escapeHtml(item.installAddress || '-')}</td>
                     <td class="address-group">
                         <div class="location-cell" title="${escapeHtml(locationVal)}" onclick="openLocationModal('${item.id}')">
