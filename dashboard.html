@@ -586,9 +586,16 @@
             text-decoration: underline;
         }
 
-        /* 장소명 - 클릭 시 상세정보 팝업 */
+        /* 장소명 - 클릭 시 상세정보 팝업
+           2026-09-20 라운드14: 글자만 클릭/hover되던 걸 셀 전체(td.sticky-col-3)로 확장 — 글자 위에
+           있을 때뿐 아니라 셀 어디에 마우스를 올려도 같은 빨간색 hover 효과가 나오도록 셀 hover에서도
+           안쪽 텍스트 색이 바뀌게 처리, 클릭도 td에서 받도록 이동(대장님 요청) */
         .place-name-link { cursor: pointer; transition: color 0.12s; }
-        .place-name-link:hover { color: var(--coral); font-weight: 800; text-decoration: underline; }
+        td.sticky-col-3:hover .place-name-link,
+        .place-name-link:hover {
+            color: var(--coral); font-weight: 800; text-decoration: underline;
+        }
+        td.sticky-col-3 { cursor: pointer; }
         /* 2026-09-20 라운드12: 라운드11의 No.·그룹 칸 빨간배경 방식은 "안 이쁘다"는 피드백으로 폐기,
            그룹 칸은 완전히 원래대로(강조 없음), No. 칸은 배경색 대신 번호 자리에 사용자가 직접 만든
            경고 아이콘(assets/urgent-request-icon.webp)을 넣는 방식으로 교체.
@@ -3007,7 +3014,7 @@ function generateUniqueId() {
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
                     </td>
                     <td class="sticky-col-2 region-group">${escapeHtml(siVal)} ${escapeHtml(guVal)}</td>
-                    <td class="sticky-col-3 region-group"><b class="place-name-link" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기">${escapeHtml(item.placeName || '-')}</b></td>
+                    <td class="sticky-col-3 region-group" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기"><b class="place-name-link">${escapeHtml(item.placeName || '-')}</b></td>
                     <td class="address-group">${escapeHtml(item.installAddress || '-')}</td>
                     <td class="address-group">
                         <div class="location-cell" title="${escapeHtml(locationVal)}" onclick="openLocationModal('${item.id}')">
