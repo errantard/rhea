@@ -918,6 +918,14 @@
         .form-group label { display: block; font-size: 12px; color: #636e72; margin-bottom: 4px; font-weight: 600; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #dfe6e9; border-radius: var(--r-xs); font-size: 13px; background: #ffffff; }
 
+        /* 2026-09-23: 임대기간 "직접입력" 모드 — 프리셋 select 아래에 숫자+단위(개월/주일/일) 입력줄을 붙임.
+           평소엔 숨겨져 있다가 select에서 "직접입력" 고르면 .show 클래스로 나타남 */
+        .rental-period-custom { display: none; align-items: center; gap: 6px; margin-top: 6px; }
+        .rental-period-custom.show { display: flex; }
+        .rental-period-custom input[type="number"] { width: 60px; flex: none; }
+        .rental-period-custom select { flex: none; width: auto; }
+        .dfield .rental-period-custom input[type="number"] { width: 46px; }
+
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -1595,12 +1603,21 @@
                         </div>
                         <div class="form-group">
                             <label>임대 기간</label>
-                            <select id="rentalPeriod" onchange="handleRentalDateInputsChange()">
+                            <select id="rentalPeriod" onchange="handleRentalPeriodPresetChange('reg')">
                                 <option value="1개월">1개월</option>
                                 <option value="15일">15일</option>
                                 <option value="1주일">1주일</option>
                                 <option value="1일">1일</option>
+                                <option value="custom">직접입력</option>
                             </select>
+                            <div class="rental-period-custom" id="rentalPeriodCustom">
+                                <input type="number" id="rentalPeriodCustomValue" min="1" step="1" value="1" onchange="handleRentalDateInputsChange()">
+                                <select id="rentalPeriodCustomUnit" onchange="handleRentalDateInputsChange()">
+                                    <option value="개월">개월</option>
+                                    <option value="주일">주일</option>
+                                    <option value="일">일</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>임대 종료일 <span style="font-weight: normal; color:#8a8f98;">(자동계산, 직접수정 가능)</span></label>
@@ -1786,10 +1803,19 @@
                             <div class="dfield"><label>기기도입일</label><input type="date" id="detailInstallDate" onchange="handleDetailRentalDateChange()"></div>
                             <div class="dfield">
                                 <label>임대 기간</label>
-                                <select id="detailRentalPeriod" onchange="handleDetailRentalDateChange()">
+                                <select id="detailRentalPeriod" onchange="handleRentalPeriodPresetChange('detail')">
                                     <option value="1개월">1개월</option><option value="15일">15일</option>
                                     <option value="1주일">1주일</option><option value="1일">1일</option>
+                                    <option value="custom">직접입력</option>
                                 </select>
+                                <div class="rental-period-custom" id="detailRentalPeriodCustom">
+                                    <input type="number" id="detailRentalPeriodCustomValue" min="1" step="1" value="1" onchange="handleDetailRentalDateChange()">
+                                    <select id="detailRentalPeriodCustomUnit" onchange="handleDetailRentalDateChange()">
+                                        <option value="개월">개월</option>
+                                        <option value="주일">주일</option>
+                                        <option value="일">일</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="dfield"><label>임대 종료일 (자동계산, 직접수정 가능)</label><input type="date" id="detailRentalEndDate"></div>
                         </div>
@@ -3174,20 +3200,69 @@ function generateUniqueId() {
             return '';
         }
 
+        // 2026-09-23: "1개월/15일/1주일/1일" 고정 프리셋 4개짜리 switch문이었는데, 2개월짜리 임대 업체가
+        // 나오면서 프리셋을 계속 늘리는 대신 "숫자+단위" 조합이면 뭐든 파싱되게 일반화함.
+        // 기존 4개 프리셋 문자열도 이 패턴에 그대로 들어맞아서 저장된 데이터는 그대로 호환됨.
+        function parseRentalPeriod(period) {
+            const str = String(period || '').trim();
+            let m = str.match(/^(\d+)\s*개월$/);
+            if (m) return { value: parseInt(m[1], 10) || 1, unit: 'month' };
+            m = str.match(/^(\d+)\s*주(?:일)?$/);
+            if (m) return { value: parseInt(m[1], 10) || 1, unit: 'week' };
+            m = str.match(/^(\d+)\s*일$/);
+            if (m) return { value: parseInt(m[1], 10) || 1, unit: 'day' };
+            return { value: 1, unit: 'month' };
+        }
+
+        function isValidRentalPeriod(str) {
+            return /^\d+\s*(개월|주일?|일)$/.test(String(str || '').trim());
+        }
+
+        const RENTAL_PERIOD_PRESETS = ['1개월', '15일', '1주일', '1일'];
+
+        // 임대기간 select + "직접입력" 숫자/단위 입력에서 최종 문자열("2개월" 등)을 읽어옴
+        function readRentalPeriodValue(selectId, customValueId, customUnitId) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return '1개월';
+            if (sel.value !== 'custom') return sel.value;
+            const num = Math.max(1, parseInt(document.getElementById(customValueId).value, 10) || 1);
+            const unit = document.getElementById(customUnitId).value || '개월';
+            return `${num}${unit}`;
+        }
+
+        // 저장돼있던 임대기간 값을 UI에 되돌림 — 프리셋 4개 중 하나면 select만 맞추고,
+        // 아니면(예: "2개월") select를 "직접입력"으로 두고 숫자/단위 입력창을 채워서 보여줌
+        function applyRentalPeriodValue(selectId, customWrapId, customValueId, customUnitId, value) {
+            const sel = document.getElementById(selectId);
+            const wrap = document.getElementById(customWrapId);
+            if (!sel || !wrap) return;
+            const v = (value && String(value).trim()) || '1개월';
+            if (RENTAL_PERIOD_PRESETS.includes(v)) {
+                sel.value = v;
+                wrap.classList.remove('show');
+            } else {
+                const parsed = parseRentalPeriod(v);
+                sel.value = 'custom';
+                wrap.classList.add('show');
+                document.getElementById(customValueId).value = parsed.value;
+                document.getElementById(customUnitId).value = parsed.unit === 'month' ? '개월' : (parsed.unit === 'week' ? '주일' : '일');
+            }
+        }
+
         function calcRentalEndDate(installDateStr, period) {
             if (!installDateStr) return '';
             const d = new Date(installDateStr + 'T00:00:00');
             if (isNaN(d.getTime())) return '';
-            switch (period) {
-                case '15일': d.setDate(d.getDate() + 15); break;
-                case '1주일': d.setDate(d.getDate() + 7); break;
-                case '1일': d.setDate(d.getDate() + 1); break;
-                case '1개월':
+            const { value, unit } = parseRentalPeriod(period);
+            switch (unit) {
+                case 'day': d.setDate(d.getDate() + value); break;
+                case 'week': d.setDate(d.getDate() + value * 7); break;
+                case 'month':
                 default: {
                     // setMonth()만 쓰면 1/31 + 1개월이 "2월 31일"이 없어서 3/3으로 튀는 버그가 있었음.
                     // 다음달 실제 마지막 날짜를 넘지 않도록 클램핑해서 1/31 + 1개월 = 2/28(말일)이 되도록 처리
                     const originalDay = d.getDate();
-                    const targetMonthIndex = d.getMonth() + 1;
+                    const targetMonthIndex = d.getMonth() + value;
                     const targetYear = d.getFullYear() + Math.floor(targetMonthIndex / 12);
                     const targetMonth = ((targetMonthIndex % 12) + 12) % 12;
                     const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
@@ -3198,9 +3273,21 @@ function generateUniqueId() {
             return formatDateYMD(d);
         }
 
+        function handleRentalPeriodPresetChange(scope) {
+            if (scope === 'detail') {
+                const sel = document.getElementById('detailRentalPeriod');
+                document.getElementById('detailRentalPeriodCustom').classList.toggle('show', sel.value === 'custom');
+                handleDetailRentalDateChange();
+            } else {
+                const sel = document.getElementById('rentalPeriod');
+                document.getElementById('rentalPeriodCustom').classList.toggle('show', sel.value === 'custom');
+                handleRentalDateInputsChange();
+            }
+        }
+
         function handleRentalDateInputsChange() {
             const installDate = document.getElementById('installDate').value;
-            const period = document.getElementById('rentalPeriod').value;
+            const period = readRentalPeriodValue('rentalPeriod', 'rentalPeriodCustomValue', 'rentalPeriodCustomUnit');
             document.getElementById('rentalEndDate').value = calcRentalEndDate(installDate, period);
         }
 
@@ -3733,7 +3820,7 @@ function generateUniqueId() {
             document.getElementById('editTargetId').value = "";
             document.querySelector('input[name="division"][value="판매"]').checked = true;
             document.getElementById('installDate').value = '';
-            document.getElementById('rentalPeriod').value = '1개월';
+            applyRentalPeriodValue('rentalPeriod', 'rentalPeriodCustom', 'rentalPeriodCustomValue', 'rentalPeriodCustomUnit', '1개월');
             document.getElementById('rentalEndDate').value = '';
             handleDivisionChange();
             document.getElementById('modal').style.display = "flex";
@@ -3761,7 +3848,7 @@ function generateUniqueId() {
 
         function handleDetailRentalDateChange() {
             const installDate = document.getElementById('detailInstallDate').value;
-            const period = document.getElementById('detailRentalPeriod').value;
+            const period = readRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit');
             document.getElementById('detailRentalEndDate').value = calcRentalEndDate(installDate, period);
         }
 
@@ -3839,7 +3926,7 @@ function generateUniqueId() {
             document.getElementById('detailKioAdminId').value = item.kioAdminId || '';
 
             document.getElementById('detailInstallDate').value = item.installDate || '';
-            document.getElementById('detailRentalPeriod').value = item.rentalPeriod || '1개월';
+            applyRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustom', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit', item.rentalPeriod);
             document.getElementById('detailRentalEndDate').value = item.rentalEndDate || '';
 
             document.getElementById('detailNewMemoInput').value = '';
@@ -3911,7 +3998,7 @@ function generateUniqueId() {
                 reaCode: document.getElementById('detailReaCode').value,
                 division: document.getElementById('detailDivisionValue').value,
                 installDate: document.getElementById('detailInstallDate').value,
-                rentalPeriod: document.getElementById('detailRentalPeriod').value,
+                rentalPeriod: readRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit'),
                 rentalEndDate: document.getElementById('detailRentalEndDate').value,
                 memoList: targetItem.memoList || [], // AS이력은 이미 각자 즉시 저장되므로 현재 메모리 상태 그대로 실어보냄
                 status: document.getElementById('detailStatusValue').value,
@@ -4092,7 +4179,7 @@ function generateUniqueId() {
                 reaCode: document.getElementById('reaCode').value,
                 division: document.querySelector('input[name="division"]:checked').value,
                 installDate: document.getElementById('installDate').value,
-                rentalPeriod: document.getElementById('rentalPeriod').value,
+                rentalPeriod: readRentalPeriodValue('rentalPeriod', 'rentalPeriodCustomValue', 'rentalPeriodCustomUnit'),
                 rentalEndDate: document.getElementById('rentalEndDate').value,
                 memoList: memoList,
                 status: document.getElementById('status').value,
@@ -4694,7 +4781,7 @@ function generateUniqueId() {
                                 reaCode: readField(row, "reaCode"),
                                 division: (row["구분"] === "임대") ? "임대" : "판매",
                                 installDate: normalizeExcelDate(row["기기도입일"] || row["installDate"] || ""),
-                                rentalPeriod: ["1개월","15일","1주일","1일"].includes(row["임대기간"]) ? row["임대기간"] : "1개월",
+                                rentalPeriod: isValidRentalPeriod(row["임대기간"]) ? String(row["임대기간"]).trim() : "1개월",
                                 rentalEndDate: normalizeExcelDate(row["임대종료일"] || row["rentalEndDate"] || ""),
                                 memoList: memoText ? [{ id: generateUniqueId(), date: "엑셀 대량등록", text: String(memoText) }] : [],
                                 status: readField(row, "status") || "정상",
@@ -4750,7 +4837,7 @@ function generateUniqueId() {
                 { header: '레아코드',    key: 'reaCode',         group: 'sys-group',     width: 10, example: 'qr99' },
                 { header: '구분',        key: 'division',        group: 'rental-group',  width: 8,  example: '판매 또는 임대' },
                 { header: '기기도입일',  key: 'installDate',     group: 'rental-group',  width: 14, example: '2026-08-01 (임대일 때만 입력, YYYY-MM-DD)' },
-                { header: '임대기간',    key: 'rentalPeriod',    group: 'rental-group',  width: 10, example: '1개월/15일/1주일/1일 중 하나' },
+                { header: '임대기간',    key: 'rentalPeriod',    group: 'rental-group',  width: 10, example: '1개월/15일/1주일/1일 또는 2개월,3주일처럼 숫자+단위 직접입력 가능' },
                 { header: '임대종료일',  key: 'rentalEndDate',   group: 'rental-group',  width: 14, example: '비워두면 도입일+임대기간으로 자동계산' },
                 { header: '메모',        key: 'memo',            group: null,            width: 26, example: '초기 점검 완료' },
                 { header: '상태',        key: 'status',          group: null,            width: 10, example: '정상' }
