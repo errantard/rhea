@@ -918,13 +918,23 @@
         .form-group label { display: block; font-size: 12px; color: #636e72; margin-bottom: 4px; font-weight: 600; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #dfe6e9; border-radius: var(--r-xs); font-size: 13px; background: #ffffff; }
 
-        /* 2026-09-23: 임대기간 "직접입력" 모드 — 프리셋 select 아래에 숫자+단위(개월/주일/일) 입력줄을 붙임.
-           평소엔 숨겨져 있다가 select에서 "직접입력" 고르면 .show 클래스로 나타남 */
-        .rental-period-custom { display: none; align-items: center; gap: 6px; margin-top: 6px; }
+        /* 2026-09-23: 임대기간 "직접입력" 모드 — ① select 아래 새 줄로 내려가니 옆 필드보다 세로로 길어져 어색함
+           → ② select 옆에 숫자+단위를 나란히 붙였더니 이번엔 좁은 칸 안에서 select와 숫자입력이 자리다툼하면서
+           "직접입력" 글자가 "직"으로 잘려버림 → 그래서 최종적으로 "직접입력"을 고르면 select는 아예 숨기고
+           그 자리에 숫자+단위+되돌리기(↩) 버튼만 보여주는 방식으로 변경. 항상 한 번에 하나의 컨트롤 조합만
+           보이니 좁은 칸에서도 잘릴 일이 없음 */
+        .rental-period-row { display: flex; align-items: center; gap: 6px; }
+        .rental-period-row > select.hidden-by-custom { display: none; }
+        .rental-period-custom { display: none; align-items: center; gap: 4px; }
         .rental-period-custom.show { display: flex; }
-        .rental-period-custom input[type="number"] { width: 60px; flex: none; }
+        .rental-period-custom input[type="number"] { width: 48px; flex: none; }
         .rental-period-custom select { flex: none; width: auto; }
-        .dfield .rental-period-custom input[type="number"] { width: 46px; }
+        .dfield .rental-period-custom input[type="number"] { width: 40px; }
+        .rental-period-back {
+            flex: none; border: none; background: transparent; cursor: pointer; font-size: 13px;
+            color: #8a8f98; padding: 2px 5px; line-height: 1; border-radius: 4px; font-family: inherit;
+        }
+        .rental-period-back:hover { background: rgba(0,0,0,0.06); color: #4a463a; }
 
         .checkbox-group {
             display: flex;
@@ -1603,24 +1613,27 @@
                         </div>
                         <div class="form-group">
                             <label>임대 기간</label>
-                            <select id="rentalPeriod" onchange="handleRentalPeriodPresetChange('reg')">
-                                <option value="1개월">1개월</option>
-                                <option value="15일">15일</option>
-                                <option value="1주일">1주일</option>
-                                <option value="1일">1일</option>
-                                <option value="custom">직접입력</option>
-                            </select>
-                            <div class="rental-period-custom" id="rentalPeriodCustom">
-                                <input type="number" id="rentalPeriodCustomValue" min="1" step="1" value="1" onchange="handleRentalDateInputsChange()">
-                                <select id="rentalPeriodCustomUnit" onchange="handleRentalDateInputsChange()">
-                                    <option value="개월">개월</option>
-                                    <option value="주일">주일</option>
-                                    <option value="일">일</option>
+                            <div class="rental-period-row">
+                                <select id="rentalPeriod" onchange="handleRentalPeriodPresetChange('reg')">
+                                    <option value="1개월">1개월</option>
+                                    <option value="15일">15일</option>
+                                    <option value="1주일">1주일</option>
+                                    <option value="1일">1일</option>
+                                    <option value="custom">직접입력</option>
                                 </select>
+                                <div class="rental-period-custom" id="rentalPeriodCustom">
+                                    <input type="number" id="rentalPeriodCustomValue" min="1" step="1" value="1" onchange="handleRentalDateInputsChange()">
+                                    <select id="rentalPeriodCustomUnit" onchange="handleRentalDateInputsChange()">
+                                        <option value="개월">개월</option>
+                                        <option value="주일">주일</option>
+                                        <option value="일">일</option>
+                                    </select>
+                                    <button type="button" class="rental-period-back" onclick="handleRentalPeriodBack('reg')" title="프리셋으로 되돌리기">↩</button>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>임대 종료일 <span style="font-weight: normal; color:#8a8f98;">(자동계산, 직접수정 가능)</span></label>
+                            <label title="자동계산, 직접수정 가능">임대종료일</label>
                             <input type="date" id="rentalEndDate">
                         </div>
                     </div>
@@ -1803,21 +1816,24 @@
                             <div class="dfield"><label>기기도입일</label><input type="date" id="detailInstallDate" onchange="handleDetailRentalDateChange()"></div>
                             <div class="dfield">
                                 <label>임대 기간</label>
-                                <select id="detailRentalPeriod" onchange="handleRentalPeriodPresetChange('detail')">
-                                    <option value="1개월">1개월</option><option value="15일">15일</option>
-                                    <option value="1주일">1주일</option><option value="1일">1일</option>
-                                    <option value="custom">직접입력</option>
-                                </select>
-                                <div class="rental-period-custom" id="detailRentalPeriodCustom">
-                                    <input type="number" id="detailRentalPeriodCustomValue" min="1" step="1" value="1" onchange="handleDetailRentalDateChange()">
-                                    <select id="detailRentalPeriodCustomUnit" onchange="handleDetailRentalDateChange()">
-                                        <option value="개월">개월</option>
-                                        <option value="주일">주일</option>
-                                        <option value="일">일</option>
+                                <div class="rental-period-row">
+                                    <select id="detailRentalPeriod" onchange="handleRentalPeriodPresetChange('detail')">
+                                        <option value="1개월">1개월</option><option value="15일">15일</option>
+                                        <option value="1주일">1주일</option><option value="1일">1일</option>
+                                        <option value="custom">직접입력</option>
                                     </select>
+                                    <div class="rental-period-custom" id="detailRentalPeriodCustom">
+                                        <input type="number" id="detailRentalPeriodCustomValue" min="1" step="1" value="1" onchange="handleDetailRentalDateChange()">
+                                        <select id="detailRentalPeriodCustomUnit" onchange="handleDetailRentalDateChange()">
+                                            <option value="개월">개월</option>
+                                            <option value="주일">주일</option>
+                                            <option value="일">일</option>
+                                        </select>
+                                        <button type="button" class="rental-period-back" onclick="handleRentalPeriodBack('detail')" title="프리셋으로 되돌리기">↩</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="dfield"><label>임대 종료일 (자동계산, 직접수정 가능)</label><input type="date" id="detailRentalEndDate"></div>
+                            <div class="dfield"><label title="자동계산, 직접수정 가능">임대종료일</label><input type="date" id="detailRentalEndDate"></div>
                         </div>
                     </div>
 
@@ -3239,10 +3255,12 @@ function generateUniqueId() {
             const v = (value && String(value).trim()) || '1개월';
             if (RENTAL_PERIOD_PRESETS.includes(v)) {
                 sel.value = v;
+                sel.classList.remove('hidden-by-custom');
                 wrap.classList.remove('show');
             } else {
                 const parsed = parseRentalPeriod(v);
                 sel.value = 'custom';
+                sel.classList.add('hidden-by-custom');
                 wrap.classList.add('show');
                 document.getElementById(customValueId).value = parsed.value;
                 document.getElementById(customUnitId).value = parsed.unit === 'month' ? '개월' : (parsed.unit === 'week' ? '주일' : '일');
@@ -3276,11 +3294,26 @@ function generateUniqueId() {
         function handleRentalPeriodPresetChange(scope) {
             if (scope === 'detail') {
                 const sel = document.getElementById('detailRentalPeriod');
-                document.getElementById('detailRentalPeriodCustom').classList.toggle('show', sel.value === 'custom');
+                const isCustom = sel.value === 'custom';
+                sel.classList.toggle('hidden-by-custom', isCustom);
+                document.getElementById('detailRentalPeriodCustom').classList.toggle('show', isCustom);
                 handleDetailRentalDateChange();
             } else {
                 const sel = document.getElementById('rentalPeriod');
-                document.getElementById('rentalPeriodCustom').classList.toggle('show', sel.value === 'custom');
+                const isCustom = sel.value === 'custom';
+                sel.classList.toggle('hidden-by-custom', isCustom);
+                document.getElementById('rentalPeriodCustom').classList.toggle('show', isCustom);
+                handleRentalDateInputsChange();
+            }
+        }
+
+        // "직접입력" 모드에서 ↩ 버튼을 누르면 프리셋(기본 1개월)으로 되돌아감
+        function handleRentalPeriodBack(scope) {
+            if (scope === 'detail') {
+                applyRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustom', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit', '1개월');
+                handleDetailRentalDateChange();
+            } else {
+                applyRentalPeriodValue('rentalPeriod', 'rentalPeriodCustom', 'rentalPeriodCustomValue', 'rentalPeriodCustomUnit', '1개월');
                 handleRentalDateInputsChange();
             }
         }
