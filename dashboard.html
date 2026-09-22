@@ -542,6 +542,24 @@
         tr.row-terminated:hover td.sticky-col-0, tr.row-terminated:hover td.sticky-col-group, tr.row-terminated:hover td.sticky-col-1, tr.row-terminated:hover td.sticky-col-2, tr.row-terminated:hover td.sticky-col-3 { background-color: #CFCABC !important; }
         tr.row-terminated.checked-row td.sticky-col-0, tr.row-terminated.checked-row td.sticky-col-group, tr.row-terminated.checked-row td.sticky-col-1, tr.row-terminated.checked-row td.sticky-col-2, tr.row-terminated.checked-row td.sticky-col-3 { background-color: #FBEEC7 !important; }
 
+        /* 2026-09-23: 상세보기 팝업을 열어둔 행이 마우스를 다른 데로 옮기면 어느 행이었는지 헷갈린다는
+           피드백 — 팝업이 열려있는 동안 그 행만 눈에 띄는 하늘색으로 계속 표시(체크됨/종료/hover 등
+           다른 배경색 규칙보다 항상 위에 보이도록 뒤에서 동일 우선순위로 재정의). 기존 팔레트에 없던
+           색(파란 계열)이라 "체크됨"(노랑)·"요청"(빨강)·"종료"(회색)와 절대 헷갈리지 않음. */
+        tr.detail-open-row td,
+        tr.detail-open-row:hover td,
+        tr.detail-open-row.checked-row td,
+        tr.detail-open-row.row-terminated td {
+            background-color: #BEE7FB !important;
+        }
+        tr.detail-open-row td.sticky-col-0, tr.detail-open-row td.sticky-col-group, tr.detail-open-row td.sticky-col-1, tr.detail-open-row td.sticky-col-2, tr.detail-open-row td.sticky-col-3,
+        tr.detail-open-row:hover td.sticky-col-0, tr.detail-open-row:hover td.sticky-col-group, tr.detail-open-row:hover td.sticky-col-1, tr.detail-open-row:hover td.sticky-col-2, tr.detail-open-row:hover td.sticky-col-3,
+        tr.detail-open-row.checked-row td.sticky-col-0, tr.detail-open-row.checked-row td.sticky-col-group, tr.detail-open-row.checked-row td.sticky-col-1, tr.detail-open-row.checked-row td.sticky-col-2, tr.detail-open-row.checked-row td.sticky-col-3,
+        tr.detail-open-row.row-terminated td.sticky-col-0, tr.detail-open-row.row-terminated td.sticky-col-group, tr.detail-open-row.row-terminated td.sticky-col-1, tr.detail-open-row.row-terminated td.sticky-col-2, tr.detail-open-row.row-terminated td.sticky-col-3 {
+            background-color: #BEE7FB !important;
+        }
+        tr.detail-open-row td.sticky-col-0 { box-shadow: inset 3px 0 0 #0288D1; }
+
         .badge { padding: 4px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
         .badge-success { background: #E1F0EA; color: var(--teal); }
         .badge-danger { background: #F7E2D8; color: var(--coral-text); } /* 2026-08-29: 명암비 개선 — 기존 var(--coral)는 이 연분홍 배경 위에서 3.66:1로 WCAG AA(4.5:1) 미달, --coral-text(4.58:1)로 교체 */
@@ -1492,8 +1510,8 @@
                             <th class="manager-group sortable-th" data-field-label="managerContact" data-sort-key="managerContact">담당자연락처</th>
                             <th class="manager-group manager-email-cell sortable-th" data-field-label="managerEmail" data-sort-key="managerEmail">담당자이메일</th>
                             <th class="device-group sortable-th" data-field-label="deviceModel" data-sort-key="deviceModel">모델명</th>
-                            <th class="device-group sortable-th" data-field-label="deviceType" data-sort-key="deviceType">유형</th>
-                            <th class="device-group sortable-th" data-field-label="deviceOption" data-sort-key="deviceOption">옵션</th>
+                            <th class="device-group sortable-th" data-field-label="deviceType" data-sort-key="deviceType">옵션</th>
+                            <th class="device-group sortable-th" data-field-label="deviceOption" data-sort-key="deviceOption">설치날짜</th>
                             <th class="sys-group sortable-th" data-field-label="kioId" data-sort-key="kioId">키오에듀ID</th>
                             <th class="sys-group sortable-th" data-field-label="reaCode" data-sort-key="reaCode">레아코드</th>
                             <th class="rental-group">구분</th>
@@ -1623,8 +1641,8 @@
                     <div class="section-tab section-device" data-group-label="device">기기정보</div>
                     <div class="section-fields">
                         <div class="form-group"><label><span data-field-label="deviceModel">모델명</span></label><input type="text" id="deviceModel"></div>
-                        <div class="form-group"><label><span data-field-label="deviceType">유형</span></label><input type="text" id="deviceType"></div>
-                        <div class="form-group"><label><span data-field-label="deviceOption">옵션</span></label><input type="text" id="deviceOption"></div>
+                        <div class="form-group"><label><span data-field-label="deviceType">옵션</span></label><input type="text" id="deviceType"></div>
+                        <div class="form-group"><label><span data-field-label="deviceOption">설치날짜</span></label><input type="date" id="deviceOption"></div>
                     </div>
                 </div>
 
@@ -1820,8 +1838,8 @@
                         </div>
                         <div class="dfields">
                             <div class="dfield"><label>모델명</label><input type="text" id="detailDeviceModel"></div>
-                            <div class="dfield"><label>유형</label><input type="text" id="detailDeviceType"></div>
-                            <div class="dfield"><label>옵션</label><input type="text" id="detailDeviceOption"></div>
+                            <div class="dfield"><label>옵션</label><input type="text" id="detailDeviceType"></div>
+                            <div class="dfield"><label>설치날짜</label><input type="date" id="detailDeviceOption"></div>
                         </div>
                     </div>
 
@@ -2084,8 +2102,8 @@ function showSyncStatus(msg, isError) {
             managerEmail: '담당자 이메일',
             managerNote: '비고',
             deviceModel: '모델명',
-            deviceType: '유형',
-            deviceOption: '옵션',
+            deviceType: '옵션',
+            deviceOption: '설치날짜',
             kioId: '키오에듀ID',
             kioAdminId: '그외',
             reaCode: '레아코드',
@@ -2096,7 +2114,10 @@ function showSyncStatus(msg, isError) {
             orgDept: ['소속부서'], orgName: ['소속성명'], orgTitle: ['소속직책'],
             orgContact: ['소속연락처'], orgEmail: ['소속이메일'],
             managerContact: ['담당자연락처'], managerEmail: ['담당자이메일'], managerNote: ['담당자비고'],
-            kioId: ['키오에듀번호'], kioAdminId: ['키오드민번호']
+            kioId: ['키오에듀번호'], kioAdminId: ['키오드민번호'],
+            // 2026-09-23: 유형→옵션, 옵션→설치날짜로 기본 라벨명이 바뀌면서, 예전 라벨을 헤더로 쓴
+            // 엑셀 업로드 파일도 계속 올바른 필드에 매칭되도록 옛 라벨을 legacy alias로 남겨둠
+            deviceType: ['유형'], deviceOption: ['옵션']
         };
         const DEFAULT_GROUP_LABELS = {
             region: '지역', address: '주소', org: '소속',
@@ -3051,6 +3072,15 @@ function generateUniqueId() {
             // 모바일 카드 리스트도 같이 갱신 (PC 표 로직은 위에서 이미 끝났고, 이 아래는 순수 추가 기능이라
             // 여기서 에러가 나도 try/catch로 막아서 PC 화면(표)에는 절대 영향이 없게 함)
             try { renderMobileCards(filteredData); } catch (e) { console.error('모바일 카드 렌더링 실패:', e); }
+
+            // 2026-09-23: 실시간 동기화 등으로 팝업이 열려있는 도중에도 renderTable()이 다시 불릴 수 있음 —
+            // 표가 새로 그려지면 DOM이 통째로 교체되어 .detail-open-row 표시가 같이 사라지므로,
+            // 팝업이 아직 열려있으면 같은 업체 행에 하늘색 표시를 다시 붙여줌
+            const detailModalEl = document.getElementById('detailModal');
+            if (detailModalEl && detailModalEl.style.display === 'flex') {
+                const openId = document.getElementById('detailTargetId').value;
+                if (openId) markDetailOpenRow(openId);
+            }
         }
 
         /* ===================== 모바일 카드 리스트 (2026-08-29 추가, 880px 이하에서만 화면에 보임) =====================
@@ -3828,6 +3858,28 @@ function generateUniqueId() {
             const contentEl = document.querySelector('#detailModal .detail-modal-content');
             modalEl.style.pointerEvents = 'none';
             if (contentEl) contentEl.style.pointerEvents = 'auto';
+
+            markDetailOpenRow(id);
+        }
+
+        // 2026-09-23: 상세팝업이 열려있는 행을 표에서 하늘색으로 표시(위 CSS .detail-open-row 참고).
+        // sticky-col-3(장소명) 셀의 onclick 속성에 id가 그대로 들어있는 걸 이용해서 행을 찾음
+        // (toggleCheck()가 체크박스 onchange 속성으로 행을 찾는 것과 같은 방식).
+        function markDetailOpenRow(id) {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            tbody.querySelectorAll('tr.detail-open-row').forEach(tr => tr.classList.remove('detail-open-row'));
+            const cell = Array.from(tbody.querySelectorAll('td.sticky-col-3')).find(td => {
+                const oc = td.getAttribute('onclick');
+                return oc && oc.includes(`'${id}'`);
+            });
+            if (cell) cell.closest('tr').classList.add('detail-open-row');
+        }
+
+        function clearDetailOpenRow() {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            tbody.querySelectorAll('tr.detail-open-row').forEach(tr => tr.classList.remove('detail-open-row'));
         }
 
         async function saveDetailEdit() {
@@ -3930,6 +3982,7 @@ function generateUniqueId() {
         function closeDetailModal() {
             document.getElementById('detailModal').style.display = 'none';
             resetDetailModalPosition();
+            clearDetailOpenRow();
         }
 
         function resetDetailModalPosition() {
@@ -4168,8 +4221,8 @@ function generateUniqueId() {
             { key: 'managerEmail',    label: '담당자이메일', group: 'manager-group', width: 20, pdfWeight: 9,  compact: true },
             { key: 'managerNote',     label: '담당자비고',  group: 'manager-group', width: 16, pdfWeight: 8,  compact: true },
             { key: 'deviceModel',     label: '모델명',     group: 'device-group',  width: 14, pdfWeight: 8  },
-            { key: 'deviceType',      label: '유형',       group: 'device-group',  width: 10, pdfWeight: 6  },
-            { key: 'deviceOption',    label: '옵션',       group: 'device-group',  width: 12, pdfWeight: 7  },
+            { key: 'deviceType',      label: '옵션',       group: 'device-group',  width: 10, pdfWeight: 6  },
+            { key: 'deviceOption',    label: '설치날짜',   group: 'device-group',  width: 12, pdfWeight: 7  },
             { key: 'kioId',           label: '키오에듀번호', group: 'sys-group',    width: 14, pdfWeight: 8,  compact: true },
             { key: 'kioAdminId',      label: '키오드민번호', group: 'sys-group',    width: 14, pdfWeight: 8,  compact: true },
             { key: 'reaCode',         label: '레아코드',   group: 'sys-group',     width: 10, pdfWeight: 6,  compact: true },
@@ -4635,7 +4688,7 @@ function generateUniqueId() {
                                 managerNote: readField(row, "managerNote"),
                                 deviceModel: readField(row, "deviceModel"),
                                 deviceType: readField(row, "deviceType"),
-                                deviceOption: readField(row, "deviceOption"),
+                                deviceOption: normalizeExcelDate(readField(row, "deviceOption")),
                                 kioId: readField(row, "kioId"),
                                 kioAdminId: readField(row, "kioAdminId"),
                                 reaCode: readField(row, "reaCode"),
@@ -4690,8 +4743,8 @@ function generateUniqueId() {
                 { header: '담당자연락처', key: 'managerContact',  group: 'manager-group', width: 16, example: '010-9876-5432' },
                 { header: '담당자이메일', key: 'managerEmail',    group: 'manager-group', width: 22, example: 'manager@test.com' },
                 { header: '모델명',      key: 'deviceModel',     group: 'device-group',  width: 16, example: 'KIO-EDU-24' },
-                { header: '유형',        key: 'deviceType',      group: 'device-group',  width: 12, example: '스탠드형' },
-                { header: '옵션',        key: 'deviceOption',    group: 'device-group',  width: 14, example: '터치스크린 포함' },
+                { header: '옵션',        key: 'deviceType',      group: 'device-group',  width: 12, example: '터치스크린 포함' },
+                { header: '설치날짜',    key: 'deviceOption',    group: 'device-group',  width: 14, example: '2026-01-15' },
                 { header: '키오에듀번호', key: 'kioId',           group: 'sys-group',     width: 16, example: 'a1b2c3d4' },
                 { header: '키오드민번호', key: 'kioAdminId',      group: 'sys-group',     width: 16, example: 'e5f6g7h8' },
                 { header: '레아코드',    key: 'reaCode',         group: 'sys-group',     width: 10, example: 'qr99' },
