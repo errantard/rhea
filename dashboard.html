@@ -1158,6 +1158,122 @@
            ═══════════════════════════════════════════════════════════════ */
         .mobile-card-list { display: none; }
 
+
+        /* ===================== 2026-10-03 12차: 헤더 2줄 구조 (구분 탭 · AS 요청 · 그룹/임대단계/신규/종료) ===================== */
+        .header-fixed { z-index: 30; }
+        .navbar { padding-top: 6px; padding-bottom: 6px; }
+        .navbar-left-stack { gap: 8px; }
+        .navbar-line-top { gap: 20px; }
+        .div-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.28); padding: 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.10); }
+        .div-tab { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px 0 12px; border: none; border-radius: 9px; cursor: pointer;
+            background: transparent; color: #DCE9E2; font: 700 15px 'Public Sans', sans-serif; white-space: nowrap; transition: background .15s, color .15s; }
+        .div-tab:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .div-tab:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+        .div-tab .dt-ic { width: 20px; height: 20px; flex-shrink: 0; }
+        /* 숫자 자리를 항상 3자리 폭으로 고정 — 1자리↔2자리로 바뀌어도 탭 길이가 출렁이지 않게 */
+        .div-tab .dt-cnt { font: 700 15px 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; opacity: .85; margin-left: 2px; display: inline-block; min-width: 3ch; text-align: left; }
+        .div-tab.active { background: #F2C94C; color: #0F1B2A; }
+        .div-tab.active .dt-cnt { opacity: 1; }
+
+        .as-panel { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 8px 0 12px; border-radius: 12px; cursor: pointer; transition: .15s;
+            border: 1px solid rgba(255,140,120,0.55); background: rgba(40,14,14,0.55); box-shadow: 0 0 14px rgba(255,120,100,0.18); }
+        .as-panel:hover { border-color: #FF9F8A; }
+        .as-panel:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+        .as-panel.active { background: rgba(232,96,76,0.30); border-color: #FF9F8A; box-shadow: 0 0 0 1px rgba(255,159,138,.35), 0 0 18px rgba(255,120,100,.35); }
+        .as-head { display: flex; align-items: center; gap: 6px; color: #FF9F8A; font: 800 13.5px 'Public Sans', sans-serif; white-space: nowrap; }
+        .as-head b { font-family: 'IBM Plex Mono', monospace; font-size: 15px; background: #E8604C; color: #fff; border-radius: 999px; padding: 0 8px; margin-left: 2px; }
+        .as-list { display: flex; align-items: center; gap: 4px; }
+        .as-list span { font: 600 12px 'Public Sans', sans-serif; color: #F4E6E2; padding: 4px 9px; border-radius: 8px; background: rgba(255,255,255,0.06); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+        .as-list i { font-style: normal; color: #FF9F8A; margin-left: 4px; font-weight: 700; }
+        .as-list .as-more { background: none; color: #C3D6E6; }
+        .as-panel.is-empty { border-color: rgba(123,235,196,0.35); background: rgba(10,40,34,0.45); box-shadow: none; cursor: default; }
+        .as-panel.is-empty .as-head { color: #7BEBC4; font-weight: 700; }
+
+        .navbar-line-filters { display: flex; align-items: center; gap: 10px; min-height: 34px; flex-wrap: wrap; row-gap: 6px; }
+        .hf-box { display: flex; align-items: center; gap: 7px; padding: 3px 10px 3px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.18); transition: border-color .2s, box-shadow .2s, opacity .2s; }
+        .hf-box.glow { border-color: rgba(242,201,76,0.85); background: rgba(242,201,76,0.08);
+            box-shadow: 0 0 0 1px rgba(242,201,76,0.25), 0 0 18px rgba(242,201,76,0.28), inset 0 0 12px rgba(242,201,76,0.08); }
+        .hf-box.glow .hf-lbl { color: #F7D874; }
+        .hf-box.dim { opacity: .5; filter: saturate(.6); }
+        .hf-box.dim:hover { opacity: .8; }
+        .group-name-pill.group-pill-lease { background-color: #8E7CF0; color: #fff; }
+        .reg-group-select { height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #D8D2C0; background: #fff; font-weight: 700; font-size: 13px; color: #1B2A3A; }
+        .hf-lbl { font: 700 11px 'Public Sans', sans-serif; color: #9FB3C6; letter-spacing: .5px; margin-right: 2px; white-space: nowrap; }
+        .hf-chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.20); background: rgba(255,255,255,0.05); color: #E6EEF4; font: 600 12.5px 'Public Sans', sans-serif; white-space: nowrap; transition: .15s; }
+        .hf-chip b { font: 700 12.5px 'IBM Plex Mono', monospace; color: #FBF6E8; }
+        .hf-chip:hover { border-color: #F2C94C; }
+        .hf-chip:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+        .hf-chip.active { background: rgba(242,201,76,0.20); border-color: #F2C94C; color: #F7D874; }
+        .hf-chip.active b { color: #F7D874; }
+        .hf-chip .hf-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .hf-chip.is-zero { opacity: .45; }
+        .hf-chip.hf-add { border-style: dashed; color: #9FB3C6; padding: 0 10px; }
+        .hf-chip.hf-ended { background: rgba(0,0,0,0.25); color: #C3D6E6; border-color: rgba(255,255,255,0.16); }
+        .hf-chip.hf-ended.active { background: rgba(195,214,230,0.18); border-color: #C3D6E6; color: #fff; }
+        .hf-chip.hf-new .hf-new-tag { font: 800 9.5px 'Public Sans', sans-serif; letter-spacing: .5px; background: #3FB6A8; color: #fff; border-radius: 4px; padding: 1px 4px; }
+        .hf-chip.hf-new.active { background: rgba(63,182,168,0.22); border-color: #5FD3C4; color: #BFF3EC; }
+        .hf-chip.hf-new.active b { color: #BFF3EC; }
+        .hf-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.18); margin: 0 2px; }
+        .hf-step { display: flex; background: rgba(0,0,0,0.22); border-radius: 999px; padding: 3px; border: 1px solid rgba(255,255,255,0.10); }
+        .hf-step button { height: 22px; display: flex; align-items: center; gap: 5px; padding: 0 11px; border: none; border-radius: 999px; background: transparent; cursor: pointer;
+            font: 600 12.5px 'Public Sans', sans-serif; color: #C3D6E6; white-space: nowrap; transition: .15s; }
+        .hf-step button b { font-family: 'IBM Plex Mono', monospace; color: #FBF6E8; }
+        .hf-step button:hover { background: rgba(255,255,255,0.08); }
+        .hf-step button.warn { color: #FF9F8A; }
+        .hf-step button.warn b { color: #FF9F8A; }
+        .hf-step button.is-zero { opacity: .5; }
+        .hf-step button.active { background: #F2C94C; color: #0F1B2A; }
+        .hf-step button.active b { color: #0F1B2A; }
+
+        /* 업체명 옆 NEW 뱃지 (판매 · 설치 2개월 이내) */
+        .new-badge { display: inline-block; margin-left: 6px; font: 800 9.5px 'Public Sans', sans-serif; letter-spacing: .5px; color: #fff; background: #3FB6A8; border-radius: 4px; padding: 1px 5px; vertical-align: 2px; }
+
+        /* 다운로드 드롭다운 (마우스 올리면 펼쳐짐, 터치에선 클릭으로 열림) */
+        .dl-wrap { position: relative; }
+        .dl-caret { font-size: 10px; opacity: .8; margin-left: -2px; }
+        .dl-menu { display: none; position: absolute; top: 100%; left: 0; padding-top: 6px; min-width: 220px; z-index: 1000; }
+        .dl-menu::before { content: ''; position: absolute; inset: 6px 0 0 0; background: #13213A; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,0.45); z-index: -1; }
+        .dl-wrap:hover .dl-menu, .dl-wrap.open .dl-menu { display: block; }
+        .dl-wrap.dl-suppress .dl-menu { display: none !important; }
+        .dl-menu > * { position: relative; }
+        .dl-menu .dl-sec { font: 700 10.5px 'Public Sans', sans-serif; color: #8EA3B8; letter-spacing: .4px; padding: 10px 14px 4px; }
+        .dl-menu .dl-sec b { color: #F7D874; font-family: 'IBM Plex Mono', monospace; }
+        .dl-menu button { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: calc(100% - 12px); margin: 0 6px; padding: 8px 10px;
+            border: none; background: transparent; border-radius: 8px; cursor: pointer; font: 600 12.5px 'Public Sans', sans-serif; color: #E6EEF4; white-space: nowrap; text-align: left; }
+        .dl-menu button:hover { background: rgba(242,201,76,0.16); color: #F7D874; }
+        .dl-menu small { color: #8EA3B8; font-size: 11px; font-weight: 500; }
+        .dl-menu hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 6px 12px; }
+        .dl-menu .dl-foot { display: flex; align-items: center; gap: 6px; padding: 6px 14px 12px; font-size: 11px; color: #8EA3B8; white-space: nowrap; }
+        .dl-menu .dl-dot { width: 7px; height: 7px; border-radius: 50%; background: #7BEBC4; box-shadow: 0 0 6px rgba(123,235,196,.7); }
+
+        /* 1회성 그룹 정리 도우미 팝업 */
+        .mig-modal { position: fixed; inset: 0; background: rgba(5,12,22,0.62); display: none; align-items: center; justify-content: center; z-index: 5000; }
+        .mig-card { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; background: #FBF8F0; color: #1B2A3A; border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.4); padding: 22px 24px; font-size: 13.5px; }
+        .mig-card h3 { margin: 0 0 4px; font-size: 18px; color: #0F1B2A; }
+        .mig-card .mig-sub { color: #5B6B7B; margin-bottom: 14px; }
+        .mig-step { border: 1px solid #E2DDD0; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #fff; }
+        .mig-step h4 { margin: 0 0 6px; font-size: 14px; }
+        .mig-step ul { margin: 4px 0 0; padding-left: 18px; }
+        .mig-step li { margin: 3px 0; }
+        .mig-warn { color: #B4442F; font-weight: 700; }
+        .mig-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+        .mig-actions button { border: none; border-radius: 8px; padding: 9px 14px; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .mig-btn-ghost { background: #EEE9DC; color: #3A4A5A; }
+        .mig-btn-backup { background: #1F4E79; color: #fff; }
+        .mig-btn-run { background: #E0B83F; color: #1B2A3A; }
+        .mig-btn-run:disabled { opacity: .45; cursor: not-allowed; }
+
+        @media (max-width: 880px) {
+            .navbar-line-top { gap: 10px; }
+            .div-tabs { width: 100%; }
+            .div-tab { flex: 1; justify-content: center; padding: 0 8px; font-size: 14px; }
+            .as-panel { width: 100%; }
+            .as-list span:not(:first-child) { display: none; }
+            .navbar-line-filters { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; padding-bottom: 4px; }
+            .hf-box, .hf-chip { flex-shrink: 0; }
+        }
+
         @media (max-width: 880px) {
             /* ---------- 뷰포트/스크롤 기본 ---------- */
             body { height: 100vh; height: 100dvh; }
@@ -1300,72 +1416,22 @@
                 <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo.webp" alt="Rheavision Corp.">
             </div>
             <div class="navbar-left-stack">
+                <!-- 2026-10-03 12차: 헤더 2줄 구조로 재설계 (claude/12차-헤더-탭구조-설계확정.md)
+                     1줄: 브랜드명 · 구분 탭(전체/판매/임대) · AS 요청 패널(항상 보임)
+                     2줄: 그룹 박스 · 임대 단계 박스 · 신규 칩 · 종료 보기 칩
+                     예전 그룹 탭(topMenu)·상태카드·판매/임대 미니스탯은 없앰. topMenu는 옛 코드 호환용으로 숨겨서만 남겨둠 -->
                 <div class="navbar-line-top">
                     <span class="brand-name">Rheavision Corp.</span>
-                    <ul class="top-menu" id="topMenu"></ul>
-                    <button class="group-add-btn" id="groupAddBtn" onclick="openGroupEditModal()" title="그룹 편집" aria-label="그룹 편집">
-                        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
-                    </button>
+                    <ul class="top-menu" id="topMenu" style="display:none;"></ul>
+                    <div class="div-tabs" id="divisionTabs" role="tablist" aria-label="구분"></div>
+                    <div class="as-panel" id="asPanel" role="button" tabindex="0" onclick="toggleAsFilter()" title="AS 요청 업체만 보기 (다시 누르면 해제)"></div>
                 </div>
-                <div class="navbar-line-stats">
-                    <div class="cards" title="클릭하면 해당 상태로 목록이 필터링됩니다">
-                        <button type="button" class="card status-filter-card" data-status-key="" onclick="filterStatusStat('')">
-                            <div class="card-title">🏢 전체</div>
-                            <div id="totalCount" class="card-value">0</div>
-                        </button>
-                        <button type="button" class="card status-filter-card" data-status-key="정상" onclick="filterStatusStat('정상')">
-                            <div class="card-title" style="color: #7BEBC4;">정상</div>
-                            <div id="successCount" class="card-value" style="color: #7BEBC4;">0</div>
-                        </button>
-                        <button type="button" class="card status-filter-card" data-status-key="요청" onclick="filterStatusStat('요청')">
-                            <div class="card-title" style="color: var(--coral-dark);">요청</div>
-                            <div id="dangerCount" class="card-value" style="color: var(--coral-dark);">0</div>
-                        </button>
-                        <div class="card backup-card">
-                            <div class="backup-card-top">
-                                <span class="card-title">저장소</span>
-                                <span class="card-value">☁️ Supabase 클라우드</span>
-                            </div>
-                            <div class="backup-card-bottom">
-                                <span class="card-title">마지막 백업</span>
-                                <span id="lastBackupNotice" class="backup-notice"></span>
-                                <span class="backup-actions">
-                                    <span class="backup-divider">|</span>
-                                    <button type="button" class="backup-link-btn" onclick="backupData()">백업하기</button>
-                                    <span class="backup-divider">|</span>
-                                    <button type="button" class="backup-link-btn" id="restoreLinkBtn" onclick="triggerRestoreUpload()">불러오기</button>
-                                </span>
-                                <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="handleRestoreFile(this)">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cards rental-panel" title="판매/임대 현황 (클릭하면 해당 조건으로 목록이 필터링됩니다)">
-                        <!-- 2026-09-20: "🏷️ 임대"(전체 임대 보기)는 없애고, 전체 그룹을 통틀어 항상 다 세는
-                             "판매" 총 대수로 교체. 숫자 자체는 나머지 카드들("지금 보고 있는 탭 기준")과 달리
-                             예외로 탭에 상관없이 항상 전체 합계임 (대장님 요청).
-                             2026-09-20 10차: 클릭해도 반응 없던 걸(순수 표시용) 대장님이 임대처럼 눌러서
-                             필터되게 해달라고 해서, 다른 rental-mini 버튼들과 똑같이 button+onclick으로 바꿈 -->
-                        <button type="button" class="rental-mini rental-label-btn" data-rental-key="sale" onclick="filterRentalStat('sale')" title="판매 업체만 보기 (숫자는 탭과 무관하게 항상 전체 기준)">
-                            <span class="rental-mini-label">판매</span><span class="rental-mini-value" id="saleAllCount">0</span>
-                        </button>
-                        <span class="rental-divider"></span>
-                        <!-- 2026-08-29: 사용중/종료예정은 "임대"와 같은 굵은 강조 크기로 승격, 예정/종료는 기존 작은 크기 그대로 한 열(세로)로 배치
-                             2026-09-20: 라벨만 "사용중" → "임대"로 변경 (집계 방식/클릭 동작은 그대로 유지) -->
-                        <button type="button" class="rental-mini rental-label-btn" data-rental-key="ongoing" onclick="filterRentalStat('ongoing')">
-                            <span class="rental-mini-label">임대</span><span class="rental-mini-value" id="rentalOngoingCount">0</span>
-                        </button>
-                        <button type="button" class="rental-mini rental-label-btn" data-rental-key="expiring" onclick="filterRentalStat('expiring')">
-                            <span class="rental-mini-label">종료예정</span><span class="rental-mini-value" id="rentalExpiringCount">0</span>
-                        </button>
-                        <div class="rental-stats-grid">
-                            <button type="button" class="rental-mini" data-rental-key="upcoming" onclick="filterRentalStat('upcoming')">
-                                <span class="rental-mini-label">예정</span><span class="rental-mini-value" id="rentalUpcomingCount">0</span>
-                            </button>
-                            <button type="button" class="rental-mini" data-rental-key="expired" onclick="filterRentalStat('expired')">
-                                <span class="rental-mini-label">종료</span><span class="rental-mini-value" id="rentalExpiredCount">0</span>
-                            </button>
-                        </div>
-                    </div>
+                <div class="navbar-line-filters" id="headerFilterRow">
+                    <div class="hf-box hf-group" id="hfGroupBox"></div>
+                    <div class="hf-box hf-stage" id="hfStageBox"></div>
+                    <span class="hf-sep"></span>
+                    <button type="button" class="hf-chip hf-new" id="hfNewChip" onclick="toggleNewFilter()" title="설치 2개월 이내 판매 업체만 보기"></button>
+                    <button type="button" class="hf-chip hf-ended" id="hfEndedChip" onclick="toggleEndedFilter()" title="종료된 업체만 보기 (다시 누르면 해제)"></button>
                 </div>
             </div>
         </div>
@@ -1374,39 +1440,36 @@
             <div class="navbar-right">
                 <input type="file" id="excelUploadInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
 
-                <button class="action-btn desktop-only-action" onclick="exportAllGroupsToExcel()" title="선택 여부와 상관없이 전체 그룹의 모든 업체를 엑셀로 다운로드">
-                    <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
-                        <path fill="currentColor" d="M4 4h16v4H4V4zm0 6h16v4H4v-4zm0 6h16v4H4v-4z"/>
-                    </svg>
-                    <span>전체 다운로드</span>
-                </button>
-
-                <button class="action-btn desktop-only-action" onclick="exportSelectedToPDF(event)" title="선택된 업체 리스트를 디자인 그대로 PDF로 저장">
-                    <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
-                        <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9.5 12.5c0 .83-.67 1.5-1.5 1.5H7v2H5.5V9H8c.83 0 1.5.67 1.5 1.5v2zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V9H13c.83 0 1.5.67 1.5 1.5v4zm4-3H17v1h1.5V13H17v2h-1.5V9h3v1.5z"/>
-                    </svg>
-                    <span>PDF</span>
-                </button>
-
-                <button class="action-btn desktop-only-action" onclick="exportSelectedToExcel()" title="선택된 업체 리스트를 서식 포함 엑셀로 저장">
-                    <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
-                        <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                    </svg>
-                    <span>엑셀</span>
-                </button>
+                <!-- 2026-10-03 12차: 전체다운로드/PDF/엑셀/양식다운로드 4개 버튼 → "다운로드" 하나로 합침 (마우스 올리면 펼쳐짐).
+                     저장소/백업 카드도 메인 줄에서 빼고 이 메뉴 아래쪽으로 옮김 -->
+                <div class="dl-wrap desktop-only-action" id="dlWrap">
+                    <button type="button" class="action-btn" onclick="toggleDownloadMenu(event)" title="다운로드 · 백업">
+                        <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        <span>다운로드</span><span class="dl-caret">▾</span>
+                    </button>
+                    <div class="dl-menu" id="dlMenu">
+                        <div class="dl-sec">지금 보이는 업체 <b id="dlVisibleCount">0</b>건</div>
+                        <button type="button" onclick="exportVisible('excel')">엑셀<small>서식 포함</small></button>
+                        <button type="button" onclick="exportVisible('pdf')">PDF<small>디자인 그대로</small></button>
+                        <div class="dl-sec">체크한 업체</div>
+                        <button type="button" onclick="closeDownloadMenu(); exportSelectedToExcel()">엑셀<small>서식 포함</small></button>
+                        <button type="button" onclick="closeDownloadMenu(); exportSelectedToPDF(null)">PDF<small>디자인 그대로</small></button>
+                        <hr>
+                        <button type="button" onclick="closeDownloadMenu(); exportAllGroupsToExcel()">전체 다운로드<small>모든 업체 엑셀</small></button>
+                        <button type="button" onclick="closeDownloadMenu(); downloadTemplateExcel()">등록 양식<small>대량 등록용</small></button>
+                        <hr>
+                        <button type="button" onclick="closeDownloadMenu(); backupData()">데이터 백업 받기<small>JSON</small></button>
+                        <button type="button" id="restoreLinkBtn" onclick="closeDownloadMenu(); triggerRestoreUpload()">백업 불러오기<small>관리자</small></button>
+                        <div class="dl-foot"><span class="dl-dot" title="Supabase 클라우드 저장소"></span>마지막 백업 <span id="lastBackupNotice" class="backup-notice"></span></div>
+                        <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="handleRestoreFile(this)">
+                    </div>
+                </div>
 
                 <button class="action-btn desktop-only-action" onclick="triggerExcelUpload()" title="엑셀 파일로 대량 업체 등록">
                     <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
                         <path fill="currentColor" d="M5 15h4v6h6v-6h4l-7-7-7 7zm0-8h14V5H5v2z"/>
                     </svg>
                     <span>업로드</span>
-                </button>
-
-                <button class="action-btn desktop-only-action" onclick="downloadTemplateExcel()" title="대량 등록용 엑셀 양식 다운로드">
-                    <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
-                        <path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                    </svg>
-                    <span>양식 다운로드</span>
                 </button>
 
                 <button class="action-btn" onclick="handleLogout()" title="로그아웃">
@@ -1446,7 +1509,7 @@
                         <option value="충남">충남</option>
                     </select>
                     <span class="col-toggle-group">
-                        <span class="col-toggle-title"><b>⚙️ 항목그룹 표시:</b></span>
+                        <span class="col-toggle-title"><b>표시 항목:</b></span>
                         <label><input type="checkbox" id="toggleAddress" checked onchange="handleColumnToggle('address-group', this.checked)"> <span data-group-label="address">주소</span></label>
                         <label><input type="checkbox" id="toggleOrg" checked onchange="handleColumnToggle('org-group', this.checked)"> 1. <span data-group-label="org">소속</span></label>
                         <label><input type="checkbox" id="toggleManager" checked onchange="handleColumnToggle('manager-group', this.checked)"> 2. <span data-group-label="manager">담당자</span></label>
@@ -1475,14 +1538,15 @@
                         <span>+ 신규등록</span>
                     </button>
                     <div class="group-move-wrap">
-                        <button class="icon-btn-move" id="groupMoveBtn" onclick="toggleGroupMoveMenu(event)" title="선택된 업체를 다른 그룹으로 이동">
+                        <button class="icon-btn-move" id="groupMoveBtn" onclick="toggleGroupMoveMenu(event)" title="체크한 업체의 그룹을 한 번에 변경">
                             <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
-                            <span>그룹이동</span>
+                            <span>그룹 변경</span>
                         </button>
                         <div id="groupMoveMenu" class="group-move-menu"></div>
                     </div>
-                    <span class="toggle-divider">|</span>
-                    <label class="terminated-toggle-label"><input type="checkbox" id="toggleUnsupported" onchange="handleUnsupportedToggle(this.checked)"> 종료 업체 표시</label>
+                    <!-- 2026-10-03 12차: "종료 업체 표시" 체크박스는 헤더의 [종료 보기] 칩으로 대체 — 옛 코드(saveSettings 등)가
+                         이 id를 읽으므로 요소만 숨겨서 남겨둠 -->
+                    <input type="checkbox" id="toggleUnsupported" style="display:none;">
                     <span class="toggle-divider">|</span>
                     <div class="density-switch" id="densitySwitch" role="group" aria-label="표 행간격 설정">
                         <span class="density-label">행간격:</span>
@@ -1562,6 +1626,7 @@
                 <div class="modal-header">
                     <span id="modalTitle">업체 등록</span>
                     <div style="display:flex; align-items:center; gap:16px;">
+                        <select id="regGroupSelect" class="reg-group-select" title="판매 그룹 (임대는 그룹 없음)"></select>
                         <div class="division-switch">
                             <label><input type="radio" name="division" value="판매" checked onchange="handleDivisionChange()"><span>판매</span></label>
                             <label><input type="radio" name="division" value="임대" onchange="handleDivisionChange()"><span>임대</span></label>
@@ -2073,7 +2138,19 @@ function showSyncStatus(msg, isError) {
         let groupColors = {}; // { [groupId]: '#hexColor' } — dashboardSettings.groupColors에 저장됨
         const GROUP_COLOR_PALETTE = ['#F2C94C', '#6FCF97', '#56CCF2', '#BB6BD9', '#F2994A', '#EB5757', '#9CCC65', '#64B5F6'];
         let lastBackupAtIso = null;
-        let rentalFilter = null; // null | 'all' | 'upcoming' | 'expiring' | 'expired'
+        let rentalFilter = null; // (12차 이후 미사용 — 옛 코드 호환용으로만 남겨둠)
+        /* ----- 2026-10-03 12차: 헤더 필터 상태 -----
+           currentDivision: 1줄 구분 탭(전체/판매/임대) · currentGroup: 2줄 그룹 칩(기존 변수 그대로 재사용)
+           leaseStage: 임대 단계(예정/임대중/종료임박/회수대기) · newOnly: 신규(NEW) 칩 · endedOnly: 종료 보기 칩 · asOnly: AS 요청 패널 */
+        let currentDivision = 'all';
+        let leaseStage = null; // null | 'upcoming' | 'ongoing' | 'expiring' | 'awaiting'
+        let newOnly = false;
+        let endedOnly = false;
+        let asOnly = false;
+        let lastRenderedItems = []; // 지금 표에 보이는 업체 (다운로드 "지금 보이는 업체"용)
+        let exportVisibleMode = false;
+        const NEW_BADGE_MONTHS = 2; // 판매 업체 설치일(설치날짜 항목)로부터 이 개월 수 이내면 NEW 표시
+        const DIVISION_ICONS = {"all": "<svg class=\"dt-ic\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2.5 21.5h19\"/><path d=\"M8 21.5V11l4-5.5 4 5.5v10.5\"/><path d=\"M12 2v3.5M10.9 3.2h2.2\"/><path d=\"M10.4 21.5v-3.6a1.6 1.6 0 0 1 3.2 0v3.6\"/><path d=\"M12 11.3l.9 1.3-.9 1.3-.9-1.3z\"/><path d=\"M4 21.5v-9L5.75 9 7.5 12.5v9\"/><path d=\"M5.75 9V7.3\"/><path d=\"M16.5 21.5v-9L18.25 9 20 12.5v9\"/><path d=\"M18.25 9V7.3\"/><path d=\"M5.75 15v2M18.25 15v2\"/></svg>", "sale": "<svg class=\"dt-ic\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14.5 17.5L3.5 6.5v-3h3l11 11\"/><path d=\"M13 19l6-6\"/><path d=\"M16 16l3.2 3.2\"/><circle cx=\"20.1\" cy=\"20.1\" r=\"1.1\"/><path d=\"M12.7 8.3l4.8-4.8h3v3l-4.8 4.8\"/><path d=\"M8.3 12.7l-1.8 1.8M11.3 15.7l-1.8 1.8\"/><path d=\"M5 13l6 6\"/><path d=\"M8 16l-3.2 3.2\"/><circle cx=\"3.9\" cy=\"20.1\" r=\"1.1\"/></svg>", "lease": "<svg class=\"dt-ic\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.2 16.5L2.8 8.3l4.9 3.6L12 4.5l4.3 7.4 4.9-3.6-1.4 8.2z\"/><rect x=\"4\" y=\"18.5\" width=\"16\" height=\"2.5\" rx=\"1.1\"/><path d=\"M12 11l1.1 1.6L12 14.2l-1.1-1.6z\"/></svg>"};
         let columnSort = { key: null, dir: 'asc' }; // 테이블 헤더 클릭 정렬 상태
 
         /* ----- 관리자/일반 사용자 역할(role) 판별 -----
@@ -2562,7 +2639,8 @@ function showSyncStatus(msg, isError) {
             appInitStarted = true;
             try {
                 await loadAllDataFromSupabase();
-                await syncExpiredRentalStatuses();
+                // 2026-10-03 12차: 임대 기간이 끝나도 자동으로 "종료" 처리하지 않음 → "회수대기" 단계로 보이고,
+                // 기기를 회수한 뒤 상세팝업에서 직접 "종료"로 바꾸는 방식 (syncExpiredRentalStatuses 호출 중단)
                 await migrateKioFieldsIfNeeded();
                 await resetStaleKioLabelsIfNeeded();
                 renderGroupTabs();
@@ -2575,6 +2653,7 @@ function showSyncStatus(msg, isError) {
                 renderTable();
                 updateStats();
                 updateBackupNotice();
+                maybeOfferGroupMigration();
                 document.getElementById('searchInput').addEventListener('input', renderTable);
                 document.getElementById('filterRegion').addEventListener('change', renderTable);
                 document.getElementById('filterStatus').addEventListener('change', renderTable);
@@ -2615,6 +2694,356 @@ function showSyncStatus(msg, isError) {
         }
         bootDashboard();
 
+
+        /* ===================== 2026-10-03 12차: 헤더 필터(구분 탭 · 그룹 · 임대 단계 · 신규 · 종료 · AS 요청) ===================== */
+        function isEndedItem(item) { return item.status === '종료'; }
+        function isLeaseItem(item) { return item.division === '임대'; }
+
+        // 임대 단계: 종료(status)가 아닌 임대 업체만 대상. 기간이 끝났는데 아직 "종료" 처리 안 된 업체 = 회수대기
+        function getLeaseStage(item) {
+            if (!isLeaseItem(item) || isEndedItem(item)) return null;
+            const cat = getRentalCategory(item);
+            if (cat === 'upcoming') return 'upcoming';
+            if (cat === 'expiring') return 'expiring';
+            if (cat === 'expired') return 'awaiting';
+            return 'ongoing'; // 진행중 + 종료일 미입력
+        }
+
+        // "2026-08-01", "2026.8.1", "20260801" 등 느슨한 날짜 문자열 → Date (실패 시 null)
+        function parseLooseDate(str) {
+            const m = String(str || '').match(/(\d{4})\D?(\d{1,2})\D?(\d{1,2})/);
+            if (!m) return null;
+            const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        // 신규(NEW): 판매 업체 + 설치날짜가 오늘 기준 NEW_BADGE_MONTHS 이내. 임대는 기간이 짧아 의미가 없어 제외
+        function isNewSaleItem(item) {
+            if (isLeaseItem(item) || isEndedItem(item)) return false;
+            const d = parseLooseDate(item.deviceOption);
+            if (!d) return false;
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            if (d > today) return false;
+            const limit = new Date(today); limit.setMonth(limit.getMonth() - NEW_BADGE_MONTHS);
+            return d >= limit;
+        }
+
+        function matchesDivision(item, div) {
+            if (div === 'sale') return !isLeaseItem(item);
+            if (div === 'lease') return isLeaseItem(item);
+            return true;
+        }
+
+        // 헤더 필터 판정. o로 일부 조건을 바꿔 끼워서 "그걸 누르면 몇 건이 보일지" 숫자 계산에도 그대로 씀
+        function passesHeaderFilters(item, o) {
+            o = o || {};
+            const div = ('division' in o) ? o.division : currentDivision;
+            const grp = ('group' in o) ? o.group : currentGroup;
+            const stage = ('stage' in o) ? o.stage : leaseStage;
+            const ended = ('ended' in o) ? o.ended : endedOnly;
+            const nw = ('nw' in o) ? o.nw : newOnly;
+            const as = ('as' in o) ? o.as : asOnly;
+            // 12차-2: 그룹은 판매 업체에만 있음 (임대는 그룹 없이 "임대" 하나로 묶음) → 그룹을 고르면 판매 업체만
+            if (grp && grp !== ALL_GROUP_KEY && (isLeaseItem(item) || item.groupId !== grp)) return false;
+            if (!matchesDivision(item, div)) return false;
+            if (ended) { if (!isEndedItem(item)) return false; }
+            else if (isEndedItem(item)) return false;
+            if (stage && getLeaseStage(item) !== stage) return false;
+            if (nw && !isNewSaleItem(item)) return false;
+            if (as && item.status !== '요청') return false;
+            return true;
+        }
+
+        // 첫 화면 정렬: 조치가 필요한 업체가 맨 위 (AS 요청 → 회수대기 → 종료임박 → 나머지)
+        function getActionPriority(item) {
+            if (item.status === '요청') return 0;
+            const st = getLeaseStage(item);
+            if (st === 'awaiting') return 1;
+            if (st === 'expiring') return 2;
+            return 3;
+        }
+
+        // 12차-2: 선택 경로를 하나로 단순화
+        //  - 전체 탭: 모든 조건 초기화  - 판매 탭: 임대 단계 해제  - 임대 탭: 그룹·신규 해제
+        //  - 그룹 칩 → 판매 탭으로 이동  - 임대 단계 → 임대 탭으로 이동
+        function setDivision(div) {
+            currentDivision = div;
+            if (div === 'all') { currentGroup = ALL_GROUP_KEY; leaseStage = null; newOnly = false; }
+            if (div === 'sale') leaseStage = null;
+            if (div === 'lease') { currentGroup = ALL_GROUP_KEY; newOnly = false; }
+            renderTable();
+        }
+
+        function setLeaseStage(stage) {
+            leaseStage = (leaseStage === stage) ? null : stage;
+            if (leaseStage) { currentDivision = 'lease'; currentGroup = ALL_GROUP_KEY; newOnly = false; endedOnly = false; }
+            renderTable();
+        }
+
+        function toggleNewFilter() {
+            newOnly = !newOnly;
+            if (newOnly) { currentDivision = 'sale'; leaseStage = null; endedOnly = false; }
+            renderTable();
+        }
+
+        function toggleEndedFilter() {
+            endedOnly = !endedOnly;
+            if (endedOnly) { leaseStage = null; newOnly = false; asOnly = false; }
+            renderTable();
+        }
+
+        function toggleAsFilter() {
+            const panel = document.getElementById('asPanel');
+            if (panel && panel.classList.contains('is-empty') && !asOnly) return;
+            asOnly = !asOnly;
+            if (asOnly) { currentDivision = 'all'; currentGroup = ALL_GROUP_KEY; leaseStage = null; newOnly = false; endedOnly = false; }
+            renderTable();
+        }
+
+        function renderHeaderFilters() {
+            const tabsEl = document.getElementById('divisionTabs');
+            if (!tabsEl) return;
+            const all = getAllGroupsFlatData();
+            const count = (o) => all.filter(i => passesHeaderFilters(i, o)).length;
+            const base = { stage: null, ended: false, nw: false, as: false };
+
+            // 1줄: 구분 탭 — 최상위라서 숫자는 항상 전체 기준 (아래 그룹 칩을 눌러도 안 바뀜)
+            tabsEl.innerHTML = [['all', '전체'], ['sale', '판매'], ['lease', '임대']].map(([d, label]) => `
+                <button type="button" class="div-tab ${currentDivision === d ? 'active' : ''}" role="tab" aria-selected="${currentDivision === d}" onclick="setDivision('${d}')">
+                    ${DIVISION_ICONS[d]}${label}<span class="dt-cnt">${count(Object.assign({}, base, { division: d, group: ALL_GROUP_KEY }))}</span>
+                </button>`).join('');
+
+            // 1줄: AS 요청 (탭·그룹과 상관없이 항상 전체 기준)
+            const asPanel = document.getElementById('asPanel');
+            const asItems = all.filter(i => passesHeaderFilters(i, { division: 'all', group: ALL_GROUP_KEY, stage: null, ended: false, nw: false, as: true }));
+            const wrenchSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>';
+            if (asItems.length === 0) {
+                if (asOnly) asOnly = false;
+                asPanel.classList.add('is-empty');
+                asPanel.classList.remove('active');
+                asPanel.innerHTML = `<div class="as-head">✓ AS 요청 없음</div>`;
+            } else {
+                const lastMemoTime = (it) => {
+                    const list = it.memoList || [];
+                    const d = list.length ? parseLooseDate(list[list.length - 1].date) : null;
+                    return d ? d.getTime() : 0;
+                };
+                const sorted = asItems.slice().sort((a, b) => lastMemoTime(a) - lastMemoTime(b));
+                const shown = sorted.slice(0, 2);
+                const rest = asItems.length - shown.length;
+                asPanel.classList.remove('is-empty');
+                asPanel.classList.toggle('active', asOnly);
+                asPanel.innerHTML = `<div class="as-head">${wrenchSvg}AS 요청 <b>${asItems.length}</b></div>
+                    <div class="as-list">${shown.map(i => `<span title="${escapeHtml(i.placeName || '')}">${escapeHtml(i.placeName || '-')}</span>`).join('')}${rest > 0 ? `<span class="as-more">외 ${rest}건 ›</span>` : ''}</div>`;
+            }
+
+            // 2줄: 그룹 박스
+            const groupBox = document.getElementById('hfGroupBox');
+            const groupChips = groupOrder.map(g => {
+                const n = count(Object.assign({}, base, { division: 'sale', group: g })); // 판매 업체 수 (항상 고정)
+                return `<button type="button" class="hf-chip ${currentGroup === g ? 'active' : ''} ${n ? '' : 'is-zero'}" onclick="switchGroup('${g}')">
+                    <span class="hf-dot" style="background:${getGroupColor(g)};"></span>${escapeHtml(groupNames[g] || '-')} <b>${n}</b></button>`;
+            }).join('');
+            const addBtn = isAdminUser() ? `<button type="button" class="hf-chip hf-add" id="groupAddBtn" onclick="openGroupEditModal()" title="그룹 추가 · 이름 · 순서 · 색 편집">+</button>` : '';
+            groupBox.innerHTML = `<span class="hf-lbl">판매 그룹</span>
+                <button type="button" class="hf-chip ${currentGroup === ALL_GROUP_KEY && currentDivision === 'sale' ? 'active' : ''}" onclick="switchGroup('${ALL_GROUP_KEY}'); setDivision('sale')">전체</button>${groupChips}${addBtn}`;
+            groupBox.classList.toggle('glow', currentDivision === 'sale');
+            groupBox.classList.toggle('dim', currentDivision === 'lease');
+
+            // 2줄: 임대 단계 박스
+            const stageBox = document.getElementById('hfStageBox');
+            const stages = [['upcoming', '예정', false], ['ongoing', '임대중', false], ['expiring', '종료임박', true], ['awaiting', '회수대기', true]];
+            stageBox.innerHTML = `<span class="hf-lbl">임대 단계</span><div class="hf-step">${stages.map(([st, label, warn]) => {
+                const n = count({ division: 'lease', group: ALL_GROUP_KEY, stage: st, ended: false, nw: false, as: false }); // 그룹과 무관하게 항상 전체 기준
+                return `<button type="button" class="${leaseStage === st ? 'active' : ''} ${warn && n ? 'warn' : ''} ${n ? '' : 'is-zero'}" onclick="setLeaseStage('${st}')">${label} <b>${n}</b></button>`;
+            }).join('')}</div>`;
+            stageBox.classList.toggle('glow', currentDivision === 'lease');
+            stageBox.classList.toggle('dim', currentDivision === 'sale');
+
+            // 2줄: 신규 · 종료 보기
+            const newChip = document.getElementById('hfNewChip');
+            const newCount = count({ division: 'sale', group: ALL_GROUP_KEY, stage: null, ended: false, nw: true, as: false });
+            newChip.innerHTML = `<span class="hf-new-tag">NEW</span>신규 <b>${newCount}</b>`;
+            newChip.classList.toggle('active', newOnly);
+            newChip.classList.toggle('is-zero', !newOnly && (newCount === 0 || currentDivision === 'lease'));
+
+            const endedChip = document.getElementById('hfEndedChip');
+            const endedCount = count({ group: ALL_GROUP_KEY, stage: null, ended: true, nw: false, as: false });
+            endedChip.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.2"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>종료 보기 <b>${endedCount}</b>`;
+            endedChip.classList.toggle('active', endedOnly);
+        }
+
+        /* ----- 다운로드 메뉴 ----- */
+        function toggleDownloadMenu(event) {
+            if (event) event.stopPropagation();
+            const w = document.getElementById('dlWrap');
+            if (!w) return;
+            w.classList.remove('dl-suppress');
+            w.classList.toggle('open');
+        }
+        function closeDownloadMenu() {
+            const w = document.getElementById('dlWrap');
+            if (!w) return;
+            w.classList.remove('open');
+            w.classList.add('dl-suppress'); // 마우스가 아직 위에 있어도 메뉴를 닫힌 상태로 유지 (마우스가 벗어나면 해제)
+        }
+        document.addEventListener('click', function(e) {
+            const w = document.getElementById('dlWrap');
+            if (w && w.classList.contains('open') && !w.contains(e.target)) w.classList.remove('open');
+        });
+        document.addEventListener('mouseover', function(e) {
+            const w = document.getElementById('dlWrap');
+            if (w && w.classList.contains('dl-suppress') && !w.contains(e.target)) w.classList.remove('dl-suppress');
+        });
+
+        // "지금 보이는 업체" 다운로드 — 기존 체크 업체 내보내기 함수를 그대로 쓰되, 대상만 지금 표에 보이는 업체로 바꿔치기
+        function exportVisible(kind) {
+            closeDownloadMenu();
+            if (!lastRenderedItems.length) { alert('지금 보이는 업체가 없습니다.'); return; }
+            exportVisibleMode = true;
+            try {
+                if (kind === 'pdf') exportSelectedToPDF(null);
+                else exportSelectedToExcel();
+            } finally {
+                exportVisibleMode = false; // 두 함수 모두 첫 await 전에 대상 목록을 다 읽어가므로 바로 해제해도 안전
+            }
+        }
+
+        /* ===================== 2026-10-03 12차: 1회성 그룹 정리 도우미 (관리자 전용) =====================
+           기존/신규 → "개별" 하나로 합침, "임대"·"종료" 그룹 업체 → "개별"로 옮기고 그룹 삭제.
+           임대는 이제 구분 탭, 종료는 상태(종료 보기 칩)로 관리하기 때문. 니아 등 다른 그룹은 건드리지 않음.
+           자동 실행 아님 — 백업을 먼저 받아야 [정리 실행] 버튼이 켜지고, 실행 전 무엇이 바뀌는지 미리 보여줌. */
+        const GROUP_MIGRATION_FLAG = 'groupMigration12Done';
+        let groupMigrationPlan = null;
+
+        function planGroupMigration() {
+            const norm = (n) => String(n || '').replace(/\s/g, '');
+            const byName = (name) => groupOrder.find(k => norm(groupNames[k]) === name);
+            const gInd = byName('개별'), gOld = byName('기존'), gNew = byName('신규'), gRent = byName('임대'), gEnd = byName('종료');
+            const target = gInd || gOld || gNew;
+            if (!target) return null;
+            const sources = [gOld, gNew, gRent, gEnd].filter(k => k && k !== target);
+            const renameTarget = norm(groupNames[target]) !== '개별';
+            if (!sources.length && !renameTarget) return null;
+            const rentItems = gRent ? (allGroupsData[gRent] || []) : [];
+            const endItems = gEnd ? (allGroupsData[gEnd] || []) : [];
+            return {
+                target, sources, renameTarget, gRent, gEnd,
+                rentMismatch: rentItems.filter(i => i.division !== '임대'),
+                endToMark: endItems.filter(i => i.status !== '종료'),
+                untouched: groupOrder.filter(k => k !== target && !sources.includes(k))
+            };
+        }
+
+        function maybeOfferGroupMigration() {
+            if (!isAdminUser()) return;
+            if (dashboardSettings && dashboardSettings[GROUP_MIGRATION_FLAG]) return;
+            groupMigrationPlan = planGroupMigration();
+            if (!groupMigrationPlan) return;
+            openGroupMigrationModal();
+        }
+
+        function openGroupMigrationModal() {
+            const p = groupMigrationPlan;
+            if (!p) return;
+            const nm = (k) => escapeHtml(groupNames[k] || '-');
+            const cnt = (k) => (allGroupsData[k] || []).length;
+            const srcLines = p.sources.map(k => `<li><b>${nm(k)}</b> 그룹 업체 ${cnt(k)}곳 → <b>개별</b>로 옮긴 뒤 "${nm(k)}" 그룹 삭제</li>`).join('');
+            const renameLine = p.renameTarget ? `<li><b>${nm(p.target)}</b> 그룹 이름을 <b>개별</b>로 변경 (업체 ${cnt(p.target)}곳 그대로)</li>` : '';
+            const keepLine = p.untouched.length ? `<li>그대로 둠: ${p.untouched.map(k => `<b>${nm(k)}</b>(${cnt(k)})`).join(', ')}</li>` : '';
+            const endLine = p.endToMark.length ? `<li>"종료" 그룹 업체 중 상태가 종료가 아닌 ${p.endToMark.length}곳 → 상태를 <b>종료</b>로 맞춤</li>` : '';
+            const mismatch = p.rentMismatch.length ? `
+                <div class="mig-step"><h4>2. 확인할 업체 <span class="mig-warn">${p.rentMismatch.length}곳</span></h4>
+                    "임대" 그룹에 있는데 구분이 <b>판매</b>로 되어 있어요. 이대로 두면 정리 후 <b>판매</b> 탭에 나와요.
+                    <ul>${p.rentMismatch.map(i => `<li>${escapeHtml(i.placeName || '-')} <span style="color:#7A8794">(${escapeHtml(((i.regionSi || '') + ' ' + (i.regionGu || '')).trim())})</span></li>`).join('')}</ul>
+                    <label style="display:flex;gap:6px;align-items:center;margin-top:8px;cursor:pointer;"><input type="checkbox" id="migFixDivision"> 이 업체들의 구분을 <b>임대</b>로 바꾸기 (매입한 업체면 체크하지 마세요)</label>
+                </div>` : `<div class="mig-step"><h4>2. 확인할 업체</h4>"임대" 그룹 업체는 모두 구분이 임대로 맞게 되어 있어요 ✓</div>`;
+            let modal = document.getElementById('groupMigrationModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'groupMigrationModal';
+                modal.className = 'mig-modal';
+                document.body.appendChild(modal);
+            }
+            modal.innerHTML = `
+                <div class="mig-card" role="dialog" aria-modal="true" aria-labelledby="migTitle">
+                    <h3 id="migTitle">그룹 정리 (1회)</h3>
+                    <div class="mig-sub">새 화면 구조에 맞게 그룹을 정리해요. 임대는 위쪽 <b>판매/임대 탭</b>, 종료는 <b>[종료 보기]</b>로 관리하게 돼요.</div>
+                    <div class="mig-step"><h4>1. 백업 먼저</h4>지금 데이터를 통째로 백업 파일(JSON)로 받아둬요. 백업을 받아야 [정리 실행]이 켜져요.</div>
+                    ${mismatch}
+                    <div class="mig-step"><h4>3. 바뀌는 내용</h4><ul>${renameLine}${srcLines}${endLine}${keepLine}</ul></div>
+                    <div class="mig-actions">
+                        <button type="button" class="mig-btn-ghost" onclick="closeGroupMigrationModal()">나중에</button>
+                        <button type="button" class="mig-btn-backup" onclick="backupData(); document.getElementById('migRunBtn').disabled = false; this.textContent = '✓ 백업 받음';">백업 받기</button>
+                        <button type="button" class="mig-btn-run" id="migRunBtn" disabled onclick="runGroupMigration()">정리 실행</button>
+                    </div>
+                </div>`;
+            modal.style.display = 'flex';
+        }
+
+        function closeGroupMigrationModal() {
+            const modal = document.getElementById('groupMigrationModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function runGroupMigration() {
+            const p = groupMigrationPlan;
+            if (!p) return;
+            const btn = document.getElementById('migRunBtn');
+            const fixDivision = !!(document.getElementById('migFixDivision') || {}).checked;
+            if (btn) { btn.disabled = true; btn.textContent = '정리 중...'; }
+            try {
+                // ① 대상 그룹 이름을 "개별"로
+                if (p.renameTarget) {
+                    const { error } = await sb.from('groups').update({ name: '개별' }).eq('id', p.target);
+                    if (error) throw error;
+                }
+                // ② 업체 옮기기 (임대·종료 그룹 업체 포함)
+                const movingIds = p.sources.flatMap(k => (allGroupsData[k] || []).map(i => i.id));
+                if (movingIds.length) {
+                    const { error } = await sb.from('companies').update({ group_id: p.target }).in('id', movingIds);
+                    if (error) throw error;
+                }
+                // ③ "종료" 그룹 업체 상태 맞추기 / ④ 선택 시 구분 맞추기
+                if (p.endToMark.length) {
+                    const { error } = await sb.from('companies').update({ status: '종료' }).in('id', p.endToMark.map(i => i.id));
+                    if (error) throw error;
+                }
+                if (fixDivision && p.rentMismatch.length) {
+                    const { error } = await sb.from('companies').update({ division: '임대' }).in('id', p.rentMismatch.map(i => i.id));
+                    if (error) throw error;
+                }
+                // ⑤ 안전 확인: 지울 그룹에 업체가 정말 하나도 안 남았는지 서버에서 다시 세어본 뒤에만 그룹 삭제
+                if (p.sources.length) {
+                    const { count, error: cntErr } = await sb.from('companies').select('id', { count: 'exact', head: true }).in('group_id', p.sources);
+                    if (cntErr) throw cntErr;
+                    if (count && count > 0) throw new Error(`옮기지 못한 업체가 ${count}곳 남아 있어서 그룹 삭제를 멈췄어요. (데이터는 안전해요)`);
+                    const { error } = await sb.from('groups').delete().in('id', p.sources);
+                    if (error) throw error;
+                }
+                // 화면 상태 반영
+                if (p.renameTarget) groupNames[p.target] = '개별';
+                p.endToMark.forEach(i => { i.status = '종료'; });
+                if (fixDivision) p.rentMismatch.forEach(i => { i.division = '임대'; });
+                p.sources.forEach(k => {
+                    (allGroupsData[k] || []).forEach(i => { i.groupId = p.target; allGroupsData[p.target].push(i); });
+                    delete allGroupsData[k]; delete groupNames[k]; delete groupColors[k];
+                });
+                groupOrder = groupOrder.filter(k => !p.sources.includes(k));
+                if (!groupOrder.includes(currentGroup)) currentGroup = ALL_GROUP_KEY;
+
+                dashboardSettings = Object.assign({}, dashboardSettings, { [GROUP_MIGRATION_FLAG]: true, groupColors });
+                await persistAppSettings({ dashboard_settings: dashboardSettings }, '☁️ 그룹 정리 완료');
+                closeGroupMigrationModal();
+                renderTable();
+                alert('그룹 정리가 끝났어요! 이제 그룹은 ' + groupOrder.map(k => groupNames[k]).join(' · ') + ' 입니다.');
+            } catch (err) {
+                console.error(err);
+                alert('그룹 정리 중 문제가 생겨 멈췄어요: ' + (err.message || err) + '\n\n새로고침하면 실제 저장된 상태가 보여요. 필요하면 방금 받은 백업으로 되돌릴 수 있어요.');
+                if (btn) { btn.disabled = false; btn.textContent = '정리 실행'; }
+            }
+        }
+
 function generateUniqueId() {
             return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
@@ -2624,22 +3053,9 @@ function generateUniqueId() {
             renderGroupTabs();
         }
 
+        // 2026-10-03 12차: 옛 그룹 탭 대신 헤더(구분 탭 + 그룹 칩 등)를 다시 그림. 기존 호출부는 그대로 둬도 됨
         function renderGroupTabs() {
-            const menu = document.getElementById('topMenu');
-            const allTab = `
-                <li id="menu_${ALL_GROUP_KEY}" class="${currentGroup === ALL_GROUP_KEY ? 'active' : ''}"
-                    onclick="switchGroup('${ALL_GROUP_KEY}', this)"
-                    style="${currentGroup === ALL_GROUP_KEY ? 'background-color:' + getGroupColor(ALL_GROUP_KEY) + ';' : ''}">
-                    <span class="tab-label">전체</span>
-                </li>`;
-            const groupTabs = groupOrder.map(key => `
-                <li id="menu_${key}" class="${key === currentGroup ? 'active' : ''}"
-                    onclick="switchGroup('${key}', this)"
-                    style="${key === currentGroup ? 'background-color:' + getGroupColor(key) + ';' : ''}">
-                    <span class="tab-label">${escapeHtml(groupNames[key])}</span>
-                </li>
-            `).join('');
-            menu.innerHTML = allTab + groupTabs;
+            renderHeaderFilters();
         }
 
         async function addNewGroup() {
@@ -2693,7 +3109,7 @@ function generateUniqueId() {
                 groupOrder = groupOrder.filter(k => k !== groupKey);
 
                 if (currentGroup === groupKey) {
-                    currentGroup = groupOrder[0];
+                    currentGroup = ALL_GROUP_KEY;
                 }
                 delete groupColors[groupKey];
                 renderGroupTabs();
@@ -2815,17 +3231,10 @@ function generateUniqueId() {
             }
         }
 
+        // 그룹 칩 클릭 (같은 칩을 다시 누르면 전체로). 검색어·지역필터는 유지 — 칩은 필터를 좁히는 용도라 초기화하지 않음
         function switchGroup(groupKey, element) {
-            currentGroup = groupKey;
-            // 2026-09-16 버그수정: 이전엔 클릭한 탭에만 active 클래스를 더하고 예전 탭의 인라인 배경색(그룹색)은
-            // 안 지워져서, 탭을 바꿔도 예전 탭이 계속 금색으로 남아 "두 개가 눌린 것처럼" 보였음.
-            // renderGroupTabs()를 다시 호출해서 클래스+인라인 그룹색을 항상 currentGroup 기준으로 통째로 새로 그림.
-            renderGroupTabs();
-            document.getElementById('searchInput').value = '';
-            document.getElementById('filterRegion').value = '';
-            document.getElementById('filterStatus').value = ''; // 그룹 바뀌어도 기본은 "전체"부터 보이게 통일
-            document.getElementById('sortSelect').value = 'region';
-            rentalFilter = null;
+            currentGroup = (currentGroup === groupKey && groupKey !== ALL_GROUP_KEY) ? ALL_GROUP_KEY : groupKey;
+            if (currentGroup !== ALL_GROUP_KEY) { currentDivision = 'sale'; leaseStage = null; } // 그룹은 판매 전용
             renderTable();
         }
 
@@ -2847,15 +3256,15 @@ function generateUniqueId() {
 
             const checkedCount = getCurrentViewData().filter(i => i.checked).length;
             if (checkedCount === 0) {
-                alert('이동할 업체를 먼저 체크박스로 선택해주세요.');
+                alert('그룹을 바꿀 업체를 먼저 체크박스로 선택해주세요.');
                 return;
             }
 
             // "전체" 탭에서는 체크된 업체들이 여러 그룹에 걸쳐 있을 수 있어서 모든 그룹을 이동 대상으로 보여줌
             const otherGroups = currentGroup === ALL_GROUP_KEY ? groupOrder : groupOrder.filter(k => k !== currentGroup);
             menu.innerHTML = otherGroups.length > 0
-                ? otherGroups.map(k => `<div class="group-move-item" onclick="moveCheckedToGroup('${k}')">${escapeHtml(groupNames[k])}로 이동</div>`).join('')
-                : `<div class="group-move-empty">이동할 다른 그룹이 없습니다</div>`;
+                ? otherGroups.map(k => `<div class="group-move-item" onclick="moveCheckedToGroup('${k}')">${escapeHtml(groupNames[k])}(으)로 변경</div>`).join('')
+                : `<div class="group-move-empty">바꿀 다른 그룹이 없습니다</div>`;
 
             // 2026-09-16: 화면(카드/표) 스크롤·overflow에 눌려 드롭다운이 잘려보이던 버그 수정 —
             // position:absolute 대신 버튼 위치를 기준으로 position:fixed 좌표를 직접 계산해서 어떤 조상 요소의
@@ -2907,10 +3316,10 @@ function generateUniqueId() {
                 allGroupsData[targetKey].push(...allMoving);
 
                 renderTable();
-                alert(`${allMoving.length}개 업체를 '${groupNames[targetKey]}' 그룹으로 이동했습니다.`);
+                alert(`${allMoving.length}개 업체의 그룹을 '${groupNames[targetKey]}'(으)로 바꿨습니다.`);
             } catch (err) {
                 console.error(err);
-                alert('그룹 이동에 실패했습니다: ' + (err.message || err));
+                alert('그룹 변경에 실패했습니다: ' + (err.message || err));
             }
         }
 
@@ -2987,7 +3396,7 @@ function generateUniqueId() {
             const currentData = getCurrentViewData();
 
             let filteredData = currentData.filter((item) => {
-                if (!showUnsupported && item.status === '종료') return false;
+                if (!passesHeaderFilters(item)) return false; // 12차: 구분 탭·임대 단계·신규·종료 보기·AS 요청
 
                 const searchFields = [
                     item.regionSi, item.regionGu, item.placeName, item.installAddress,
@@ -3004,21 +3413,7 @@ function generateUniqueId() {
                 const regionMatch = filterRegion === "" || (item.regionSi || "").includes(filterRegion) || (item.regionGu || "").includes(filterRegion);
                 const statusMatch = filterStatus === "" || item.status === filterStatus;
 
-                let rentalMatch = true;
-                if (rentalFilter === 'all') {
-                    rentalMatch = item.division === '임대';
-                } else if (rentalFilter === 'sale') {
-                    // 2026-09-20 10차: "판매" 카드도 임대처럼 눌러서 필터링되도록 추가 — 구분이 임대가
-                    // 아니면 판매로 취급(saleAllCount 집계와 동일한 기준)
-                    rentalMatch = item.division !== '임대';
-                } else if (rentalFilter === 'ongoing') {
-                    // "사용중" 카드 클릭 시: 상단 카운트가 진행중+종료예정을 합쳐서 보여주는 것과 동일하게,
-                    // 진행중(ongoing)뿐 아니라 종료예정(expiring, D-7 이내)도 아직 사용중이므로 같이 포함해서 필터링
-                    const cat = getRentalCategory(item);
-                    rentalMatch = item.division === '임대' && (cat === 'ongoing' || cat === 'expiring');
-                } else if (rentalFilter) {
-                    rentalMatch = item.division === '임대' && getRentalCategory(item) === rentalFilter;
-                }
+                const rentalMatch = true; // 12차: 임대 필터는 passesHeaderFilters로 옮김
 
                 return searchMatch && regionMatch && statusMatch && rentalMatch;
             });
@@ -3029,6 +3424,11 @@ function generateUniqueId() {
                 filteredData.sort((a, b) => getColumnSortValue(a, columnSort.key).localeCompare(getColumnSortValue(b, columnSort.key), 'ko') * dir);
             } else {
                 filteredData.sort((a, b) => {
+                    // 12차: 기본(지역순) 정렬일 때는 조치가 필요한 업체(AS 요청·회수대기·종료임박)를 맨 위로
+                    if (sortType === 'region') {
+                        const pr = getActionPriority(a) - getActionPriority(b);
+                        if (pr) return pr;
+                    }
                     if (sortType === 'name') {
                         return (a.placeName || '').localeCompare(b.placeName || '');
                     } else if (sortType === 'latest') {
@@ -3044,6 +3444,7 @@ function generateUniqueId() {
             }
 
             updateSortIndicators();
+            lastRenderedItems = filteredData;
 
             filteredData.forEach((item, index) => {
                 const tr = document.createElement('tr');
@@ -3072,12 +3473,12 @@ function generateUniqueId() {
 
                 tr.innerHTML = `
                     <td class="sticky-col-0">${isUrgent ? '<img class="urgent-no-icon" src="assets/urgent-request-icon.webp" alt="AS 요청중" title="AS 요청중">' : (index + 1)}</td>
-                    <td class="sticky-col-group"><span class="group-name-pill" style="background-color:${getGroupColor(item.groupId)};">${escapeHtml(groupNames[item.groupId] || '-')}</span></td>
+                    <td class="sticky-col-group">${isLeaseItem(item) ? '<span class="group-name-pill group-pill-lease">임대</span>' : `<span class="group-name-pill" style="background-color:${getGroupColor(item.groupId)};">${escapeHtml(groupNames[item.groupId] || '-')}</span>`}</td>
                     <td class="sticky-col-1" style="text-align: center;">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
                     </td>
                     <td class="sticky-col-2 region-group">${escapeHtml(siVal)} ${escapeHtml(guVal)}</td>
-                    <td class="sticky-col-3 region-group" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기"><b class="place-name-link">${escapeHtml(item.placeName || '-')}</b></td>
+                    <td class="sticky-col-3 region-group" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기"><b class="place-name-link">${escapeHtml(item.placeName || '-')}</b>${isNewSaleItem(item) ? '<span class="new-badge" title="설치 2개월 이내">NEW</span>' : ''}</td>
                     <td class="address-group">${escapeHtml(item.installAddress || '-')}</td>
                     <td class="address-group">
                         <div class="location-cell" title="${escapeHtml(locationVal)}" onclick="openLocationModal('${item.id}')">
@@ -3165,7 +3566,7 @@ function generateUniqueId() {
                 <div class="mc-card">
                     <div class="mc-card-top">
                         <div class="mc-card-titlewrap">
-                            <b class="mc-place-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}</b>
+                            <b class="mc-place-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}</b>${isNewSaleItem(item) ? '<span class="new-badge">NEW</span>' : ''}
                             <div class="mc-sub">${escapeHtml(subLine || '-')}</div>
                         </div>
                         <div class="mc-badges">
@@ -3580,13 +3981,11 @@ function generateUniqueId() {
         }
 
         /* ===================== ⑪ 대시보드 통계 (상단 요약 숫자 + 임대 상태별 필터) ===================== */
+        // 12차: 상단 숫자는 전부 헤더(renderHeaderFilters)가 그림
         function updateStats() {
-            const currentData = getStatsViewData();
-            document.getElementById('totalCount').innerText = currentData.length;
-            document.getElementById('successCount').innerText = currentData.filter(i => i.status === '정상').length;
-            document.getElementById('dangerCount').innerText = currentData.filter(i => i.status === '요청').length;
-            updateRentalStats();
-            updateStatusFilterCards();
+            renderHeaderFilters();
+            const vc = document.getElementById('dlVisibleCount');
+            if (vc) vc.textContent = lastRenderedItems.length;
         }
 
         // 그룹전체/정상/지원 카드 클릭 시 상태필터(filterStatus)와 연동. 지금 어떤 카드가 선택돼있는지 골드색으로 구분감을 줌
@@ -3602,36 +4001,7 @@ function generateUniqueId() {
             });
         }
 
-        function updateRentalStats() {
-            const currentData = getStatsViewData();
-            const rentalItems = currentData.filter(i => i.division === '임대');
-            let upcoming = 0, ongoing = 0, expiring = 0, expired = 0;
-            rentalItems.forEach(item => {
-                const cat = getRentalCategory(item);
-                if (cat === 'expired') expired++;
-                else if (cat === 'expiring') expiring++;
-                else if (cat === 'ongoing') ongoing++;
-                else if (cat === 'upcoming') upcoming++;
-            });
-            // "판매" 합계는 탭 무관하게 항상 전체 그룹 기준 (종료 업체는 전체탭 통계와 동일하게 제외)
-            const saleCount = getAllGroupsFlatData().filter(i => i.division !== '임대' && i.status !== '종료').length;
-            document.getElementById('saleAllCount').innerText = saleCount;
-            document.getElementById('rentalUpcomingCount').innerText = upcoming;
-            // "사용중" 카운트는 진짜 진행중(ongoing) + 종료예정(expiring, D-7 이내)까지 합산해서 보여줌.
-            // 종료예정도 아직 만료 전이라 실사용 중인 상태이기 때문 (2026-08-31 요청 반영). 필터 클릭 동작은 기존처럼
-            // ongoing/expiring 각자 그대로 유지되고, 이건 상단 숫자 표시만 합쳐서 보여주는 것.
-            document.getElementById('rentalOngoingCount').innerText = ongoing + expiring;
-            document.getElementById('rentalExpiringCount').innerText = expiring;
-            document.getElementById('rentalExpiredCount').innerText = expired;
-
-            document.querySelectorAll('.rental-mini').forEach(btn => {
-                btn.classList.toggle('active', rentalFilter === btn.dataset.rentalKey);
-            });
-
-            // 종료예정 1건 이상이면 놓치지 않게 빨간 글씨로 강조 (0건일 땐 원래 스타일 그대로)
-            const expiringBtn = document.querySelector('.rental-mini[data-rental-key="expiring"]');
-            if (expiringBtn) expiringBtn.classList.toggle('rental-alert', expiring >= 1);
-        }
+        function updateRentalStats() { /* 12차: 임대 미니스탯 없어짐 — 임대 단계 박스(renderHeaderFilters)로 대체 */ }
 
         function filterRentalStat(key) {
             rentalFilter = (rentalFilter === key) ? null : key;
@@ -3840,18 +4210,25 @@ function generateUniqueId() {
         function handleDivisionChange() {
             const division = document.querySelector('input[name="division"]:checked').value;
             document.getElementById('secRentalBlock').style.display = (division === '임대') ? 'flex' : 'none';
+            const gs = document.getElementById('regGroupSelect');
+            if (gs) gs.style.display = (division === '임대') ? 'none' : '';
+        }
+
+        // 12차-2: 임대 업체는 그룹이 없지만 DB상 group_id가 필요해서 "개별"(없으면 첫 그룹)에 넣어둠 — 화면엔 "임대"로만 보임
+        function getLeaseStorageGroupKey() {
+            return groupOrder.find(k => String(groupNames[k] || '').replace(/\s/g, '') === '개별') || groupOrder[0];
         }
 
         function openModalForAdd() {
-            if (currentGroup === ALL_GROUP_KEY) {
-                alert('"전체" 탭에서는 새 업체를 등록할 수 없어요. 등록할 그룹 탭을 먼저 선택해주세요.');
-                return;
-            }
-            document.getElementById('modalTitle').innerText = `신규 업체 등록 (${groupNames[currentGroup]})`;
+            // 12차-2: 어느 화면에서든 등록 가능. 판매면 그룹을 고르고(기본: 지금 선택한 그룹), 임대면 그룹 없음
+            document.getElementById('modalTitle').innerText = '신규 업체 등록';
+            const gs = document.getElementById('regGroupSelect');
+            gs.innerHTML = groupOrder.map(k => `<option value="${k}">${escapeHtml(groupNames[k] || '-')}</option>`).join('');
+            gs.value = (currentGroup !== ALL_GROUP_KEY) ? currentGroup : getLeaseStorageGroupKey();
             document.getElementById('dataForm').reset();
             setSelectedRegionSi('');
             document.getElementById('editTargetId').value = "";
-            document.querySelector('input[name="division"][value="판매"]').checked = true;
+            document.querySelector('input[name="division"][value="' + (currentDivision === 'lease' ? '임대' : '판매') + '"]').checked = true;
             document.getElementById('installDate').value = '';
             applyRentalPeriodValue('rentalPeriod', 'rentalPeriodCustom', 'rentalPeriodCustomValue', 'rentalPeriodCustomUnit', '1개월');
             document.getElementById('rentalEndDate').value = '';
@@ -3926,7 +4303,7 @@ function generateUniqueId() {
             if (!item) return;
 
             document.getElementById('detailTargetId').value = id;
-            document.getElementById('detailGroupTag').textContent = groupNames[loc.groupKey] || '-';
+            document.getElementById('detailGroupTag').textContent = isLeaseItem(item) ? '임대' : (groupNames[loc.groupKey] || '-');
 
             setDetailDivision(item.division === '임대' ? '임대' : '판매');
             setDetailStatus(item.status === '요청' ? '요청' : (item.status === '종료' ? '종료' : '정상'));
@@ -4182,7 +4559,8 @@ function generateUniqueId() {
 
         async function saveData(event) {
             event.preventDefault();
-            const targetGroupKey = currentGroup;
+            const regDivision = document.querySelector('input[name="division"]:checked').value;
+            const targetGroupKey = (regDivision === '임대') ? getLeaseStorageGroupKey() : (document.getElementById('regGroupSelect').value || getLeaseStorageGroupKey());
             const memoList = [];
 
             const initVersionText = document.getElementById('version').value.trim();
@@ -4311,7 +4689,7 @@ function generateUniqueId() {
                 if (savedSettings.device !== undefined) document.getElementById('toggleDevice').checked = savedSettings.device;
                 document.getElementById('toggleSys').checked = savedSettings.sys;
                 if (savedSettings.rental !== undefined) document.getElementById('toggleRental').checked = savedSettings.rental;
-                document.getElementById('toggleUnsupported').checked = savedSettings.unsupported;
+                // 12차: "종료 업체 표시" 저장값은 더 이상 안 씀 — 종료 보기는 매번 꺼진 상태로 시작
             }
         }
 
@@ -4427,6 +4805,7 @@ function generateUniqueId() {
         }
 
         function getSelectedItemsForExport() {
+            if (exportVisibleMode) return mapItemsForExport(lastRenderedItems); // 12차: "지금 보이는 업체" 다운로드
             const currentData = getCurrentViewData();
             if (!currentData || currentData.length === 0) {
                 alert('내보낼 데이터가 없습니다.');
@@ -4763,7 +5142,7 @@ function generateUniqueId() {
         /* ===================== ⑳ 엑셀 업로드(대량등록) / 등록양식 템플릿 다운로드 ===================== */
         function triggerExcelUpload() {
             if (currentGroup === ALL_GROUP_KEY) {
-                alert('"전체" 탭에서는 엑셀 대량등록을 할 수 없어요. 등록할 그룹 탭을 먼저 선택해주세요.');
+                alert('엑셀 대량등록은 넣을 그룹을 먼저 골라야 해요.\n판매 그룹(니아/개별) 칩을 하나 누른 뒤 다시 업로드해주세요.\n(임대 업체는 엑셀의 구분 칸에 "임대"라고 적으면 임대로 들어가요)');
                 return;
             }
             document.getElementById('excelUploadInput').click();
