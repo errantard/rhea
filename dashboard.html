@@ -15,7 +15,7 @@
     <!-- Supabase 연동용 SDK (테스트 버전에서 새로 추가) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&family=Cinzel:wght@500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
     <!-- ═══════════════════════════════════════════════════════════════
          [PART 1] STYLE — 전체 디자인/레이아웃 CSS
          ═══════════════════════════════════════════════════════════════ -->
@@ -1196,6 +1196,59 @@
         .hf-box.glow .hf-lbl { color: #F7D874; }
         .hf-box.dim { opacity: .5; filter: saturate(.6); }
         .hf-box.dim:hover { opacity: .8; }
+
+        /* ===== 12차-3: 2줄 필터 크게 + 임대 단계는 흐름(스테퍼) 모양 + 말풍선 목록 ===== */
+        .navbar-line-filters { gap: 12px; min-height: 42px; }
+        .hf-box { padding: 4px 12px 4px 14px; border-radius: 14px; gap: 8px; }
+        .hf-lbl { font-size: 11.5px; }
+        .hf-chip { height: 32px; padding: 0 14px; font-size: 13.5px; gap: 7px; }
+        .hf-chip b { font-size: 12px; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,0.10);
+            display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+        .hf-chip.active b { background: rgba(242,201,76,0.28); }
+        .hf-chip .hf-dot { width: 9px; height: 9px; box-shadow: 0 0 0 2px rgba(255,255,255,0.08); }
+        .hf-chip.hf-add { width: 32px; padding: 0; justify-content: center; font-size: 16px; }
+        .hf-box.hf-group .hf-chip.active { box-shadow: 0 0 12px rgba(242,201,76,0.35); }
+
+        /* 임대 단계: 예정 → 임대중 → 종료임박 → 회수대기 흐름이 한눈에 보이게 화살표로 잇는 스테퍼 */
+        .hf-step { background: transparent; border: none; padding: 0; gap: 2px; align-items: center; }
+        .hf-step button { height: 32px; padding: 0 12px 0 10px; font-size: 13.5px; gap: 7px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); }
+        .hf-step button .st-ic { width: 16px; height: 16px; flex-shrink: 0; opacity: .85; }
+        .hf-step button b { font-size: 12px; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,0.10);
+            display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+        .hf-step button:hover { border-color: #F2C94C; }
+        .hf-step button.warn { border-color: rgba(255,140,120,0.55); background: rgba(232,96,76,0.10); }
+        .hf-step button.warn b { background: #E8604C; color: #fff; }
+        .hf-step button.active { border-color: #F2C94C; }
+        .hf-step button.active b { background: rgba(15,27,42,0.18); color: #0F1B2A; }
+        .hf-step .st-arrow { color: rgba(255,255,255,0.28); font-size: 12px; padding: 0 1px; user-select: none; }
+
+        /* AS 요청: 가로로 늘어나지 않게 업체명은 빼고, 마우스를 올리면 말풍선 목록 */
+        .as-panel { gap: 8px; padding: 0 10px 0 12px; }
+        .as-caret { color: #FF9F8A; font-size: 10px; opacity: .8; }
+
+        /* 말풍선 목록 (AS 요청 · 임대 단계 공용) */
+        .hf-pop { position: fixed; z-index: 4000; width: 340px; max-height: 420px; display: none; flex-direction: column;
+            background: #13213A; color: #E6EEF4; border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,0.5); overflow: hidden; }
+        .hf-pop.open { display: flex; }
+        .hf-pop::before { content: ''; position: absolute; top: -6px; left: var(--arrow-x, 40px); width: 10px; height: 10px; background: #13213A;
+            border-left: 1px solid rgba(255,255,255,0.18); border-top: 1px solid rgba(255,255,255,0.18); transform: rotate(45deg); }
+        .hf-pop-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px 8px; font: 800 13px 'Public Sans', sans-serif; color: #F7D874; }
+        .hf-pop-head.warn { color: #FF9F8A; }
+        .hf-pop-head .st-ic { width: 16px; height: 16px; flex-shrink: 0; }
+        .hf-pop-list { overflow-y: auto; padding: 0 8px 4px; }
+        .hf-pop-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer; }
+        .hf-pop-row + .hf-pop-row { border-top: 1px solid rgba(255,255,255,0.06); }
+        .hf-pop-row:hover { background: rgba(255,255,255,0.06); }
+        .hf-pop-main { flex: 1; min-width: 0; }
+        .hf-pop-name { font: 700 13.5px 'Public Sans', sans-serif; color: #FBF6E8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hf-pop-sub { font-size: 11.5px; color: #8EA3B8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hf-pop-tag { font: 700 11px 'IBM Plex Mono', monospace; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.08); color: #C3D6E6; white-space: nowrap; }
+        .hf-pop-tag.warn { background: rgba(232,96,76,0.22); color: #FF9F8A; }
+        .hf-pop-btn { border: none; border-radius: 8px; padding: 6px 10px; font: 700 12px 'Public Sans', sans-serif; background: #1F7A63; color: #fff; cursor: pointer; white-space: nowrap; }
+        .hf-pop-btn:hover { background: #26957A; }
+        .hf-pop-foot { padding: 8px 16px 12px; font-size: 11px; color: #6F849A; border-top: 1px solid rgba(255,255,255,0.06); text-align: center; }
+        .hf-pop-empty { padding: 14px 16px 18px; color: #8EA3B8; font-size: 12.5px; }
+        @media (max-width: 880px), (hover: none) { .hf-pop { display: none !important; } }
         .group-name-pill.group-pill-lease { background-color: #8E7CF0; color: #fff; }
         .reg-group-select { height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #D8D2C0; background: #fff; font-weight: 700; font-size: 13px; color: #1B2A3A; }
         .hf-lbl { font: 700 11px 'Public Sans', sans-serif; color: #9FB3C6; letter-spacing: .5px; margin-right: 2px; white-space: nowrap; }
@@ -1390,6 +1443,304 @@
             .detail-footer { padding: 12px 16px; }
         }
     
+
+        /* ======================================================================
+           2026-10-03 13차 "지휘소 장부 (Kiosk Command Ledger)" 시안 적용 — claude/13차-시안-지휘소장부.md
+           세계관: 성채 지휘소. 구분 = 깃발(Standards), AS 요청 = 봉화(Beacon), 판매 그룹 = 문장 배너,
+           임대 단계 = 지도 위 여정(이정표), 종료 = 보관소. 아래 표는 밝은 양피지 장부 그대로.
+           ====================================================================== */
+        :root { --gold-c: #D6B46A; --gold-hi-c: #F3D68C; --gold-lo-c: #8E7442; --gold-line-c: rgba(214,180,106,.38);
+                --ember-c: #FF8A57; --parch-c: #F7F2E6; --parch2-c: #EFE7D4; --parch-line-c: #E3D8BE;
+                --display-c: 'Cinzel', 'Noto Serif KR', serif; --serif-c: 'Noto Serif KR', 'Noto Serif CJK KR', serif; }
+        .header-fixed { position: relative; }
+        .header-fixed::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 0; }
+        .navbar { min-height: 0; padding: 16px 30px 12px; align-items: center; }
+        .navbar-left { gap: 16px; }
+        .navbar-left-stack { gap: 0; }
+        .navbar-line-top { gap: 22px; align-items: center; }
+        .brand-logo-wrap, .brand-logo { width: 78px; height: 78px; }
+        .brand-logo { filter: drop-shadow(0 0 14px rgba(214,180,106,.35)) brightness(1.06); background: none; }
+
+        /* 문장(크레스트) 글씨 */
+        .crest-text { display: flex; flex-direction: column; gap: 8px; min-width: 250px; }
+        .crest-title { font-family: var(--display-c); font-weight: 700; font-size: 28px; letter-spacing: 4px; line-height: 1;
+            background: linear-gradient(180deg, #FFF1C9 0%, #E9C77C 45%, #A9813F 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .crest-motto { font-family: var(--display-c); font-size: 10.5px; letter-spacing: 3px; color: #A99A76; white-space: nowrap; }
+        .crest-motto b { font-family: 'Public Sans', sans-serif; font-weight: 600; letter-spacing: 1px; color: #C9BC98; margin-left: 6px; }
+
+        /* 깃발: 전체 / 판매 / 임대 */
+        .div-tabs { background: none; border: none; padding: 0; gap: 10px; }
+        .standard { position: relative; display: flex; align-items: center; gap: 12px; width: 164px; height: 62px; padding: 0 18px 0 16px; cursor: pointer;
+            border: 1px solid rgba(214,180,106,.22); border-radius: 10px; color: #CFD8E2; font-family: inherit;
+            background: linear-gradient(180deg, rgba(21,40,64,.72), rgba(9,20,35,.72)); backdrop-filter: blur(3px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.05); transition: border-color .2s, box-shadow .2s; }
+        .standard:hover { border-color: rgba(214,180,106,.6); }
+        .standard:focus-visible { outline: 2px solid var(--gold-hi-c); outline-offset: 2px; }
+        .standard .dt-ic { width: 26px; height: 26px; flex-shrink: 0; }
+        .standard .std-lbl { font-family: var(--serif-c); font-weight: 700; font-size: 15px; letter-spacing: 1px; }
+        .standard .std-num { margin-left: auto; font-family: var(--display-c); font-weight: 700; font-size: 30px; line-height: 1; min-width: 2.2ch; text-align: right; color: #E9E2CF; font-variant-numeric: tabular-nums; }
+        .standard.active { color: #1A1206; border-color: #F3D68C; background: linear-gradient(180deg, #F6DD97 0%, #DDB660 55%, #B8903F 100%);
+            box-shadow: 0 0 0 1px rgba(255,236,180,.35), 0 8px 24px rgba(214,160,60,.35), inset 0 1px 0 rgba(255,255,255,.6); }
+        .standard.active .std-num { color: #1A1206; }
+        .standard.active::after { content: ''; position: absolute; left: 50%; bottom: -8px; width: 13px; height: 13px; transform: translateX(-50%) rotate(45deg);
+            background: #B8903F; border-right: 1px solid #F3D68C; border-bottom: 1px solid #F3D68C; }
+
+        /* 봉화 = AS 요청 */
+        .as-panel { position: relative; height: 62px; gap: 12px; padding: 0 18px 0 14px; border-radius: 10px; border: 1px solid rgba(255,138,87,.55);
+            background: radial-gradient(circle at 30px 50%, rgba(255,120,60,.30), transparent 60%), linear-gradient(180deg, rgba(48,16,10,.80), rgba(22,10,10,.80));
+            box-shadow: 0 0 24px rgba(255,110,60,.22), inset 0 1px 0 rgba(255,200,160,.12); }
+        .as-panel:hover { border-color: #FFB08A; }
+        .as-panel.active { border-color: #FFC9A6; box-shadow: 0 0 0 1px rgba(255,201,166,.4), 0 0 30px rgba(255,110,60,.45); }
+        .bc-fire { position: relative; width: 34px; height: 34px; display: grid; place-items: center; }
+        .bc-fire::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: radial-gradient(circle, rgba(255,150,80,.55), transparent 65%); animation: bcEmber 2.4s ease-in-out infinite; }
+        .bc-fire svg { position: relative; width: 26px; height: 26px; color: #FFB27A; }
+        .bc-t1 { font-family: var(--serif-c); font-weight: 700; font-size: 14.5px; color: #FFC9A6; letter-spacing: 1px; white-space: nowrap; }
+        .bc-t2 { font-size: 11px; color: #C99B86; margin-top: 3px; white-space: nowrap; }
+        .bc-cnt { margin-left: 4px; font-family: var(--display-c); font-weight: 700; font-size: 30px; color: #FFE1CC; text-shadow: 0 0 12px rgba(255,120,60,.8); min-width: 1.4ch; text-align: right; }
+        .as-panel.is-empty { border-color: rgba(123,235,196,.30); background: linear-gradient(180deg, rgba(12,34,32,.75), rgba(8,22,24,.75)); box-shadow: none; cursor: default; }
+        .as-panel.is-empty .bc-fire::before { display: none; }
+        .as-panel.is-empty .bc-fire svg { color: #6FA597; }
+        .as-panel.is-empty .bc-t1 { color: #9FD8C7; } .as-panel.is-empty .bc-t2 { color: #6F9C90; } .as-panel.is-empty .bc-cnt { color: #9FD8C7; text-shadow: none; }
+        @keyframes bcEmber { 0%,100% { opacity: .65; transform: scale(.95); } 50% { opacity: 1; transform: scale(1.08); } }
+        @media (prefers-reduced-motion: reduce) { .bc-fire::before { animation: none; } }
+
+        /* 오른쪽 도구 */
+        .navbar-right { gap: 8px; }
+        .navbar-right .action-btn { height: 38px; padding: 0 14px; border-radius: 999px; background: rgba(8,18,32,.55); border-color: rgba(255,255,255,.18); font-size: 12.5px; }
+        .navbar-right .action-btn.util-icon { width: 38px; padding: 0; justify-content: center; }
+        .user-profile { height: 38px; display: inline-flex; align-items: center; padding: 0 16px; background: linear-gradient(180deg, #F3D68C, #D2AA55); }
+
+        /* ===== 작전 띠 ===== */
+        .campaign { display: flex; align-items: stretch; margin: 6px 30px 0; border-radius: 12px 12px 0 0;
+            background: linear-gradient(180deg, rgba(10,22,38,.88), rgba(8,18,32,.95)); border: 1px solid var(--gold-line-c); border-bottom: none;
+            box-shadow: inset 0 1px 0 rgba(255,236,180,.08); }
+        .sect { position: relative; padding: 11px 22px 13px; display: flex; flex-direction: column; gap: 9px; transition: background .25s, opacity .25s, filter .25s; }
+        .sect + .sect::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 1px; background: linear-gradient(180deg, transparent, var(--gold-line-c), transparent); }
+        .sect + .sect::after { content: ''; position: absolute; left: -4px; top: 50%; width: 7px; height: 7px; transform: translateY(-50%) rotate(45deg); background: var(--gold-c); box-shadow: 0 0 8px rgba(214,180,106,.7); }
+        .sect-journey { flex: 1; }
+        .sect-h { display: flex; align-items: center; gap: 8px; font-family: var(--display-c); font-size: 10.5px; letter-spacing: 2.6px; color: #9C8C68; white-space: nowrap; }
+        .sect-h b { font-family: var(--serif-c); font-size: 12.5px; letter-spacing: 1px; color: #D9C9A0; }
+        .sect-h i { font-style: normal; font-family: 'Public Sans', sans-serif; font-size: 11px; letter-spacing: 0; color: #6F8196; margin-left: 4px; }
+        .sect.lit { background: linear-gradient(180deg, rgba(214,180,106,.12), rgba(214,180,106,.02)); }
+        .sect.lit .sect-h b { color: var(--gold-hi-c); }
+        .sect.hush { opacity: .5; filter: saturate(.5); }
+        .sect.hush:hover { opacity: .85; filter: none; }
+
+        /* 판매 그룹 = 문장 배너 */
+        .banners { display: flex; gap: 8px; flex-wrap: wrap; }
+        .banner { height: 40px; min-width: 88px; padding: 0 16px 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
+            border-radius: 8px; border: 1px solid rgba(255,255,255,.14); color: #D9E1EA; font: 700 14px 'Public Sans', sans-serif;
+            background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); transition: .15s; }
+        .banner:hover { border-color: rgba(214,180,106,.7); }
+        .banner:focus-visible { outline: 2px solid var(--gold-hi-c); outline-offset: 2px; }
+        .banner .bn-sig { width: 10px; height: 10px; border-radius: 2px; transform: rotate(45deg); box-shadow: 0 0 8px currentColor; flex-shrink: 0; }
+        .banner .bn-n { font-family: var(--display-c); font-size: 17px; color: #F1E8D2; min-width: 1.6ch; text-align: right; font-variant-numeric: tabular-nums; }
+        .banner.active { border-color: #F3D68C; color: #1A1206; background: linear-gradient(180deg, #F6DD97, #D7AF5C); box-shadow: 0 0 16px rgba(214,170,80,.4), inset 0 1px 0 rgba(255,255,255,.5); }
+        .banner.active .bn-n { color: #1A1206; }
+        .banner.is-zero { opacity: .5; }
+        .banner.banner-add { min-width: 40px; width: 40px; padding: 0; border-style: dashed; background: none; color: #8FA0B2; box-shadow: none; font-size: 17px; }
+
+        /* 임대 여정 = 점선 길 위 이정표 */
+        .journey { position: relative; display: inline-flex; align-self: flex-start; align-items: center; }
+        .journey::before { content: ''; position: absolute; left: 20px; right: 20px; top: 50%; height: 2px; transform: translateY(-50%);
+            background: repeating-linear-gradient(90deg, rgba(214,180,106,.55) 0 6px, transparent 6px 12px); }
+        .way { position: relative; display: flex; align-items: center; gap: 9px; height: 40px; padding: 0 16px 0 4px; margin-right: 18px; cursor: pointer;
+            border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, #132A44, #0C1D31); color: #CBD6E1; font-family: inherit; transition: .15s; }
+        .way:last-child { margin-right: 0; }
+        .way:hover { border-color: rgba(214,180,106,.7); }
+        .way:focus-visible { outline: 2px solid var(--gold-hi-c); outline-offset: 2px; }
+        .way-seal { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+            background: radial-gradient(circle at 35% 30%, #2B4A6E, #10233A); border: 1px solid rgba(214,180,106,.55); color: #E7D5A6; }
+        .way-seal .st-ic { width: 17px; height: 17px; opacity: 1; }
+        .way-lbl { font-family: var(--serif-c); font-weight: 700; font-size: 14px; letter-spacing: .5px; white-space: nowrap; }
+        .way-n { font-family: var(--display-c); font-weight: 700; font-size: 18px; min-width: 1.4ch; text-align: right; color: #F1E8D2; }
+        .way.is-zero { opacity: .55; }
+        .way.warn { border-color: rgba(255,138,87,.6); color: #FFC9A6; background: linear-gradient(180deg, #3A1A14, #1E0F0D); }
+        .way.warn .way-seal { background: radial-gradient(circle at 35% 30%, #FF9A63, #B5412A); border-color: #FFC09A; color: #fff; box-shadow: 0 0 14px rgba(255,120,60,.6); }
+        .way.warn .way-n { color: #FFE1CC; }
+        .way.active { border-color: #F3D68C; background: linear-gradient(180deg, #F6DD97, #D7AF5C); color: #1A1206; box-shadow: 0 0 16px rgba(214,170,80,.45); }
+        .way.active .way-n { color: #1A1206; }
+        .way.active .way-seal { background: radial-gradient(circle at 35% 30%, #FFF3CF, #C99A44); color: #1A1206; border-color: #FFF0C4; box-shadow: none; }
+
+        /* 보관소 */
+        .vault { display: flex; gap: 8px; }
+        .tome { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 9px; cursor: pointer; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #CBD6E1; font: 700 13.5px 'Public Sans', sans-serif; white-space: nowrap; transition: .15s; }
+        .tome:hover { border-color: rgba(214,180,106,.7); }
+        .tome svg { width: 17px; height: 17px; }
+        .tome .tm-n { font-family: var(--display-c); font-size: 17px; color: #F1E8D2; }
+        .tome .tm-tag { font-size: 9.5px; font-weight: 800; letter-spacing: .6px; padding: 2px 5px; border-radius: 4px; background: #43BFAF; color: #fff; }
+        .tome.tome-new { border-color: rgba(67,191,175,.55); color: #BFF3EC; background: linear-gradient(180deg, rgba(67,191,175,.20), rgba(67,191,175,.05)); }
+        .tome.is-zero { opacity: .5; }
+        .tome.tome-new.active { border-color: #7FE3D6; background: linear-gradient(180deg, rgba(67,191,175,.55), rgba(67,191,175,.25)); color: #fff; box-shadow: 0 0 14px rgba(95,211,196,.35); }
+        .tome.tome-ended.active { border-color: #C3D6E6; background: rgba(195,214,230,.22); color: #fff; }
+
+        /* ===== 장부 작업대 (검색줄) — 밝은 양피지 ===== */
+        .filter-box { margin: 0 30px 0; background: linear-gradient(180deg, #FBF7EC, var(--parch2-c)); border: 1px solid var(--gold-line-c); border-top: 1px solid var(--parch-line-c); }
+        .filter-controls input, .filter-controls select { background: #fff; border-color: #DCCFAF; height: 36px; color: #2A3A4C; }
+        .col-toggle-group { color: #4E5B69; }
+        .col-toggle-title b { font-family: var(--serif-c); color: #7B6334; }
+        .filter-side-tools .icon-btn-move { height: 36px; background: #fff; color: #2A3A4C; border: 1px solid #CDBE98; border-radius: 8px; padding: 0 14px; }
+        .filter-side-tools .icon-btn-move:hover { background: #FFF3D0; color: #1A1206; border-color: #D6B46A; }
+        .filter-side-tools > .icon-btn-move:first-child { border: none; color: #1A1206; background: linear-gradient(180deg, #F3D68C, #D2AA55); box-shadow: 0 3px 10px rgba(190,150,70,.3), inset 0 1px 0 rgba(255,255,255,.6); }
+        .density-switch .density-label { color: #7B6334; }
+        .density-btn { background: #fff; color: #4E5B69; border-color: #DCCFAF; }
+        .density-btn:hover { background: #FFF3D0; }
+        .density-btn.active { background: #1C2F45; border-color: #1C2F45; color: #F3E7C8; }
+        .toggle-divider { color: #CDBE98; }
+
+        .hidden-by-filter-row td { background: #FFF6DC !important; color: #7B6334; font-size: 12.5px; padding: 10px 14px !important; text-align: left; }
+        .hidden-by-filter-row .hbf-inner { position: sticky; left: 14px; display: inline-flex; align-items: center; gap: 12px; }
+        .hidden-by-filter-row button { border: 1px solid #D6B46A; background: #fff; color: #5A4520; border-radius: 6px; padding: 4px 10px; font-weight: 700; font-size: 12px; cursor: pointer; }
+        .hidden-by-filter-row button:hover { background: #F3D68C; }
+        /* AS 요청 업체 = 붉은 밀랍 봉인 */
+        .wax-seal { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 900; font-size: 12px; color: #fff; line-height: 1;
+            background: radial-gradient(circle at 35% 30%, #F2785B, #B23A23); box-shadow: 0 2px 5px rgba(178,58,35,.45), inset 0 -2px 3px rgba(0,0,0,.25); }
+
+        /* 말풍선도 금장 톤으로 */
+        .hf-pop { border-color: rgba(214,180,106,.4); background: #101F33; }
+        .hf-pop::before { background: #101F33; border-color: rgba(214,180,106,.4); }
+        .hf-pop-head { font-family: var(--serif-c); font-size: 14px; }
+
+        @media (min-width: 881px) and (max-width: 1500px) {
+            .standard { width: 136px; padding: 0 14px 0 12px; }
+            .standard .std-num { font-size: 24px; }
+            .crest-text { min-width: 0; }
+            .crest-motto { display: none; }
+            .way { padding-right: 12px; margin-right: 12px; }
+            .way-lbl { font-size: 13px; }
+            .sect { padding: 10px 14px 12px; }
+        }
+        @media (max-width: 880px) {
+            .navbar { padding: 12px 12px 10px; }
+            .brand-logo-wrap, .brand-logo { width: 52px; height: 52px; }
+            .crest-title { font-size: 18px; letter-spacing: 2px; }
+            .crest-motto { display: none; }
+            .div-tabs { width: 100%; }
+            .standard { flex: 1; width: auto; height: 50px; padding: 0 10px; gap: 6px; }
+            .standard .std-num { font-size: 20px; }
+            .standard .dt-ic { width: 20px; height: 20px; }
+            .as-panel { width: 100%; height: 50px; }
+            .campaign { margin: 6px 12px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .sect { flex-shrink: 0; }
+            .filter-box { margin: 0 12px; }
+        }
+
+        /* ===== 13차-4 다듬기 (대장님 피드백) ===== */
+        /* 크레스트: 제목 폭 줄이고, 아래 "COMMAND LEDGER"를 제목 폭에 딱 맞춰 균등 배치 */
+        .crest-text { display: inline-flex; flex-direction: column; align-items: stretch; gap: 7px; min-width: 0; width: max-content; }
+        .crest-title { font-size: 24px; letter-spacing: 3px; }
+        .crest-motto { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0; color: #B3A27A; }
+        .crest-motto i { font-style: normal; }
+        .crest-motto i.sp { width: 6px; }
+
+        /* 작전 띠: 글자·숫자를 더 또렷하게, 선택된 구획은 확실히 켜진 느낌 */
+        .sect-h { color: #A8987A; }
+        .sect-h b { color: #E8DCBC; font-size: 13px; }
+        .banner, .way, .tome { color: #EEF3F8; border-color: rgba(255,255,255,.20); }
+        .banner { background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); }
+        .banner .bn-n, .way-n, .tome .tm-n { color: #F3D68C; }
+        .way { background: linear-gradient(180deg, #1A3654, #102640); }
+        .way-seal { color: #F3E2B4; }
+        .sect.lit { background: linear-gradient(180deg, rgba(242,201,76,.20), rgba(242,201,76,.05)); box-shadow: inset 0 3px 0 #F2C94C; }
+        .sect.lit .sect-h { color: #F3D68C; }
+        .sect.lit .sect-h b { color: #FFE7A3; text-shadow: 0 0 10px rgba(242,201,76,.5); }
+        .sect.lit .banner:not(.active):not(.banner-add), .sect.lit .way:not(.active):not(.warn) { border-color: rgba(242,201,76,.45); }
+        .sect.hush { opacity: .6; filter: saturate(.6); }
+        .banner.active .bn-n, .way.active .way-n { color: #1A1206; }
+        .way.warn .way-n { color: #FFE1CC; }
+
+        /* 검색줄: 위 작전 띠와 같은 어두운 톤으로 통일 (밝-어둡-밝 반복 없애기) */
+        .filter-box { background: linear-gradient(180deg, rgba(8,18,32,.95), rgba(8,18,32,.98)); border: 1px solid var(--gold-line-c); border-top: 1px solid rgba(214,180,106,.18); }
+        .filter-controls input, .filter-controls select { background: rgba(255,255,255,.07); border: 1px solid rgba(214,180,106,.30); color: #EEF3F8; }
+        .filter-controls input::placeholder { color: #8FA0B2; }
+        .filter-controls select option { color: #1C2A39; background: #fff; }
+        .col-toggle-group { color: #CFD8E2; }
+        .col-toggle-title b { color: #E8DCBC; }
+        .filter-side-tools .icon-btn-move { background: rgba(255,255,255,.06); color: #EEF3F8; border: 1px solid rgba(214,180,106,.35); }
+        .filter-side-tools .icon-btn-move:hover { background: rgba(242,201,76,.16); color: #FFE7A3; border-color: #D6B46A; }
+        .density-switch .density-label { color: #A8987A; }
+        .density-btn { background: rgba(255,255,255,.06); color: #CFD8E2; border-color: rgba(255,255,255,.18); }
+        .density-btn:hover { background: rgba(242,201,76,.16); }
+        .density-btn.active { background: linear-gradient(180deg, #F3D68C, #D2AA55); border-color: #D2AA55; color: #1A1206; }
+        .toggle-divider { color: rgba(214,180,106,.4); }
+
+        /* 표 상자가 헤더와 같은 폭에서 끝나게 (칸은 늘리지 않고 흰 바탕만 오른쪽 끝까지) */
+        /* 13차-5: 작전 띠는 네모난 독립 상자, 검색줄은 간격을 두고 따로 떨어진 상자 → 서로 폭을 맞출 필요가 없음 */
+        .campaign { border-radius: 0; border-bottom: 1px solid var(--gold-line-c); }
+        .sect.lit { background: none; box-shadow: inset 0 3px 0 #F2C94C; }
+        .sect.lit .sect-h b { text-shadow: none; }
+        .filter-box { margin: 12px 30px 10px; border: 1px solid rgba(214,180,106,.25); border-radius: 0; }
+        .crest-motto { padding-right: 3px; }
+
+        /* ===== 13차-6: 반응형 정리 ===== */
+        #hfGroupBox, #hfStageBox { cursor: pointer; }
+        #hfGroupBox:not(.lit):hover, #hfStageBox:not(.lit):hover { box-shadow: inset 0 3px 0 rgba(242,201,76,.35); }
+        /* 작전 띠는 내용 길이만큼만 (임대 여정이 화면 따라 늘어나지 않게). 공간이 모자라면 구획이 다음 줄로 내려감 */
+        .campaign { width: fit-content; max-width: calc(100% - 60px); flex-wrap: wrap; }
+        .sect, .sect-journey { flex: 0 1 auto; max-width: 100%; }
+        .sect-h { flex-wrap: wrap; row-gap: 2px; }
+        .std-lbl, .user-profile, .navbar-right .action-btn, .bc-t1 { white-space: nowrap; }
+        .navbar { gap: 16px; }
+        .navbar-left { flex: 1 1 auto; min-width: 0; }
+        .navbar-line-top { flex-wrap: wrap; row-gap: 10px; }
+        .navbar-right-stack { flex: 0 0 auto; align-self: flex-start; padding-top: 12px; }
+        .navbar-right { flex-wrap: nowrap; }
+        @media (max-width: 1700px) {
+            .navbar-right .util-txt { display: none; }
+            .standard { width: 140px; padding: 0 14px 0 12px; }
+            .standard .std-num { font-size: 26px; }
+        }
+        @media (max-width: 1420px) {
+            .bc-t2 { display: none; }
+            .standard { width: 118px; gap: 8px; padding: 0 12px 0 10px; }
+            .standard .dt-ic { width: 22px; height: 22px; }
+            .standard .std-num { font-size: 22px; }
+            .crest-title { font-size: 20px; letter-spacing: 2px; }
+            .crest-motto { font-size: 9px; }
+            .way-lbl { font-size: 13px; }
+            .way { padding-right: 12px; margin-right: 12px; }
+        }
+        @media (min-width: 881px) and (max-width: 1180px) {
+            .crest-text { display: none; }
+        }
+
+        /* ===== 13차-7: 상단 높이 줄이기 + 검색줄 투명 (대장님: 크기가 아니라 색·디자인 문제였음) ===== */
+        .navbar { padding: 10px 30px 8px; }
+        .brand-logo-wrap, .brand-logo { width: 62px; height: 62px; }
+        .crest-title { font-size: 21px; }
+        .crest-text { gap: 5px; }
+        .div-tabs { gap: 8px; }
+        .standard { width: 128px; height: 44px; gap: 9px; padding: 0 14px 0 12px; border-radius: 8px; }
+        .standard .dt-ic { width: 20px; height: 20px; }
+        .standard .std-lbl { font-size: 14px; }
+        .standard .std-num { font-size: 22px; }
+        .standard.active::after { width: 10px; height: 10px; bottom: -6px; }
+        .as-panel { height: 44px; gap: 10px; padding: 0 14px 0 10px; border-radius: 8px; }
+        .bc-fire { width: 26px; height: 26px; }
+        .bc-fire svg { width: 21px; height: 21px; }
+        .bc-t1 { font-size: 13.5px; }
+        .bc-t2 { font-size: 10.5px; margin-top: 1px; }
+        .bc-cnt { font-size: 22px; }
+        .navbar-right .action-btn, .user-profile { height: 34px; }
+        .navbar-right .action-btn.util-icon { width: 34px; }
+        .navbar-right-stack { padding-top: 5px; }
+        .campaign { margin-top: 4px; }
+        .sect { padding: 8px 18px 10px; gap: 7px; }
+        .banner, .way, .tome { height: 36px; }
+        .way-seal { width: 28px; height: 28px; }
+        /* 검색줄: 테두리·배경 없이 성채 배경 위에 컨트롤만 떠 있게 (오른쪽 끝 맞출 필요 자체가 없어짐) */
+        .filter-box { background: transparent; border: none; margin: 6px 30px 8px; padding: 6px 2px; }
+        @media (max-width: 1700px) { .standard { width: 116px; } .standard .std-num { font-size: 20px; } }
+        @media (max-width: 1420px) { .standard { width: 100px; padding: 0 10px; } .standard .std-num { font-size: 18px; } .standard .dt-ic { width: 18px; height: 18px; } }
+
+        /* 13차-8: 신규등록 · 그룹 변경 둘 다 같은 금색 버튼, 마우스 오버는 살짝 밝아지기만 */
+        .filter-side-tools .icon-btn-move, .filter-side-tools > .icon-btn-move:first-child {
+            border: 1px solid #E6C674; color: #1A1206; background: linear-gradient(180deg, #F3D68C, #D2AA55);
+            box-shadow: 0 3px 10px rgba(190,150,70,.3), inset 0 1px 0 rgba(255,255,255,.6); }
+        .filter-side-tools .icon-btn-move:hover, .filter-side-tools > .icon-btn-move:first-child:hover {
+            color: #1A1206; border-color: #FFE7A3; background: linear-gradient(180deg, #FBE3A3, #E0B963);
+            box-shadow: 0 4px 14px rgba(214,170,80,.45), inset 0 1px 0 rgba(255,255,255,.7); }
     </style>
 </head>
 <body>
@@ -1421,17 +1772,10 @@
                      2줄: 그룹 박스 · 임대 단계 박스 · 신규 칩 · 종료 보기 칩
                      예전 그룹 탭(topMenu)·상태카드·판매/임대 미니스탯은 없앰. topMenu는 옛 코드 호환용으로 숨겨서만 남겨둠 -->
                 <div class="navbar-line-top">
-                    <span class="brand-name">Rheavision Corp.</span>
+                    <div class="crest-text" title="업체 관리 지휘소"><span class="brand-name crest-title">RHEAVISION</span><span class="crest-motto" aria-label="Command Ledger"><i>C</i><i>O</i><i>M</i><i>M</i><i>A</i><i>N</i><i>D</i><i class="sp"></i><i>L</i><i>E</i><i>D</i><i>G</i><i>E</i><i>R</i></span></div>
                     <ul class="top-menu" id="topMenu" style="display:none;"></ul>
                     <div class="div-tabs" id="divisionTabs" role="tablist" aria-label="구분"></div>
-                    <div class="as-panel" id="asPanel" role="button" tabindex="0" onclick="toggleAsFilter()" title="AS 요청 업체만 보기 (다시 누르면 해제)"></div>
-                </div>
-                <div class="navbar-line-filters" id="headerFilterRow">
-                    <div class="hf-box hf-group" id="hfGroupBox"></div>
-                    <div class="hf-box hf-stage" id="hfStageBox"></div>
-                    <span class="hf-sep"></span>
-                    <button type="button" class="hf-chip hf-new" id="hfNewChip" onclick="toggleNewFilter()" title="설치 2개월 이내 판매 업체만 보기"></button>
-                    <button type="button" class="hf-chip hf-ended" id="hfEndedChip" onclick="toggleEndedFilter()" title="종료된 업체만 보기 (다시 누르면 해제)"></button>
+                    <div class="as-panel" id="asPanel" role="button" tabindex="0" onclick="toggleAsFilter()" title="AS 요청 업체를 표에서 모아보기 (다시 누르면 해제) · 마우스를 올리면 목록"></div>
                 </div>
             </div>
         </div>
@@ -1445,7 +1789,7 @@
                 <div class="dl-wrap desktop-only-action" id="dlWrap">
                     <button type="button" class="action-btn" onclick="toggleDownloadMenu(event)" title="다운로드 · 백업">
                         <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                        <span>다운로드</span><span class="dl-caret">▾</span>
+                        <span class="util-txt">다운로드</span><span class="dl-caret">▾</span>
                     </button>
                     <div class="dl-menu" id="dlMenu">
                         <div class="dl-sec">지금 보이는 업체 <b id="dlVisibleCount">0</b>건</div>
@@ -1469,17 +1813,30 @@
                     <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
                         <path fill="currentColor" d="M5 15h4v6h6v-6h4l-7-7-7 7zm0-8h14V5H5v2z"/>
                     </svg>
-                    <span>업로드</span>
+                    <span class="util-txt">업로드</span>
                 </button>
 
-                <button class="action-btn" onclick="handleLogout()" title="로그아웃">
-                    <span>로그아웃</span>
+                <button class="action-btn util-icon" onclick="handleLogout()" title="로그아웃" aria-label="로그아웃">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>
                 </button>
 
                 <div class="user-profile" id="userProfileBadge" onclick="handleEditNickname()" title="클릭하면 닉네임(실명)을 설정/수정할 수 있어요">관리자</div>
             </div>
         </div>
     </div>
+
+    <!-- 2026-10-03 13차 "지휘소 장부": 작전 띠 — 판매 그룹(문장 배너) · 임대 여정(이정표) · 보관소. 내용은 renderHeaderFilters()가 그림 -->
+    <section class="campaign" id="headerFilterRow">
+        <div class="sect sect-group" id="hfGroupBox"></div>
+        <div class="sect sect-journey" id="hfStageBox"></div>
+        <div class="sect sect-archive">
+            <div class="sect-h">ARCHIVE <b>보관소</b></div>
+            <div class="vault">
+                <button type="button" class="tome tome-new" id="hfNewChip" onclick="toggleNewFilter()" title="설치 2개월 이내 판매 업체만 보기"></button>
+                <button type="button" class="tome tome-ended" id="hfEndedChip" onclick="toggleEndedFilter()" title="종료된 업체만 보기 (다시 누르면 해제)"></button>
+            </div>
+        </div>
+    </section>
 
         <div class="filter-box">
             <!-- 2026-09-20: 검색줄 + 항목그룹표시줄 두 줄이었던 걸 한 줄로 통합 (대장님 레이아웃 요청)
@@ -2766,8 +3123,12 @@ function showSyncStatus(msg, isError) {
         // 12차-2: 선택 경로를 하나로 단순화
         //  - 전체 탭: 모든 조건 초기화  - 판매 탭: 임대 단계 해제  - 임대 탭: 그룹·신규 해제
         //  - 그룹 칩 → 판매 탭으로 이동  - 임대 단계 → 임대 탭으로 이동
+        // 13차-2: AS 요청 · 신규 · 종료 보기는 "특수 보기" — 다른 버튼(깃발·그룹·임대 단계)을 누르면 자동으로 풀림
+        function clearSpecialViews() { asOnly = false; newOnly = false; endedOnly = false; }
+
         function setDivision(div) {
             currentDivision = div;
+            clearSpecialViews();
             if (div === 'all') { currentGroup = ALL_GROUP_KEY; leaseStage = null; newOnly = false; }
             if (div === 'sale') leaseStage = null;
             if (div === 'lease') { currentGroup = ALL_GROUP_KEY; newOnly = false; }
@@ -2776,13 +3137,27 @@ function showSyncStatus(msg, isError) {
 
         function setLeaseStage(stage) {
             leaseStage = (leaseStage === stage) ? null : stage;
+            clearSpecialViews();
             if (leaseStage) { currentDivision = 'lease'; currentGroup = ALL_GROUP_KEY; newOnly = false; endedOnly = false; }
+            renderTable();
+        }
+
+        // 13차-6: 작전 띠의 판매 그룹 / 임대 여정 구획 빈 곳을 누르면 그 구분(판매/임대) 깃발이 선택됨 (버튼 위 클릭은 각 버튼 동작 그대로)
+        document.addEventListener('click', function(e) {
+            const sect = e.target.closest && e.target.closest('#hfGroupBox, #hfStageBox');
+            if (!sect || e.target.closest('button')) return;
+            setDivision(sect.id === 'hfGroupBox' ? 'sale' : 'lease');
+        });
+
+        function clearTextFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterRegion').value = '';
             renderTable();
         }
 
         function toggleNewFilter() {
             newOnly = !newOnly;
-            if (newOnly) { currentDivision = 'sale'; leaseStage = null; endedOnly = false; }
+            if (newOnly) { currentDivision = 'sale'; leaseStage = null; endedOnly = false; asOnly = false; }
             renderTable();
         }
 
@@ -2807,70 +3182,202 @@ function showSyncStatus(msg, isError) {
             const count = (o) => all.filter(i => passesHeaderFilters(i, o)).length;
             const base = { stage: null, ended: false, nw: false, as: false };
 
-            // 1줄: 구분 탭 — 최상위라서 숫자는 항상 전체 기준 (아래 그룹 칩을 눌러도 안 바뀜)
+            // 1줄: 구분 깃발 (Standards) — 최상위라서 숫자는 항상 전체 기준
             tabsEl.innerHTML = [['all', '전체'], ['sale', '판매'], ['lease', '임대']].map(([d, label]) => `
-                <button type="button" class="div-tab ${currentDivision === d ? 'active' : ''}" role="tab" aria-selected="${currentDivision === d}" onclick="setDivision('${d}')">
-                    ${DIVISION_ICONS[d]}${label}<span class="dt-cnt">${count(Object.assign({}, base, { division: d, group: ALL_GROUP_KEY }))}</span>
+                <button type="button" class="standard ${currentDivision === d ? 'active' : ''}" role="tab" aria-selected="${currentDivision === d}" onclick="setDivision('${d}')">
+                    ${DIVISION_ICONS[d]}<span class="std-lbl">${label}</span><span class="std-num">${count(Object.assign({}, base, { division: d, group: ALL_GROUP_KEY }))}</span>
                 </button>`).join('');
 
-            // 1줄: AS 요청 (탭·그룹과 상관없이 항상 전체 기준)
+            // 1줄: 봉화 = AS 요청 (탭·그룹과 상관없이 항상 전체 기준). 업체 목록은 마우스를 올리면 말풍선으로
             const asPanel = document.getElementById('asPanel');
             const asItems = all.filter(i => passesHeaderFilters(i, { division: 'all', group: ALL_GROUP_KEY, stage: null, ended: false, nw: false, as: true }));
-            const wrenchSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>';
+            const fireSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.2 4.5 4.6 4.5 9a4.5 4.5 0 0 1-9 0c0-2.2 1.2-3.4 2.2-4.6.3 1.4 1 2.2 2 2.6-.4-2.6-.2-4.8.3-7z"/><path d="M5 21h14M7 21l1.2-3h7.6L17 21"/></svg>';
             if (asItems.length === 0) {
                 if (asOnly) asOnly = false;
                 asPanel.classList.add('is-empty');
                 asPanel.classList.remove('active');
-                asPanel.innerHTML = `<div class="as-head">✓ AS 요청 없음</div>`;
+                asPanel.innerHTML = `<div class="bc-fire">${fireSvg}</div><div class="bc-txt"><div class="bc-t1">봉화 · AS 요청</div><div class="bc-t2">요청 없음 · 평온함</div></div><span class="bc-cnt">0</span>`;
             } else {
-                const lastMemoTime = (it) => {
-                    const list = it.memoList || [];
-                    const d = list.length ? parseLooseDate(list[list.length - 1].date) : null;
-                    return d ? d.getTime() : 0;
-                };
-                const sorted = asItems.slice().sort((a, b) => lastMemoTime(a) - lastMemoTime(b));
-                const shown = sorted.slice(0, 2);
-                const rest = asItems.length - shown.length;
+                let oldest = null;
+                asItems.forEach(i => {
+                    const l = i.memoList || [];
+                    const d = l.length ? parseLooseDate(l[l.length - 1].date) : null;
+                    if (d && (!oldest || d < oldest)) oldest = d;
+                });
+                const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+                const days = oldest ? Math.max(0, Math.round((t0 - oldest) / 86400000)) : null;
                 asPanel.classList.remove('is-empty');
                 asPanel.classList.toggle('active', asOnly);
-                asPanel.innerHTML = `<div class="as-head">${wrenchSvg}AS 요청 <b>${asItems.length}</b></div>
-                    <div class="as-list">${shown.map(i => `<span title="${escapeHtml(i.placeName || '')}">${escapeHtml(i.placeName || '-')}</span>`).join('')}${rest > 0 ? `<span class="as-more">외 ${rest}건 ›</span>` : ''}</div>`;
+                asPanel.innerHTML = `<div class="bc-fire">${fireSvg}</div><div class="bc-txt"><div class="bc-t1">봉화 · AS 요청</div><div class="bc-t2">${days === null ? '마우스를 올리면 목록' : (days === 0 ? '가장 오래된 기록 오늘' : `가장 오래된 기록 ${days}일 전`)}</div></div><span class="bc-cnt">${asItems.length}</span>`;
             }
 
-            // 2줄: 그룹 박스
+            // 2줄: 판매 그룹 (문장 배너)
             const groupBox = document.getElementById('hfGroupBox');
             const groupChips = groupOrder.map(g => {
                 const n = count(Object.assign({}, base, { division: 'sale', group: g })); // 판매 업체 수 (항상 고정)
-                return `<button type="button" class="hf-chip ${currentGroup === g ? 'active' : ''} ${n ? '' : 'is-zero'}" onclick="switchGroup('${g}')">
-                    <span class="hf-dot" style="background:${getGroupColor(g)};"></span>${escapeHtml(groupNames[g] || '-')} <b>${n}</b></button>`;
+                const col = getGroupColor(g);
+                return `<button type="button" class="banner ${currentGroup === g ? 'active' : ''} ${n ? '' : 'is-zero'}" onclick="switchGroup('${g}')">
+                    <span class="bn-sig" style="background:${col};color:${col};"></span><span class="bn-lbl">${escapeHtml(groupNames[g] || '-')}</span><span class="bn-n">${n}</span></button>`;
             }).join('');
-            const addBtn = isAdminUser() ? `<button type="button" class="hf-chip hf-add" id="groupAddBtn" onclick="openGroupEditModal()" title="그룹 추가 · 이름 · 순서 · 색 편집">+</button>` : '';
-            groupBox.innerHTML = `<span class="hf-lbl">판매 그룹</span>
-                <button type="button" class="hf-chip ${currentGroup === ALL_GROUP_KEY && currentDivision === 'sale' ? 'active' : ''}" onclick="switchGroup('${ALL_GROUP_KEY}'); setDivision('sale')">전체</button>${groupChips}${addBtn}`;
-            groupBox.classList.toggle('glow', currentDivision === 'sale');
-            groupBox.classList.toggle('dim', currentDivision === 'lease');
+            const addBtn = isAdminUser() ? `<button type="button" class="banner banner-add" id="groupAddBtn" onclick="openGroupEditModal()" title="그룹 추가 · 이름 · 순서 · 색 편집" aria-label="그룹 편집">+</button>` : '';
+            const saleAll = count(Object.assign({}, base, { division: 'sale', group: ALL_GROUP_KEY }));
+            groupBox.innerHTML = `<div class="sect-h">SALES BANNERS <b>판매 그룹</b></div><div class="banners">
+                <button type="button" class="banner ${currentGroup === ALL_GROUP_KEY && currentDivision === 'sale' ? 'active' : ''}" onclick="switchGroup('${ALL_GROUP_KEY}'); setDivision('sale')"><span class="bn-lbl">전체</span><span class="bn-n">${saleAll}</span></button>${groupChips}${addBtn}</div>`;
+            groupBox.classList.toggle('lit', currentDivision === 'sale');
+            groupBox.classList.toggle('hush', currentDivision === 'lease');
 
-            // 2줄: 임대 단계 박스
+            // 2줄: 임대 여정 (지도 위 이정표)
             const stageBox = document.getElementById('hfStageBox');
             const stages = [['upcoming', '예정', false], ['ongoing', '임대중', false], ['expiring', '종료임박', true], ['awaiting', '회수대기', true]];
-            stageBox.innerHTML = `<span class="hf-lbl">임대 단계</span><div class="hf-step">${stages.map(([st, label, warn]) => {
-                const n = count({ division: 'lease', group: ALL_GROUP_KEY, stage: st, ended: false, nw: false, as: false }); // 그룹과 무관하게 항상 전체 기준
-                return `<button type="button" class="${leaseStage === st ? 'active' : ''} ${warn && n ? 'warn' : ''} ${n ? '' : 'is-zero'}" onclick="setLeaseStage('${st}')">${label} <b>${n}</b></button>`;
+            stageBox.innerHTML = `<div class="sect-h">LEASE JOURNEY <b>임대 여정</b><i>예정 → 임대중 → 종료임박 → 회수대기</i></div><div class="journey">${stages.map(([st, label, warn]) => {
+                const n = count({ division: 'lease', group: ALL_GROUP_KEY, stage: st, ended: false, nw: false, as: false });
+                return `<button type="button" class="way ${leaseStage === st ? 'active' : ''} ${warn && n ? 'warn' : ''} ${n ? '' : 'is-zero'}" data-stage="${st}" onclick="setLeaseStage('${st}')"><span class="way-seal">${STAGE_ICONS[st]}</span><span class="way-lbl">${label}</span><span class="way-n">${n}</span></button>`;
             }).join('')}</div>`;
-            stageBox.classList.toggle('glow', currentDivision === 'lease');
-            stageBox.classList.toggle('dim', currentDivision === 'sale');
+            stageBox.classList.toggle('lit', currentDivision === 'lease');
+            stageBox.classList.toggle('hush', currentDivision === 'sale');
 
             // 2줄: 신규 · 종료 보기
             const newChip = document.getElementById('hfNewChip');
             const newCount = count({ division: 'sale', group: ALL_GROUP_KEY, stage: null, ended: false, nw: true, as: false });
-            newChip.innerHTML = `<span class="hf-new-tag">NEW</span>신규 <b>${newCount}</b>`;
+            newChip.innerHTML = `<span class="tm-tag">NEW</span>신규<span class="tm-n">${newCount}</span>`;
             newChip.classList.toggle('active', newOnly);
             newChip.classList.toggle('is-zero', !newOnly && (newCount === 0 || currentDivision === 'lease'));
 
             const endedChip = document.getElementById('hfEndedChip');
             const endedCount = count({ group: ALL_GROUP_KEY, stage: null, ended: true, nw: false, as: false });
-            endedChip.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.2"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>종료 보기 <b>${endedCount}</b>`;
+            endedChip.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.2"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>종료 보기<span class="tm-n">${endedCount}</span>`;
             endedChip.classList.toggle('active', endedOnly);
+        }
+
+
+        /* ----- 12차-3: 말풍선 목록 (AS 요청 · 임대 단계). 마우스를 올리면 열리고, 칩을 누르면 표가 걸러짐 ----- */
+        const STAGE_ICONS = {
+            upcoming: '<svg class="st-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+            ongoing: '<svg class="st-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9 12.2l2.2 2.2L15.5 10"/></svg>',
+            expiring: '<svg class="st-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3c0 4 8 5 8 9s-8 5-8 9M16 3c0 4-8 5-8 9"/></svg>',
+            awaiting: '<svg class="st-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5L12 4l8.5 4.5v7L12 20l-8.5-4.5z"/><path d="M3.5 8.5L12 13l8.5-4.5M12 13v7"/></svg>'
+        };
+        let hfPopTimer = null, hfPopAnchor = null;
+
+        function getHfPopEl() {
+            let el = document.getElementById('hfPopover');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'hfPopover';
+                el.className = 'hf-pop';
+                el.addEventListener('mouseenter', () => clearTimeout(hfPopTimer));
+                el.addEventListener('mouseleave', scheduleHidePopover);
+                document.body.appendChild(el);
+            }
+            return el;
+        }
+        function scheduleHidePopover() {
+            clearTimeout(hfPopTimer);
+            hfPopTimer = setTimeout(() => { getHfPopEl().classList.remove('open'); hfPopAnchor = null; }, 180);
+        }
+        function daysBetween(a, b) { return Math.round((a - b) / 86400000); }
+        function todayZero() { const t = new Date(); t.setHours(0, 0, 0, 0); return t; }
+
+        function buildPopoverContent(kind) {
+            const all = getAllGroupsFlatData();
+            const regionOf = (i) => `${i.regionSi || ''} ${i.regionGu || ''}`.trim();
+            const rowHtml = (i, sub, tag, tagWarn, btn) => `
+                <div class="hf-pop-row" onclick="hidePopoverNow(); openDetailModal('${i.id}')">
+                    <div class="hf-pop-main"><div class="hf-pop-name">${escapeHtml(i.placeName || '-')}</div><div class="hf-pop-sub">${sub}</div></div>
+                    ${tag ? `<span class="hf-pop-tag ${tagWarn ? 'warn' : ''}">${tag}</span>` : ''}${btn || ''}
+                </div>`;
+            if (kind === 'as') {
+                const items = all.filter(i => passesHeaderFilters(i, { division: 'all', group: ALL_GROUP_KEY, stage: null, ended: false, nw: false, as: true }));
+                const last = (i) => { const l = i.memoList || []; return l.length ? l[l.length - 1] : null; };
+                items.sort((a, b) => { const da = last(a) && parseLooseDate(last(a).date), db = last(b) && parseLooseDate(last(b).date); return (da ? da.getTime() : 0) - (db ? db.getTime() : 0); });
+                const list = items.map(i => {
+                    const m = last(i);
+                    const d = m ? parseLooseDate(m.date) : null;
+                    const ago = d ? daysBetween(todayZero(), d) : null;
+                    const sub = escapeHtml([regionOf(i), m ? m.text : 'AS 이력 없음'].filter(Boolean).join(' · '));
+                    return rowHtml(i, sub, ago === null ? '' : (ago <= 0 ? '오늘' : `${ago}일 전`), ago !== null && ago >= 3, '');
+                }).join('');
+                return { head: `🔧 AS 요청 업체 (${items.length})`, warn: true, body: list || '<div class="hf-pop-empty">AS 요청이 없어요 ✓</div>', foot: '업체를 누르면 상세 · 패널을 누르면 표에서 모아보기' };
+            }
+            const items = all.filter(i => passesHeaderFilters(i, { division: 'lease', group: ALL_GROUP_KEY, stage: kind, ended: false, nw: false, as: false }));
+            const t = todayZero();
+            const endOf = (i) => getRentalEndDateObj(i);
+            items.sort((a, b) => ((endOf(a) || t) - (endOf(b) || t)));
+            const label = { upcoming: '예정', ongoing: '임대중', expiring: '종료임박', awaiting: '회수대기' }[kind];
+            const list = items.map(i => {
+                const end = endOf(i);
+                const start = i.installDate ? parseLooseDate(i.installDate) : null;
+                let sub, tag = '', warn = false, btn = '';
+                if (kind === 'upcoming') {
+                    sub = `설치 ${start ? formatDateYMD(start).slice(5).replace('-', '/') : '미정'}`;
+                    if (start) tag = `D-${daysBetween(start, t)}`;
+                } else {
+                    sub = `임대종료 ${end ? formatDateYMD(end).slice(5).replace('-', '/') : '미입력'}`;
+                    if (end) { const dd = daysBetween(end, t); tag = dd >= 0 ? `D-${dd}` : `D+${-dd}`; warn = kind !== 'ongoing'; }
+                    if (kind === 'awaiting') btn = `<button type="button" class="hf-pop-btn" onclick="event.stopPropagation(); markLeaseReturned('${i.id}')">회수완료</button>`;
+                }
+                return rowHtml(i, escapeHtml([regionOf(i), sub].filter(Boolean).join(' · ')), tag, warn, btn);
+            }).join('');
+            const foot = kind === 'awaiting' ? '[회수완료]를 누르면 상태가 "종료"로 바뀌어요' : '업체를 누르면 상세 · 칩을 누르면 표에서 모아보기';
+            return { head: `${STAGE_ICONS[kind]} ${label} (${items.length})`, warn: kind === 'expiring' || kind === 'awaiting', body: list || `<div class="hf-pop-empty">${label} 업체가 없어요</div>`, foot };
+        }
+
+        function showPopover(anchor, kind) {
+            if (window.matchMedia && window.matchMedia('(hover: none), (max-width: 880px)').matches) return;
+            clearTimeout(hfPopTimer);
+            const el = getHfPopEl();
+            const c = buildPopoverContent(kind);
+            el.innerHTML = `<div class="hf-pop-head ${c.warn ? 'warn' : ''}">${c.head}</div><div class="hf-pop-list">${c.body}</div><div class="hf-pop-foot">${c.foot}</div>`;
+            el.dataset.kind = kind;
+            hfPopAnchor = anchor;
+            el.classList.add('open');
+            const r = anchor.getBoundingClientRect();
+            const w = el.offsetWidth;
+            let left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+            el.style.left = left + 'px';
+            el.style.top = (r.bottom + 10) + 'px';
+            el.style.setProperty('--arrow-x', Math.max(14, Math.min(w - 24, r.left + r.width / 2 - left - 5)) + 'px');
+        }
+        function hidePopoverNow() { clearTimeout(hfPopTimer); getHfPopEl().classList.remove('open'); hfPopAnchor = null; }
+
+        // 헤더가 다시 그려져도 동작하도록 이벤트 위임으로 연결
+        document.addEventListener('mouseover', function(e) {
+            const asEl = e.target.closest && e.target.closest('#asPanel');
+            const stEl = e.target.closest && e.target.closest('#hfStageBox button[data-stage]');
+            const anchor = asEl || stEl;
+            if (!anchor) return;
+            if (asEl && asEl.classList.contains('is-empty')) return;
+            if (hfPopAnchor === anchor) { clearTimeout(hfPopTimer); return; }
+            clearTimeout(hfPopTimer);
+            hfPopTimer = setTimeout(() => showPopover(anchor, asEl ? 'as' : stEl.dataset.stage), 160);
+        });
+        document.addEventListener('mouseout', function(e) {
+            const from = e.target.closest && e.target.closest('#asPanel, #hfStageBox button[data-stage]');
+            if (!from) return;
+            const to = e.relatedTarget;
+            if (to && (from.contains(to) || (to.closest && to.closest('#hfPopover')))) return;
+            scheduleHidePopover();
+        });
+        window.addEventListener('scroll', hidePopoverNow, true);
+
+        // 회수대기 → [회수완료]: 상태를 "종료"로 바꿈 (상세팝업에서 종료로 바꾸는 것과 같은 결과)
+        async function markLeaseReturned(id) {
+            const item = findItemLocation(id).item;
+            if (!item) return;
+            if (!confirm(`'${item.placeName}' 기기 회수를 완료했나요?\n상태가 "종료"로 바뀌고 목록에서 숨겨져요. (종료 보기에서 다시 볼 수 있어요)`)) return;
+            try {
+                const nowIso = new Date().toISOString();
+                const { data, error } = await sb.from('companies').update({ status: '종료', updated_at: nowIso }).eq('id', id).select().single();
+                if (error) throw error;
+                item.status = '종료';
+                item.updatedAt = (data && data.updated_at) || nowIso;
+                hidePopoverNow();
+                renderTable();
+                showSyncStatus('☁️ 회수완료 처리됨');
+            } catch (err) {
+                console.error(err);
+                alert('회수완료 처리에 실패했습니다: ' + (err.message || err));
+            }
         }
 
         /* ----- 다운로드 메뉴 ----- */
@@ -3234,6 +3741,7 @@ function generateUniqueId() {
         // 그룹 칩 클릭 (같은 칩을 다시 누르면 전체로). 검색어·지역필터는 유지 — 칩은 필터를 좁히는 용도라 초기화하지 않음
         function switchGroup(groupKey, element) {
             currentGroup = (currentGroup === groupKey && groupKey !== ALL_GROUP_KEY) ? ALL_GROUP_KEY : groupKey;
+            clearSpecialViews();
             if (currentGroup !== ALL_GROUP_KEY) { currentDivision = 'sale'; leaseStage = null; } // 그룹은 판매 전용
             renderTable();
         }
@@ -3472,7 +3980,7 @@ function generateUniqueId() {
                 const locationVal = item.installLocation || '-';
 
                 tr.innerHTML = `
-                    <td class="sticky-col-0">${isUrgent ? '<img class="urgent-no-icon" src="assets/urgent-request-icon.webp" alt="AS 요청중" title="AS 요청중">' : (index + 1)}</td>
+                    <td class="sticky-col-0">${isUrgent ? '<span class="wax-seal" title="AS 요청중" aria-label="AS 요청중">!</span>' : (index + 1)}</td>
                     <td class="sticky-col-group">${isLeaseItem(item) ? '<span class="group-name-pill group-pill-lease">임대</span>' : `<span class="group-name-pill" style="background-color:${getGroupColor(item.groupId)};">${escapeHtml(groupNames[item.groupId] || '-')}</span>`}</td>
                     <td class="sticky-col-1" style="text-align: center;">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
@@ -3507,6 +4015,17 @@ function generateUniqueId() {
                 `;
                 tableBody.appendChild(tr);
             });
+
+            // 13차-3: 위 숫자(깃발·여정·보관소)는 검색어/지역필터와 무관하게 세기 때문에, 검색어나 지역필터로
+            // 일부가 숨겨졌으면 표 맨 아래에 알려줌 (예: 종료 보기 3인데 "경기" 필터 때문에 2곳만 보이는 경우)
+            const hiddenByText = (searchInput || filterRegion) ? currentData.filter(i => passesHeaderFilters(i)).length - filteredData.length : 0;
+            if (hiddenByText > 0) {
+                const why = [filterRegion ? `지역필터 "${escapeHtml(filterRegion)}"` : '', searchInput ? `검색어 "${escapeHtml(searchInput)}"` : ''].filter(Boolean).join(' · ');
+                const tr = document.createElement('tr');
+                tr.className = 'hidden-by-filter-row';
+                tr.innerHTML = `<td colspan="99"><div class="hbf-inner"><span>🔎 ${why} 때문에 <b>${hiddenByText}곳</b>이 숨겨져 있어요</span><button type="button" onclick="clearTextFilters()">필터 풀고 모두 보기</button></div></td>`;
+                tableBody.appendChild(tr);
+            }
 
             updateSelectAllState();
             applyColumnVisibilities();
