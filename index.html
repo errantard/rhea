@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhea TechOps</title>
+    <title>RheaOps</title>
+    <!-- 📱 14차-3: 홈 화면 앱 설치(주소창·버튼줄 없는 전체화면) — manifest.webmanifest + assets/app-icon-*.png -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0A1626">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RheaOps">
+    <!-- 14차-4: 즐겨찾기·탭용 작은 아이콘(헬멧, 16/32/48px) — 이름 RheaOps로 통일 -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+    <link rel="apple-touch-icon" href="assets/app-icon-180.png">
     <!-- Supabase 연동용 SDK (테스트 버전에서 새로 추가) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -840,5 +852,11 @@ function togglePasswordVisibility() {
         checkExistingSession();
     </script>
 
+    <script>
+        // 📱 14차-3: 홈 화면 앱 설치용 서비스워커 등록 (캐시 없음, 실패해도 화면엔 영향 없음)
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+        }
+    </script>
 </body>
 </html>

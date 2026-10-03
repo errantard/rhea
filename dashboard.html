@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhea TechOps — 업체관리</title>
+    <title>RheaOps</title>
+    <!-- 📱 14차-3: 홈 화면 앱 설치(주소창·버튼줄 없는 전체화면) — manifest.webmanifest + assets/app-icon-*.png -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0A1626">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RheaOps">
+    <!-- 14차-4: 즐겨찾기·탭용 작은 아이콘(헬멧, 16/32/48px) — 이름 RheaOps로 통일 -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+    <link rel="apple-touch-icon" href="assets/app-icon-180.png">
 <!-- 엑셀 처리(SheetJS) 라이브러리 CDN 추가 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- 디자인 유지 엑셀 내보내기용 ExcelJS + FileSaver -->
@@ -1916,7 +1928,22 @@
             .user-profile .up-role { display: none; }
             .user-profile { max-width: 120px; }
             /* 신규등록: 글자 버튼 → 둥근 + 버튼 (카드의 [상세] 버튼을 덜 가리게) */
-            .m-fab { width: 54px; height: 54px; padding: 0; justify-content: center; border-radius: 50%; font-size: 26px; font-weight: 700; line-height: 1; }
+        }
+
+        /* ===== 📱 14차-3: + 버튼을 로고줄로 · COMMAND LEDGER 문구 복원 ===== */
+        @media (max-width: 880px) {
+            .m-add { width: 34px; height: 34px; padding: 0; border-radius: 50%; display: inline-flex !important; align-items: center; justify-content: center; cursor: pointer;
+                border: 1px solid #E6C674; color: #1A1206; background: linear-gradient(180deg, #F3D68C, #D2AA55);
+                box-shadow: 0 3px 10px rgba(190,150,70,.35), inset 0 1px 0 rgba(255,255,255,.6); }
+            .m-add svg { width: 17px; height: 17px; }
+            .m-add:active { transform: scale(.94); }
+            .navbar-right { gap: 7px; }
+            /* 아래 둥근 버튼이 없어졌으니 목록 아래 여백도 줄임 */
+            .container { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+            /* 로고 오른쪽 RHEAVISION 아래 "COMMAND LEDGER" 다시 표시 (제목 폭에 맞춰 균등 배치, 로고 높이 34px 안에) */
+            .crest-text { flex-direction: column; justify-content: center; align-items: stretch; gap: 3px; width: max-content; }
+            .crest-motto { display: flex !important; justify-content: space-between; font-size: 7.5px; letter-spacing: 0; line-height: 1; color: #B3A27A; padding-right: 2px; }
+            .crest-motto i.sp { width: 4px; }
         }
     </style>
 </head>
@@ -1993,6 +2020,8 @@
                     <span class="util-txt">업로드</span>
                 </button>
 
+                <!-- 📱 14차-3: 폰 전용 신규등록 + 버튼 (로고줄 빈 공간, 로그아웃 왼쪽). PC는 검색줄의 "+ 신규등록" 그대로 -->
+                <button type="button" class="m-add m-only" onclick="openModalForAdd()" aria-label="신규 업체 등록" title="신규 업체 등록"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
                 <button class="action-btn util-icon" onclick="handleLogout()" title="로그아웃" aria-label="로그아웃">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>
                 </button>
@@ -2148,7 +2177,6 @@
             <!-- 모바일 전용 카드 리스트 (880px 이하에서만 보임, PC에서는 항상 display:none) -->
             <div class="mobile-card-list" id="mobileCardList"></div>
             <!-- 📱 14차 모바일 전용: 신규등록 둥근 버튼 + 아래 시트 (PC에서는 .m-only로 숨김) -->
-            <button type="button" class="m-fab m-only" onclick="openModalForAdd()" aria-label="신규 업체 등록" title="신규 업체 등록">＋</button>
             <div class="m-sheet-dim m-only" id="mSheetDim"></div>
             <div class="m-sheet m-only" id="mSheet" role="dialog" aria-label="목록"></div>
         </div>
@@ -6143,5 +6171,11 @@ function generateUniqueId() {
     
     </script>
 
+    <script>
+        // 📱 14차-3: 홈 화면 앱 설치용 서비스워커 등록 (캐시 없음, 실패해도 화면엔 영향 없음)
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+        }
+    </script>
 </body>
 </html>
