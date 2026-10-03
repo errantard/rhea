@@ -877,6 +877,39 @@
         }
         .dfield input:hover, .dfield select:hover { border-bottom-color: var(--teal); background: rgba(15,110,92,0.04); }
         .dfield input:focus, .dfield select:focus { border-bottom-color: var(--teal); background: rgba(15,110,92,0.07); }
+        /* 15차: 기기 여러 대 — 왼쪽 [+]/번호, 모델명 넓게 · 옵션 · 설치날짜 좁게 */
+        .dev-fields { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
+        .dev-line { display: flex; align-items: flex-end; gap: 8px; }
+        .dev-line + #detailExtraDevices:empty { display: none; }
+        #detailExtraDevices { display: flex; flex-direction: column; gap: 8px; }
+        .dev-line .dfield { min-width: 0; }
+        .dev-line .dev-model { flex: 1.8 1 0; }
+        .dev-line .dev-opt { flex: 1 1 0; }
+        .dev-line .dev-date { flex: 0 0 120px; }
+        .dev-add, .dev-num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 2px; }
+        .dev-add { border: 1px solid #3f8f4a; background: linear-gradient(180deg, #62c473, #3f8f4a); color: #fff; font: 800 17px/1 'Public Sans', sans-serif; cursor: pointer;
+            box-shadow: 0 2px 6px rgba(63,143,74,.35); padding: 0; }
+        .dev-add:hover { filter: brightness(1.08); }
+        .dev-num { background: #E9F4EA; color: #2a6532; font: 800 14px/1 'Public Sans', sans-serif; }
+        .dev-no { color: #2a6532; font-weight: 800; }
+        .dev-del { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; border: none; background: #F3EEE4; color: #8a8578; font-size: 16px; line-height: 1; cursor: pointer; margin-bottom: 3px; padding: 0; }
+        .dev-del:hover { background: #F7E2D8; color: #A54823; }
+        .dev-del-space { flex: 0 0 24px; }
+        .dev-br { display: none; }
+        .dev-more { display: inline-block; margin-right: 6px; font-size: 10.5px; font-weight: 800; color: #2a6532; background: #E9F4EA; border-radius: 5px; padding: 1px 6px; vertical-align: 1px; white-space: nowrap; }
+        @media (max-width: 880px) {
+            .dev-line { flex-wrap: wrap; row-gap: 6px; }
+            .dev-br { display: block; flex: 0 0 100%; height: 0; }
+            .dev-line .dev-model { flex: 1 1 0; }
+            .dev-extra .dev-model { margin-right: 38px; }
+            .dev-line .dev-opt { flex: 1 1 0; margin-left: 38px; }
+            .dev-line .dev-date { flex: 0 0 138px; }
+            .dev-del-space { display: none; }
+            .dev-extra { padding-top: 8px; border-top: 1px dashed #E3D8BE; }
+            .dev-extra .dev-del { position: absolute; right: 0; top: 12px; }
+            .dev-extra { position: relative; }
+            .dev-add, .dev-num { flex-basis: 30px; width: 30px; height: 30px; }
+        }
         .drental-row { display: none; }
         .drental-row.show { display: flex; }
 
@@ -1945,6 +1978,41 @@
             .crest-motto { display: flex !important; justify-content: space-between; font-size: 7.5px; letter-spacing: 0; line-height: 1; color: #B3A27A; padding-right: 2px; }
             .crest-motto i.sp { width: 4px; }
         }
+
+        /* ===== 📱 14차-6: 전화 버튼에 이름 · 번호 여러 개면 고르는 창 · 상세팝업 번호 바로 걸기 ===== */
+        @media (max-width: 880px) {
+            .mc-ab.call { font-family: inherit; cursor: pointer; }
+            .mc-call-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .mc-call-more { font-size: 10px; opacity: .8; margin-left: -2px; }
+            button.m-rc { border: none; cursor: pointer; }
+            .m-call-r { text-decoration: none; color: inherit; }
+            .m-call-r .m-rs { font: 600 13px 'Public Sans', sans-serif; color: #C3D6E6; letter-spacing: .3px; }
+            .m-rank { flex-shrink: 0; min-width: 44px; text-align: center; font: 700 11px 'Public Sans', sans-serif; padding: 4px 7px; border-radius: 6px;
+                background: rgba(255,255,255,.08); color: #C3D6E6; }
+            .m-rank.first { background: linear-gradient(180deg, #F3D68C, #D2AA55); color: #1A1206; }
+            .m-divider { padding: 12px 10px 4px; font: 700 11px 'Public Sans', sans-serif; color: #8EA3B8; letter-spacing: .5px; border-top: 1px solid rgba(255,255,255,.1); margin-top: 4px; }
+            .m-dcalls { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+            .m-dcalls:empty { display: none !important; }
+            .m-dcall { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; background: #1F7A63; color: #fff; text-decoration: none; font-size: 13px; }
+            .m-dcall svg { width: 15px; height: 15px; flex-shrink: 0; }
+            .m-dcall b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+            .m-dcall span { margin-left: auto; font: 600 13px 'Public Sans', sans-serif; letter-spacing: .3px; opacity: .95; }
+            /* 14차-7/8: 소속 쪽 사람 표시 = 직책(주무관·사회복지사 등), 없으면 "소속" */
+            .mc-org-tag, .m-org-tag { flex-shrink: 0; font: 800 10.5px 'Public Sans', sans-serif; font-style: normal; padding: 2px 6px; border-radius: 5px;
+                background: #F3D68C; color: #1A1206; letter-spacing: 0; }
+            .m-r .m-org-tag { margin-right: -4px; }
+            /* 14차-9: 전화 버튼 칸을 넓게(꼬리표+이름이 안 잘리게), 길찾기·상세는 조금 좁게 */
+            .mc-acts { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, .75fr); }
+            .mc-ab.call { gap: 5px; padding: 0 8px; }
+            .mc-org-tag { font-size: 10px; padding: 2px 5px; }
+            /* 상세팝업: 번호 버튼이 생긴 칸은 한 줄 전체를 써서 이름·번호가 안 잘리게 */
+            .dfield:has(.m-dcalls:not(:empty)) { flex-basis: 100%; }
+            /* 이름은 절대 안 자르고, 자리가 모자라면 번호만 다음 줄(오른쪽)로 내려감 */
+            .m-dcall { flex-wrap: wrap; row-gap: 2px; }
+            .m-dcalls:not(:empty) { display: flex !important; }
+            .m-dcall b { flex: 0 0 auto; max-width: none; overflow: visible; }
+            .m-dcall span { flex-shrink: 0; white-space: nowrap; margin-left: auto; padding-left: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -2484,10 +2552,10 @@
                             <span>소속</span>
                         </div>
                         <div class="dfields">
-                            <div class="dfield"><label>부서</label><input type="text" id="detailOrgDept"></div>
-                            <div class="dfield"><label>성명</label><input type="text" id="detailOrgName"></div>
-                            <div class="dfield"><label>직책</label><input type="text" id="detailOrgTitle"></div>
-                            <div class="dfield"><label>연락처</label><input type="text" id="detailOrgContact"></div>
+                            <div class="dfield"><label>부서</label><input type="text" id="detailOrgDept" oninput="mRenderDetailCalls()"></div>
+                            <div class="dfield"><label>성명</label><input type="text" id="detailOrgName" oninput="mRenderDetailCalls()"></div>
+                            <div class="dfield"><label>직책</label><input type="text" id="detailOrgTitle" oninput="mRenderDetailCalls()"></div>
+                            <div class="dfield"><label>연락처</label><input type="text" id="detailOrgContact" oninput="mRenderDetailCalls()"><div class="m-dcalls m-only" id="detailOrgCalls"></div></div>
                             <div class="dfield"><label>이메일</label><input type="text" id="detailOrgEmail"></div>
                         </div>
                     </div>
@@ -2498,9 +2566,9 @@
                             <span>담당자</span>
                         </div>
                         <div class="dfields">
-                            <div class="dfield"><label>담당자 연락처</label><input type="text" id="detailManagerContact"></div>
+                            <div class="dfield"><label>담당자 연락처</label><input type="text" id="detailManagerContact" oninput="mRenderDetailCalls()"><div class="m-dcalls m-only" id="detailManagerCalls"></div></div>
                             <div class="dfield"><label>담당자 이메일</label><input type="text" id="detailManagerEmail"></div>
-                            <div class="dfield wide"><label>비고</label><input type="text" id="detailManagerNote"></div>
+                            <div class="dfield wide"><label>비고</label><input type="text" id="detailManagerNote" oninput="mRenderDetailCalls()"><div class="m-dcalls m-only" id="detailNoteCalls"></div></div>
                         </div>
                     </div>
 
@@ -2509,10 +2577,16 @@
                             <svg viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 18h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                             <span>기기</span>
                         </div>
-                        <div class="dfields">
-                            <div class="dfield"><label>모델명</label><input type="text" id="detailDeviceModel"></div>
-                            <div class="dfield"><label>옵션</label><input type="text" id="detailDeviceType"></div>
-                            <div class="dfield"><label>설치날짜</label><input type="date" id="detailDeviceOption"></div>
+                        <!-- 15차: 기기 여러 대 — 첫 줄은 기존 칸 그대로(①), [+]로 2대째부터 줄 추가(②③…, 각자 설치날짜) -->
+                        <div class="dfields dev-fields">
+                            <div class="dev-line">
+                                <button type="button" class="dev-add" onclick="addExtraDevice()" title="기기 추가 (설치날짜가 다른 기기를 한 줄씩)" aria-label="기기 추가">+</button>
+                                <div class="dfield dev-model"><label>모델명<b class="dev-no" id="detailDevNo1"></b></label><input type="text" id="detailDeviceModel"></div><span class="dev-br"></span>
+                                <div class="dfield dev-opt"><label>옵션</label><input type="text" id="detailDeviceType"></div>
+                                <div class="dfield dev-date"><label>설치날짜</label><input type="date" id="detailDeviceOption"></div>
+                                <span class="dev-del-space" aria-hidden="true"></span>
+                            </div>
+                            <div id="detailExtraDevices"></div>
                         </div>
                     </div>
 
@@ -2994,6 +3068,7 @@ function showSyncStatus(msg, isError) {
                 rentalPeriod: row.rental_period || '1개월',
                 rentalEndDate: row.rental_end_date || '',
                 memoList: (Array.isArray(row.memo_list) ? row.memo_list : []).map(m => m.id ? m : Object.assign({}, m, { id: generateUniqueId() })),
+                devices: Array.isArray(row.devices) ? row.devices : [], // 15차: 2대째부터의 추가 기기 [{model, type, date}] (1대째는 device_* 칸 그대로)
                 status: row.status || '정상',
                 updatedAt: row.updated_at || null, // 동시편집 충돌 감지용 - 서버에 저장된 마지막 수정시각
                 checked: false // 체크 선택 상태는 항상 화면(브라우저)에서만 관리하고 DB에는 저장하지 않음
@@ -3028,7 +3103,9 @@ function showSyncStatus(msg, isError) {
                 rental_end_date: item.rentalEndDate || null,
                 memo_list: item.memoList || [],
                 status: item.status || '정상',
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                // 15차: Supabase에 devices 칸이 있을 때만 같이 저장 (칸이 없는데 보내면 저장 자체가 실패하므로)
+                ...((devicesColumnReady && Array.isArray(item.devices)) ? { devices: item.devices } : {})
             };
         }
 
@@ -3205,6 +3282,7 @@ function showSyncStatus(msg, isError) {
             appInitStarted = true;
             try {
                 await loadAllDataFromSupabase();
+                await detectDevicesColumn(); // 15차: 기기 여러 대용 devices 칸이 Supabase에 있는지 확인
                 // 2026-10-03 12차: 임대 기간이 끝나도 자동으로 "종료" 처리하지 않음 → "회수대기" 단계로 보이고,
                 // 기기를 회수한 뒤 상세팝업에서 직접 "종료"로 바꾸는 방식 (syncExpiredRentalStatuses 호출 중단)
                 await migrateKioFieldsIfNeeded();
@@ -3286,7 +3364,7 @@ function showSyncStatus(msg, isError) {
         // 신규(NEW): 판매 업체 + 설치날짜가 오늘 기준 NEW_BADGE_MONTHS 이내. 임대는 기간이 짧아 의미가 없어 제외
         function isNewSaleItem(item) {
             if (isLeaseItem(item) || isEndedItem(item)) return false;
-            const d = parseLooseDate(item.deviceOption);
+            const d = getLatestInstallDate(item); // 15차: 기기 여러 대면 가장 최근(오늘 이전) 설치일 기준 (대장님 결정)
             if (!d) return false;
             const today = new Date(); today.setHours(0, 0, 0, 0);
             if (d > today) return false;
@@ -4119,7 +4197,8 @@ function generateUniqueId() {
                     item.regionSi, item.regionGu, item.placeName, item.installAddress,
                     item.installLocation, item.orgDept, item.orgName, item.orgTitle,
                     item.orgContact, item.orgEmail, item.managerContact, item.managerEmail, item.managerNote,
-                    item.kioId, item.kioAdminId, item.reaCode
+                    item.kioId, item.kioAdminId, item.reaCode,
+                    item.deviceModel, item.deviceType, (item.devices || []).map(d => [d.model, d.type].join(' ')).join(' ') // 15차
                 ];
 
                 const memoTexts = (item.memoList || []).map(m => m.text).join(' ');
@@ -4209,7 +4288,7 @@ function generateUniqueId() {
                     <td class="org-group copy-cell org-email-cell"><span class="email-display">${formatEmailForDisplay(item.orgEmail || '-')}</span></td>
                     <td class="manager-group">${escapeHtml(item.managerContact || '-')}</td>
                     <td class="manager-group copy-cell manager-email-cell"><span class="email-display">${formatEmailForDisplay(item.managerEmail || '-')}</span></td>
-                    <td class="device-group">${escapeHtml(item.deviceModel || '-')}</td>
+                    <td class="device-group" title="${escapeHtml(deviceListText(item))}">${(item.devices || []).length ? `<span class="dev-more">${item.devices.length + 1}대</span>` : ''}${escapeHtml(item.deviceModel || '-')}</td>
                     <td class="device-group">${escapeHtml(item.deviceType || '-')}</td>
                     <td class="device-group">${escapeHtml(item.deviceOption || '-')}</td>
                     <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.kioId || '-')}</span></td>
@@ -4259,6 +4338,87 @@ function generateUniqueId() {
            업체 데이터를 다시 읽거나 다시 필터링하지 않으므로, PC 표와 모바일 카드는 항상 100% 같은 목록을 보여줌.
            클릭 동작(상세보기/수정/AS이력)은 전부 기존 함수(openDetailModal 하나로 통합됨)를 그대로
            재사용 — 모바일 전용으로 새로 만든 로직이 아니라서 동작 방식이 PC와 항상 동일하게 유지됨. */
+        /* ===================== 15차: 기기 여러 대 (2026-10-03) =====================
+           · 1대째 = 기존 칸(device_model / device_type / device_option) 그대로 → 표·엑셀 양식·예전 백업이 안 깨짐
+           · 2대째부터 = companies.devices (jsonb 목록) [{model, type, date}]
+           · Supabase에 devices 칸이 없으면(대장님이 SQL을 아직 안 돌렸으면) 추가 기기 저장을 막고 안내만 함
+             SQL: alter table companies add column devices jsonb not null default '[]'::jsonb;
+           · 레아코드·키오에듀ID는 기기 순서대로 콤마로 적음 (대장님 결정) */
+        let devicesColumnReady = false;
+        async function detectDevicesColumn() {
+            try { const { error } = await sb.from('companies').select('devices').limit(1); devicesColumnReady = !error; }
+            catch (e) { devicesColumnReady = false; }
+        }
+        function allDevices(item) {
+            return [{ model: item.deviceModel || '', type: item.deviceType || '', date: item.deviceOption || '' }].concat(item.devices || []);
+        }
+        function deviceListText(item) {
+            const list = allDevices(item);
+            if (list.length < 2) return '';
+            return list.map((d, i) => `${'①②③④⑤⑥⑦⑧⑨⑩'[i] || (i + 1)} ${[d.model, d.type, d.date].filter(Boolean).join(' · ')}`).join('\n');
+        }
+        // 가장 최근 설치일 (오늘 이후 날짜는 빼고) — NEW 표시 기준
+        function getLatestInstallDate(item) {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            return allDevices(item).map(d => parseLooseDate(d.date)).filter(d => d && d <= today).sort((a, b) => b - a)[0] || null;
+        }
+        const DEV_NUMS = '①②③④⑤⑥⑦⑧⑨⑩';
+        function extraDeviceLineHtml(d, i) {
+            return `<div class="dev-line dev-extra">
+                <span class="dev-num" title="${i + 2}번째 기기">${DEV_NUMS[i + 1] || (i + 2)}</span>
+                <div class="dfield dev-model"><label>모델명</label><input type="text" class="dx-model" value="${escapeHtml(d.model || '')}"></div><span class="dev-br"></span>
+                <div class="dfield dev-opt"><label>옵션</label><input type="text" class="dx-type" value="${escapeHtml(d.type || '')}"></div>
+                <div class="dfield dev-date"><label>설치날짜</label><input type="date" class="dx-date" value="${escapeHtml(d.date || '')}"></div>
+                <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 기기 줄 지우기" aria-label="기기 줄 지우기">×</button>
+            </div>`;
+        }
+        function renderExtraDevices(list) {
+            const box = document.getElementById('detailExtraDevices');
+            if (!box) return;
+            box.innerHTML = (list || []).map((d, i) => extraDeviceLineHtml(d, i)).join('');
+            renumberDevices();
+        }
+        function readExtraDevices() {
+            return Array.from(document.querySelectorAll('#detailExtraDevices .dev-extra')).map(line => ({
+                model: line.querySelector('.dx-model').value.trim(),
+                type: line.querySelector('.dx-type').value.trim(),
+                date: line.querySelector('.dx-date').value
+            })).filter(d => d.model || d.type || d.date);
+        }
+        function renumberDevices() {
+            const lines = document.querySelectorAll('#detailExtraDevices .dev-extra');
+            lines.forEach((l, i) => { l.querySelector('.dev-num').textContent = DEV_NUMS[i + 1] || (i + 2); });
+            const no1 = document.getElementById('detailDevNo1');
+            if (no1) no1.textContent = lines.length ? ' ①' : '';
+        }
+        function addExtraDevice() {
+            if (!devicesColumnReady) {
+                alert('기기를 여러 대 저장하려면 Supabase에 "기기 목록" 칸을 먼저 만들어야 해요.\n\nSupabase → SQL Editor에서 아래 한 줄을 실행한 뒤 새로고침해주세요.\n\nalter table companies add column devices jsonb not null default \'[]\'::jsonb;');
+                return;
+            }
+            const box = document.getElementById('detailExtraDevices');
+            const i = box.querySelectorAll('.dev-extra').length;
+            box.insertAdjacentHTML('beforeend', extraDeviceLineHtml({}, i));
+            renumberDevices();
+            const last = box.lastElementChild && box.lastElementChild.querySelector('.dx-model');
+            if (last) last.focus();
+        }
+        function removeExtraDevice(btn) {
+            const line = btn.closest('.dev-extra');
+            const filled = Array.from(line.querySelectorAll('input')).some(x => x.value);
+            if (filled && !confirm('이 기기 줄을 지울까요? (저장을 눌러야 실제로 반영돼요)')) return;
+            line.remove();
+            renumberDevices();
+        }
+        if (typeof openDetailModal === 'function') {
+            const _devOpenDetail = openDetailModal;
+            openDetailModal = function(id) {
+                const r = _devOpenDetail.apply(this, arguments);
+                try { const it = (findItemLocation(id) || {}).item; renderExtraDevices(it ? it.devices : []); } catch (e) { console.error(e); }
+                return r;
+            };
+        }
+
         /* ===================== 📱 14차 모바일 전용 구역 — "지휘소 수첩" (2026-10-03) =====================
            · 카드 목록(renderMobileCards): renderTable()이 이미 걸러둔 filteredData를 그대로 받아서 그리기만 함
              → PC 표와 폰 카드는 항상 같은 목록. 데이터 계산·저장은 전부 PC와 같은 함수를 씀
@@ -4272,13 +4432,77 @@ function generateUniqueId() {
 
         function isMobileView() { return !!(window.matchMedia && window.matchMedia('(max-width: 880px)').matches); }
 
-        // 전화: 담당자 번호 우선, 없으면 소속 번호 (대장님 결정 2026-10-03)
-        function mPhoneOf(item) {
-            const raw = (item.managerContact || '').trim() ? item.managerContact : (item.orgContact || '');
-            const who = (item.managerContact || '').trim() ? '담당자' : '소속';
-            const num = String(raw || '').match(/\+?\d[\d\s\-().]{5,}\d/);
-            return num ? { tel: num[0].replace(/[^\d+]/g, ''), who } : null;
+        // 14차-6: 한 칸에 적힌 "이름 + 번호"를 번호별로 나눠 읽음 (적힌 순서 = 우선순위, 왼쪽/먼저 적은 게 1순위)
+        //  예) "김철수 010-1111-2222 / 박영희 010-3333-4444" → [{name:'김철수', tel:'01011112222'}, {name:'박영희', ...}]
+        //  국내 번호 모양(0XX-XXX(X)-XXXX, (02) 820-1234, 1588-0000, +82 …)만 골라내서, 이름에 숫자가 있어도 헷갈리지 않음
+        const M_PHONE_RE = /(?:\+82[-.\s]?|\b0)(?:\d{1,2})[-.\s)]{0,2}\d{3,4}[-.\s]?\d{4}|\b1[5-9]\d{2}[-.\s]?\d{4}\b/g;
+        function mCleanName(t) {
+            return String(t || '').replace(/[\/,;|·•:()\[\]~\-–—]+/g, ' ').replace(/(담당자|담당|연락처|휴대폰|핸드폰|전화|번호|tel|TEL|HP|hp)/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 12);
         }
+        function mParsePhones(text) {
+            const str = String(text || '');
+            const hits = [];
+            let m; M_PHONE_RE.lastIndex = 0;
+            while ((m = M_PHONE_RE.exec(str))) {
+                let tel = m[0].replace(/[^\d+]/g, '');
+                if (tel.startsWith('+82')) tel = '0' + tel.slice(3);
+                hits.push({ tel, shown: m[0].trim(), start: m.index, end: m.index + m[0].length });
+            }
+            const seg = (i) => ({
+                before: mCleanName(str.slice(i ? hits[i - 1].end : 0, hits[i].start)),
+                after: mCleanName(str.slice(hits[i].end, i + 1 < hits.length ? hits[i + 1].start : str.length))
+            });
+            // "이름 번호" 순으로 적었는지, "번호 이름" 순으로 적었는지 첫 번호로 판단해서 칸 전체에 같은 규칙 적용
+            const numberFirst = hits.length && !seg(0).before && !!seg(0).after;
+            return hits.map((h, i) => {
+                const g = seg(i);
+                return { tel: h.tel, shown: h.shown, name: numberFirst ? g.after : (g.before || (i === hits.length - 1 ? g.after : '')) };
+            });
+        }
+        // 전화: 담당자 번호 우선(여러 개면 고르는 창), 없으면 소속(주무관) 번호 (대장님 결정 2026-10-03)
+        // 14차-9: 한 업체의 번호 전부를 세 묶음으로 — 담당자(적힌 순서 = 우선순위) / 비고(담당자 아래 상주 직원 등) / 소속.
+        //  같은 번호가 여러 칸에 적혀 있으면(예: 소속 사람이 곧 담당자) 앞 묶음에만 한 번 나옴
+        function mContacts(src) {
+            const seen = new Set();
+            const take = (arr) => arr.filter(p => (seen.has(p.tel) ? false : (seen.add(p.tel), true)));
+            const mgr = take(mParsePhones(src.managerContact));
+            const note = take(mParsePhones(src.managerNote));
+            const orgAll = mParsePhones(src.orgContact);
+            const org = take(orgAll).map(p => ({ ...p, name: src.orgName || p.name }));
+            // 이름 없이 적힌 번호가 소속 칸에도 있으면 소속 성명을 붙여줌 (예: 비고의 "010-5008-7279" = 소속 윤지예 번호)
+            const orgTels = new Set(orgAll.map(p => p.tel));
+            [mgr, note].forEach(arr => arr.forEach(p => { if (!p.name && orgTels.has(p.tel) && src.orgName) p.name = src.orgName; }));
+            return { mgr, note, org };
+        }
+        function mPhoneOf(item) {
+            const c = mContacts(item);
+            const team = c.mgr.concat(c.note); // 담당자 쪽 번호 (담당자 칸 → 비고 칸 순)
+            if (team.length) return { tel: team[0].tel, who: c.mgr.length ? '담당자' : '비고', name: team[0].name, many: team.length > 1 };
+            if (c.org.length) return { tel: c.org[0].tel, who: '소속', name: c.org[0].name, many: c.org.length > 1, title: mOrgTag(item.orgTitle, item.orgDept) };
+            return null;
+        }
+        // 14차-8/9: 소속 쪽 사람 꼬리표 = 직책 → 없으면 부서 → 없으면 "소속" (주무관 / 사회복지사 / 평생학습팀 …)
+        function mOrgTag(title, dept) {
+            const t = String(title || '').trim() || String(dept || '').trim();
+            return t ? (t.length > 6 ? t.slice(0, 6) : t) : '소속';
+        }
+        // 전화 버튼 HTML (카드용 / 시트 줄용). 번호가 2개 이상이면 링크 대신 "고르는 창" 버튼
+        function mCallBtnHtml(item, kind) {
+            const ph = mPhoneOf(item);
+            if (kind === 'row') {
+                if (!ph) return `<span class="m-rc off">${M_ICON.call}</span>`;
+                const orgTag = ph.who === '소속' ? `<span class="m-org-tag">${escapeHtml(ph.title)}</span>` : '';
+                return orgTag + (ph.many ? `<button type="button" class="m-rc" onclick="event.stopPropagation(); openCallChooser('${item.id}')" aria-label="전화 고르기">${M_ICON.call}</button>`
+                               : `<a class="m-rc" href="tel:${ph.tel}" aria-label="${escapeHtml(ph.name || ph.who)}에게 전화">${M_ICON.call}</a>`);
+            }
+            if (!ph) return `<span class="mc-ab call off">${M_ICON.call}번호 없음</span>`;
+            // 14차-7/8: 담당자 번호가 없어 소속 쪽(주무관·사회복지사 등)에게 거는 경우 직책 꼬리표 (상황을 모를 수 있는 분이라 걸기 전에 알아보게)
+            const isOrg = ph.who === '소속';
+            const label = `${M_ICON.call}${isOrg ? `<small class="mc-org-tag">${escapeHtml(ph.title)}</small>` : ''}<span class="mc-call-name">${escapeHtml(ph.name || (isOrg ? '' : ph.who))}</span>${ph.many ? '<small class="mc-call-more">▾</small>' : ''}`;
+            return ph.many ? `<button type="button" class="mc-ab call" onclick="event.stopPropagation(); openCallChooser('${item.id}')">${label}</button>`
+                           : `<a class="mc-ab call" href="tel:${ph.tel}" onclick="event.stopPropagation()">${label}</a>`;
+        }
+        function openCallChooser(id) { openMobileSheet('call:' + id); }
         function mLatestMemo(item) {
             const l = item.memoList || [];
             if (!l.length) return null;
@@ -4322,10 +4546,7 @@ function generateUniqueId() {
                 const isWait = getLeaseStage(item) === 'awaiting';
                 const memo = mLatestMemo(item);
                 const sub = [mRegion(item), item.installLocation].filter(Boolean).join(' · ');
-                const ph = mPhoneOf(item);
-                const callBtn = ph
-                    ? `<a class="mc-ab call" href="tel:${ph.tel}" onclick="event.stopPropagation()">${M_ICON.call}전화 <small>${ph.who}</small></a>`
-                    : `<span class="mc-ab call off">${M_ICON.call}번호 없음</span>`;
+                const callBtn = mCallBtnHtml(item, 'card');
                 const addr = (item.installAddress || '').trim();
                 const midBtn = isWait
                     ? `<button type="button" class="mc-ab done" onclick="mMarkReturned('${item.id}')">회수완료</button>`
@@ -4363,11 +4584,36 @@ function generateUniqueId() {
             if (!sheet || !mSheetKind) return;
             const all = getAllGroupsFlatData();
             const kind = mSheetKind;
-            const callHtml = (i) => { const ph = mPhoneOf(i); return ph ? `<a class="m-rc" href="tel:${ph.tel}" aria-label="${ph.who}에게 전화">${M_ICON.call}</a>` : `<span class="m-rc off">${M_ICON.call}</span>`; };
+            const callHtml = (i) => mCallBtnHtml(i, 'row');
             const row = (i, sub, tag, warn, right) => `
                 <div class="m-r"><div class="m-rm" onclick="closeMobileSheet(); openDetailModal('${i.id}')"><div class="m-rn">${escapeHtml(i.placeName || '-')}</div><div class="m-rs">${escapeHtml(sub)}</div></div>
                 ${tag ? `<span class="m-rt ${warn ? 'warn' : ''}">${tag}</span>` : ''}${right}</div>`;
             let html = '<div class="m-grab"></div>';
+            if (kind.startsWith('call:')) {
+                // 14차-6: 전화 고르기 — 담당자 번호를 적힌 순서대로(위 = 1순위), 아래에 소속(주무관)
+                const it = (findItemLocation(kind.slice(5)) || {}).item;
+                if (!it) { sheet.innerHTML = html; return; }
+                const { mgr, note, org } = mContacts(it);
+                const callRow = (p, badge, sub) => `<a class="m-r m-call-r" href="tel:${p.tel}" onclick="closeMobileSheet()">
+                    <span class="m-rank ${badge === '1순위' ? 'first' : ''}">${badge}</span>
+                    <div class="m-rm"><div class="m-rn">${escapeHtml(p.name || '이름 없음')}</div><div class="m-rs">${escapeHtml(p.shown)}${sub ? ' · ' + escapeHtml(sub) : ''}</div></div>
+                    <span class="m-rc">${M_ICON.call}</span></a>`;
+                html += `<div class="m-sh"><span class="m-sh-t">📞 누구에게 걸까요?</span></div><div class="m-ssub">${escapeHtml(it.placeName || '')}</div>`;
+                html += `<div class="m-rows">`;
+                html += mgr.map((p, n) => callRow(p, n === 0 ? '1순위' : `${n + 1}`, '')).join('');
+                if (note.length) {
+                    // 담당자 칸이 비어 있으면 비고 번호가 1순위부터 이어짐
+                    html += (mgr.length ? `<div class="m-divider">비고 · 담당자 쪽 다른 번호</div>` : '') +
+                        note.map((p, n) => callRow(p, mgr.length ? '비고' : (n === 0 ? '1순위' : `${n + 1}`), mgr.length ? '' : '비고')).join('');
+                }
+                if (org.length) {
+                    const orgSub = it.orgTitle ? (it.orgDept || '') : '';
+                    html += `<div class="m-divider">소속</div>` + org.map(p => callRow(p, mOrgTag(it.orgTitle, it.orgDept), orgSub)).join('');
+                }
+                html += `</div><div class="m-sf"><button type="button" class="b" onclick="closeMobileSheet()">닫기</button></div>`;
+                sheet.innerHTML = html;
+                return;
+            }
             if (kind === 'as') {
                 const items = all.filter(i => passesHeaderFilters(i, { division: 'all', group: ALL_GROUP_KEY, stage: null, ended: false, nw: false, as: true }));
                 const t = (i) => { const m = mLatestMemo(i); return m && m.ago !== null ? -m.ago : 0; };
@@ -4409,6 +4655,22 @@ function generateUniqueId() {
         async function mMarkReturned(id) {
             await markLeaseReturned(id);
             if (mSheetKind) renderMobileSheet();
+        }
+
+        // 14차-6: 상세팝업 연락처 칸 아래에 "누르면 바로 걸리는" 번호 칩 (폰 전용, 적힌 순서대로)
+        function mRenderDetailCalls() {
+            const v = (id) => (document.getElementById(id) || {}).value || '';
+            const orgTag = mOrgTag(v('detailOrgTitle'), v('detailOrgDept'));
+            [['detailManagerContact', 'detailManagerCalls', '', ''], ['detailManagerNote', 'detailNoteCalls', '', '비고'], ['detailOrgContact', 'detailOrgCalls', v('detailOrgName'), orgTag]].forEach(([inId, outId, fallbackName, tag]) => {
+                const out = document.getElementById(outId);
+                if (!out) return;
+                out.innerHTML = mParsePhones(v(inId)).map(p =>
+                    `<a class="m-dcall" href="tel:${p.tel}">${M_ICON.call}${tag ? `<i class="m-org-tag">${escapeHtml(tag)}</i>` : ''}<b>${escapeHtml(p.name || fallbackName || (tag ? '' : '전화'))}</b><span>${escapeHtml(p.shown)}</span></a>`).join('');
+            });
+        }
+        if (typeof openDetailModal === 'function') {
+            const _mOpenDetail = openDetailModal;
+            openDetailModal = function(id) { const r = _mOpenDetail.apply(this, arguments); try { mRenderDetailCalls(); } catch (e) {} return r; };
         }
 
         // 폰에서 봉화·이정표를 누르면 표 필터 대신 시트를 엶 (캡처 단계에서 가로채서 원래 onclick은 실행 안 됨)
@@ -5281,6 +5543,7 @@ function generateUniqueId() {
                 installDate: document.getElementById('detailInstallDate').value,
                 rentalPeriod: readRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit'),
                 rentalEndDate: document.getElementById('detailRentalEndDate').value,
+                devices: readExtraDevices(), // 15차: 2대째부터
                 memoList: targetItem.memoList || [], // AS이력은 이미 각자 즉시 저장되므로 현재 메모리 상태 그대로 실어보냄
                 status: document.getElementById('detailStatusValue').value,
                 checked: targetItem.checked
@@ -5661,9 +5924,9 @@ function generateUniqueId() {
                     managerContact: item.managerContact || '-',
                     managerEmail: item.managerEmail || '-',
                     managerNote: item.managerNote || '-',
-                    deviceModel: item.deviceModel || '-',
-                    deviceType: item.deviceType || '-',
-                    deviceOption: item.deviceOption || '-',
+                    deviceModel: allDevices(item).map(d => d.model || '-').join(' / ') || '-',
+                    deviceType: allDevices(item).map(d => d.type || '-').join(' / ') || '-',
+                    deviceOption: allDevices(item).map(d => d.date || '-').join(' / ') || '-',
                     kioId: item.kioId || '-',
                     kioAdminId: item.kioAdminId || '-',
                     reaCode: item.reaCode || '-',
