@@ -15,7 +15,10 @@
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
-    <link rel="apple-touch-icon" href="assets/app-icon-180.png">
+    <!-- 15차-4: 웨일·크롬 즐겨찾기 타일이 큰 아이콘을 쓰도록 큰 크기도 알려줌 (없으면 작은 탭 아이콘을 줄여서 보여줌) -->
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="assets/app-icon-180.png">
 <!-- 엑셀 처리(SheetJS) 라이브러리 CDN 추가 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- 디자인 유지 엑셀 내보내기용 ExcelJS + FileSaver -->
@@ -1979,6 +1982,10 @@
                 box-shadow: 0 3px 10px rgba(190,150,70,.35), inset 0 1px 0 rgba(255,255,255,.6); }
             .m-add svg { width: 17px; height: 17px; }
             .m-add:active { transform: scale(.94); }
+            /* 15차-3 버그 수정: 오른쪽 위 버튼 묶음 상자가 PC 규칙 때문에 112px 높이로 늘어나서, 그 아래 [AS 요청]·[임대] 칸의
+               터치를 가로채고 있었음 → 상자 자체는 터치를 통과시키고, 버튼만 눌리게 */
+            .navbar-right-stack, .navbar-right { height: auto; min-height: 0; pointer-events: none; }
+            .navbar-right > * { pointer-events: auto; }
             .navbar-right { gap: 7px; }
             /* 아래 둥근 버튼이 없어졌으니 목록 아래 여백도 줄임 */
             .container { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
