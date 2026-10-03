@@ -889,16 +889,42 @@
         .dev-line .dev-model { flex: 1.8 1 0; }
         .dev-line .dev-opt { flex: 1 1 0; }
         .dev-line .dev-date { flex: 0 0 120px; }
-        .dev-add, .dev-num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 2px; }
-        .dev-add { border: 1px solid #3f8f4a; background: linear-gradient(180deg, #62c473, #3f8f4a); color: #fff; font: 800 17px/1 'Public Sans', sans-serif; cursor: pointer;
+        /* 15차-6: [+]는 첫 줄 맨 끝(설치날짜 뒤), 아이콘은 SVG라 원 정중앙. 왼쪽 ①②… 번호 칸은 기기가 2대 이상일 때만 */
+        .dev-add, .dev-num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2px; box-sizing: border-box; }
+        .dev-add { border: 1px solid #3f8f4a; background: linear-gradient(180deg, #62c473, #3f8f4a); color: #fff; cursor: pointer;
             box-shadow: 0 2px 6px rgba(63,143,74,.35); padding: 0; }
+        .dev-add svg, .dev-del svg { display: block; }
+        .dev-num1 { display: none; }
+        .dev-fields.has-extra .dev-num1 { display: inline-flex; }
         .dev-add:hover { filter: brightness(1.08); }
         .dev-num { background: #E9F4EA; color: #2a6532; font: 800 14px/1 'Public Sans', sans-serif; }
         .dev-no { color: #2a6532; font-weight: 800; }
-        .dev-del { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; border: none; background: #F3EEE4; color: #8a8578; font-size: 16px; line-height: 1; cursor: pointer; margin-bottom: 3px; padding: 0; }
+        .dev-del { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; border: none; background: #F3EEE4; color: #8a8578; cursor: pointer; margin-bottom: 2px; padding: 0;
+            display: inline-flex; align-items: center; justify-content: center; }
         .dev-del:hover { background: #F7E2D8; color: #A54823; }
-        .dev-del-space { flex: 0 0 24px; }
         .dev-br { display: none; }
+        .brand-home { cursor: pointer; }
+        /* 15차-8: 로고에 마우스를 올리면 — 금빛 고리가 엠블럼 둘레를 돌고, 엠블럼이 은은하게 빛남 (RHEAVISION 글자에 올려도 같이) */
+        .brand-logo-wrap.brand-home { overflow: visible; }
+        .brand-logo-wrap.brand-home::after {
+            content: ''; position: absolute; inset: -5px; border-radius: 50%; z-index: 2; pointer-events: none; opacity: 0;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(243,214,140,0) 40deg, rgba(243,214,140,.95) 150deg, #FFF3CF 175deg, rgba(243,214,140,0) 205deg,
+                                       transparent 220deg, rgba(243,214,140,0) 230deg, rgba(214,180,106,.7) 320deg, rgba(243,214,140,0) 355deg);
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+                    mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+            transition: opacity .35s ease; }
+        .brand-logo-wrap.brand-home::before {
+            content: ''; position: absolute; inset: -10px; border-radius: 50%; z-index: 0; pointer-events: none; opacity: 0;
+            background: radial-gradient(circle, rgba(243,214,140,.38) 0%, rgba(214,170,80,.16) 45%, transparent 70%); transition: opacity .35s ease; }
+        .brand-logo-wrap.brand-home .brand-logo { transition: transform .35s ease, filter .35s ease; }
+        .navbar-left:has(.brand-home:hover) .brand-logo-wrap::after { opacity: 1; animation: brandRing 2.4s linear infinite; }
+        .navbar-left:has(.brand-home:hover) .brand-logo-wrap::before { opacity: 1; }
+        .navbar-left:has(.brand-home:hover) .brand-logo { transform: scale(1.06); filter: drop-shadow(0 0 16px rgba(243,214,140,.75)) brightness(1.18); }
+        .navbar-left:has(.brand-home:hover) .crest-title { filter: brightness(1.2) drop-shadow(0 0 8px rgba(243,214,140,.45)); }
+        .crest-title { transition: filter .35s ease; }
+        @keyframes brandRing { to { transform: rotate(360deg); } }
+        @media (hover: none) { .navbar-left:has(.brand-home:hover) .brand-logo-wrap::after { animation: none; opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .navbar-left:has(.brand-home:hover) .brand-logo-wrap::after { animation: none; } }
         /* 15차-2: 레아코드 번호 보기 (같은 칸 위에 겹쳐서 보여주기만, 저장값은 그대로) */
         .code-wrap { position: relative; }
         .code-wrap input { width: 100%; box-sizing: border-box; }
@@ -912,15 +938,16 @@
         @media (max-width: 880px) {
             .dev-line { flex-wrap: wrap; row-gap: 6px; }
             .dev-br { display: block; flex: 0 0 100%; height: 0; }
-            .dev-line .dev-model { flex: 1 1 0; }
-            .dev-extra .dev-model { margin-right: 38px; }
-            .dev-line .dev-opt { flex: 1 1 0; margin-left: 38px; }
+            .dev-line { position: relative; }
+            .dev-line .dev-model { flex: 1 1 0; margin-right: 40px; }
+            .dev-line .dev-opt { flex: 1 1 0; }
+            .dev-fields.has-extra .dev-line .dev-opt { margin-left: 40px; }
             .dev-line .dev-date { flex: 0 0 138px; }
-            .dev-del-space { display: none; }
             .dev-extra { padding-top: 8px; border-top: 1px dashed #E3D8BE; }
+            /* 폰: [+]·[×]는 모델명 줄 오른쪽 끝 */
+            .dev-line .dev-add { position: absolute; right: 0; top: 4px; }
             .dev-extra .dev-del { position: absolute; right: 0; top: 12px; }
-            .dev-extra { position: relative; }
-            .dev-add, .dev-num { flex-basis: 30px; width: 30px; height: 30px; }
+            .dev-add, .dev-num, .dev-del { flex-basis: 32px; width: 32px; height: 32px; }
         }
         .drental-row { display: none; }
         .drental-row.show { display: flex; }
@@ -2051,7 +2078,7 @@
     <div class="header-fixed">
     <div class="navbar">
         <div class="navbar-left">
-            <div class="brand-logo-wrap">
+            <div class="brand-logo-wrap brand-home" onclick="goHomeRefresh()" title="처음 화면으로 새로고침" role="link" tabindex="0">
                 <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo.webp" alt="Rheavision Corp.">
             </div>
             <div class="navbar-left-stack">
@@ -2060,7 +2087,7 @@
                      2줄: 그룹 박스 · 임대 단계 박스 · 신규 칩 · 종료 보기 칩
                      예전 그룹 탭(topMenu)·상태카드·판매/임대 미니스탯은 없앰. topMenu는 옛 코드 호환용으로 숨겨서만 남겨둠 -->
                 <div class="navbar-line-top">
-                    <div class="crest-text" title="업체 관리 지휘소"><span class="brand-name crest-title">RHEAVISION</span><span class="crest-motto" aria-label="Command Ledger"><i>C</i><i>O</i><i>M</i><i>M</i><i>A</i><i>N</i><i>D</i><i class="sp"></i><i>L</i><i>E</i><i>D</i><i>G</i><i>E</i><i>R</i></span></div>
+                    <div class="crest-text brand-home" title="처음 화면으로 새로고침" onclick="goHomeRefresh()" role="link" tabindex="0"><span class="brand-name crest-title">RHEAVISION</span><span class="crest-motto" aria-label="Command Ledger"><i>C</i><i>O</i><i>M</i><i>M</i><i>A</i><i>N</i><i>D</i><i class="sp"></i><i>L</i><i>E</i><i>D</i><i>G</i><i>E</i><i>R</i></span></div>
                     <ul class="top-menu" id="topMenu" style="display:none;"></ul>
                     <div class="div-tabs" id="divisionTabs" role="tablist" aria-label="구분"></div>
                     <div class="as-panel" id="asPanel" role="button" tabindex="0" onclick="toggleAsFilter()" title="AS 요청 업체를 표에서 모아보기 (다시 누르면 해제) · 마우스를 올리면 목록"></div>
@@ -2594,13 +2621,13 @@
                             <span>기기</span>
                         </div>
                         <!-- 15차: 기기 여러 대 — 첫 줄은 기존 칸 그대로(①), [+]로 2대째부터 줄 추가(②③…, 각자 설치날짜) -->
-                        <div class="dfields dev-fields">
+                        <div class="dfields dev-fields" id="detailDevFields">
                             <div class="dev-line">
-                                <button type="button" class="dev-add" onclick="addExtraDevice()" title="기기 추가 (설치날짜가 다른 기기를 한 줄씩)" aria-label="기기 추가">+</button>
-                                <div class="dfield dev-model"><label>모델명<b class="dev-no" id="detailDevNo1"></b></label><input type="text" id="detailDeviceModel"></div><span class="dev-br"></span>
+                                <span class="dev-num dev-num1" title="1번째 기기">①</span>
+                                <div class="dfield dev-model"><label>모델명</label><input type="text" id="detailDeviceModel"></div><span class="dev-br"></span>
                                 <div class="dfield dev-opt"><label>옵션</label><input type="text" id="detailDeviceType"></div>
                                 <div class="dfield dev-date"><label>설치날짜</label><input type="date" id="detailDeviceOption"></div>
-                                <span class="dev-del-space" aria-hidden="true"></span>
+                                <button type="button" class="dev-add" onclick="addExtraDevice()" title="기기 추가 (설치날짜가 다른 기기를 한 줄씩)" aria-label="기기 추가"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
                             </div>
                             <div id="detailExtraDevices"></div>
                         </div>
@@ -4360,6 +4387,10 @@ function generateUniqueId() {
            · Supabase에 devices 칸이 없으면(대장님이 SQL을 아직 안 돌렸으면) 추가 기기 저장을 막고 안내만 함
              SQL: alter table companies add column devices jsonb not null default '[]'::jsonb;
            · 레아코드·키오에듀ID는 기기 순서대로 콤마로 적음 (대장님 결정) */
+        // 15차-7: 로고(기사 엠블럼)·RHEAVISION 글자를 누르면 처음 화면으로 새로고침 (보통 웹사이트처럼).
+        //  필터·검색이 다 풀리고 최신 데이터·최신 화면 파일을 다시 받음. 열린 팝업은 로고를 가리므로 입력 중 실수로 날아갈 일 없음
+        function goHomeRefresh() { location.href = location.pathname; }
+        document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('brand-home')) { e.preventDefault(); goHomeRefresh(); } });
         let devicesColumnReady = false;
         async function detectDevicesColumn() {
             try { const { error } = await sb.from('companies').select('devices').limit(1); devicesColumnReady = !error; }
@@ -4385,7 +4416,7 @@ function generateUniqueId() {
                 <div class="dfield dev-model"><label>모델명</label><input type="text" class="dx-model" value="${escapeHtml(d.model || '')}"></div><span class="dev-br"></span>
                 <div class="dfield dev-opt"><label>옵션</label><input type="text" class="dx-type" value="${escapeHtml(d.type || '')}"></div>
                 <div class="dfield dev-date"><label>설치날짜</label><input type="date" class="dx-date" value="${escapeHtml(d.date || '')}"></div>
-                <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 기기 줄 지우기" aria-label="기기 줄 지우기">×</button>
+                <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 기기 줄 지우기" aria-label="기기 줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>`;
         }
         function renderExtraDevices(list) {
@@ -4422,8 +4453,9 @@ function generateUniqueId() {
         function renumberDevices() {
             const lines = document.querySelectorAll('#detailExtraDevices .dev-extra');
             lines.forEach((l, i) => { l.querySelector('.dev-num').textContent = DEV_NUMS[i + 1] || (i + 2); });
-            const no1 = document.getElementById('detailDevNo1');
-            if (no1) no1.textContent = lines.length ? ' ①' : '';
+            // 15차-6: 기기가 2대 이상일 때만 왼쪽 번호 칸(①②…)을 보여줌
+            const box = document.getElementById('detailDevFields');
+            if (box) box.classList.toggle('has-extra', lines.length > 0);
             renderReaCodeView();
         }
         function addExtraDevice() {
