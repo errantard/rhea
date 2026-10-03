@@ -1903,6 +1903,21 @@
             .m-sf .b { background: none; border: 1px solid rgba(255,255,255,.2); color: #DCE6EF; }
         }
         @media (max-width: 880px) and (prefers-reduced-motion: reduce) { .m-sheet, .m-sheet-dim { transition: none; } }
+
+        /* ===== 📱 14차-2: 대장님 갤럭시 S22 울트라(Samsung 인터넷, 화면 폭 약 384px) 실사용 화면 보고 다듬기 ===== */
+        @media (max-width: 880px) {
+            /* 칩 글자가 "니/아", "A그/룹"처럼 두 줄로 깨지던 문제: 13차 PC 규칙(.sect max-width:100%)이 칩 띠를 화면 폭에 가둬서 칩이 찌그러졌음 */
+            .campaign .sect, .campaign .sect-journey { max-width: none; flex: 0 0 auto; }
+            .banner, .way, .tome { flex-shrink: 0; white-space: nowrap; }
+            .banner .bn-lbl, .way-lbl { white-space: nowrap; }
+            /* 판매 업체가 0곳인 그룹 칩은 폰에서 숨김 (선택 중이면 보임) — 현장에서 누를 일이 없는 칩이라 줄만 길어짐 */
+            .banners .banner.is-zero:not(.active) { display: none; }
+            /* 오른쪽 위 이름표: 이름만 (역할 "· 관리자"는 PC에서만) */
+            .user-profile .up-role { display: none; }
+            .user-profile { max-width: 120px; }
+            /* 신규등록: 글자 버튼 → 둥근 + 버튼 (카드의 [상세] 버튼을 덜 가리게) */
+            .m-fab { width: 54px; height: 54px; padding: 0; justify-content: center; border-radius: 50%; font-size: 26px; font-weight: 700; line-height: 1; }
+        }
     </style>
 </head>
 <body>
@@ -2133,7 +2148,7 @@
             <!-- 모바일 전용 카드 리스트 (880px 이하에서만 보임, PC에서는 항상 display:none) -->
             <div class="mobile-card-list" id="mobileCardList"></div>
             <!-- 📱 14차 모바일 전용: 신규등록 둥근 버튼 + 아래 시트 (PC에서는 .m-only로 숨김) -->
-            <button type="button" class="m-fab m-only" onclick="openModalForAdd()" aria-label="신규 업체 등록">＋ 신규등록</button>
+            <button type="button" class="m-fab m-only" onclick="openModalForAdd()" aria-label="신규 업체 등록" title="신규 업체 등록">＋</button>
             <div class="m-sheet-dim m-only" id="mSheetDim"></div>
             <div class="m-sheet m-only" id="mSheet" role="dialog" aria-label="목록"></div>
         </div>
@@ -2719,7 +2734,7 @@ function showSyncStatus(msg, isError) {
 
             const badge = document.getElementById('userProfileBadge');
             if (badge) {
-                badge.textContent = `${currentUserDisplayName()} · ${admin ? '관리자' : '일반사용자'}`;
+                badge.innerHTML = `${escapeHtml(currentUserDisplayName())}<span class="up-role"> · ${admin ? '관리자' : '일반사용자'}</span>`; // 14차-2: 폰에서는 이름만 보이게 역할은 span으로
                 badge.title = '클릭하면 닉네임(실명)을 설정/수정할 수 있어요';
             }
 
