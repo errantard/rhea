@@ -1741,6 +1741,168 @@
         .filter-side-tools .icon-btn-move:hover, .filter-side-tools > .icon-btn-move:first-child:hover {
             color: #1A1206; border-color: #FFE7A3; background: linear-gradient(180deg, #FBE3A3, #E0B963);
             box-shadow: 0 4px 14px rgba(214,170,80,.45), inset 0 1px 0 rgba(255,255,255,.7); }
+
+        /* ======================================================================
+           📱 14차 모바일 전용 구역 — "지휘소 수첩" (2026-10-03) · claude/14차-모바일-지휘소수첩.md
+           ───────────────────────────────────────────────────────────────────────
+           · 880px 이하에서만 적용. PC 화면 규칙은 하나도 건드리지 않음
+           · 이 블록은 <style> 맨 끝에 있어야 함 — 앞쪽 13차 PC 크기 규칙(깃발 폭 고정 등)을 확실히 이기기 위해
+           · 모바일 전용 요소(.m-only: 신규등록 둥근 버튼, 아래 시트)는 PC에선 display:none
+           ====================================================================== */
+        .m-only { display: none !important; }
+        @media (max-width: 880px) {
+            .m-only { display: revert !important; }
+
+            /* ---- 상단: 로고 줄 + 4칸(전체/판매/임대/봉화) ---- */
+            .navbar { position: relative; display: block; padding: calc(10px + env(safe-area-inset-top)) 12px 0; gap: 0; }
+            .navbar-left { display: block; }
+            .brand-logo-wrap { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 12px; width: 34px; height: 34px; }
+            .brand-logo-wrap .brand-logo { width: 34px; height: 34px; }
+            .navbar-left-stack { width: 100%; gap: 0; }
+            .navbar-line-top { display: grid; grid-template-columns: 1fr 1fr 1fr 1.15fr; gap: 7px; row-gap: 10px; align-items: stretch; }
+            .crest-text { grid-column: 1 / -1; display: flex !important; height: 34px; justify-content: center; padding-left: 44px; width: auto; min-width: 0; }
+            .crest-title { font-size: 17px; letter-spacing: 2.5px; }
+            .crest-motto { display: none !important; }
+            .div-tabs { display: contents; }
+            .standard { display: grid; grid-template-columns: 16px 1fr; grid-template-rows: auto 1fr; column-gap: 5px; align-items: center;
+                width: auto !important; height: 58px; padding: 7px 9px !important; gap: 0; border-radius: 10px; min-width: 0; }
+            .standard .dt-ic { width: 16px !important; height: 16px !important; }
+            .standard .std-lbl { font-size: 12.5px; letter-spacing: 0; }
+            .standard .std-num { grid-column: 1 / -1; justify-self: end; align-self: end; font-size: 22px !important; min-width: 0; margin: 0; }
+            .standard.active::after { width: 10px; height: 10px; bottom: -6px; }
+            .as-panel { display: grid; grid-template-columns: 16px 1fr auto; grid-template-rows: auto 1fr; column-gap: 5px; align-items: center;
+                width: auto; height: 58px; padding: 7px 9px; border-radius: 10px; min-width: 0;
+                background: radial-gradient(circle at 18px 16px, rgba(255,120,60,.35), transparent 60%), linear-gradient(180deg, rgba(48,16,10,.92), rgba(22,10,10,.92)); }
+            .as-panel .bc-fire { width: 16px; height: 16px; grid-row: 1; grid-column: 1; }
+            .as-panel .bc-fire::before { inset: -5px; }
+            .as-panel .bc-fire svg { width: 16px; height: 16px; }
+            .as-panel .bc-txt { display: contents; }
+            .as-panel .bc-t1 { grid-row: 1; grid-column: 2 / 4; font-size: 12px; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; }
+            .as-panel .bc-t1 .bc-pre { display: none; }
+            .as-panel .bc-t2 { display: block !important; grid-row: 2; grid-column: 1 / 3; align-self: end; font-size: 10px; margin: 0; overflow: hidden; text-overflow: ellipsis; }
+            .as-panel .bc-t2 .bc-long { display: none; }
+            .as-panel .bc-cnt { grid-row: 2; grid-column: 3; align-self: end; font-size: 22px; margin: 0; line-height: 1; }
+            .as-panel.is-empty { background: linear-gradient(180deg, rgba(12,34,32,.85), rgba(8,22,24,.85)); }
+            .as-panel.is-empty .bc-t2 { display: none !important; }
+
+            /* 오른쪽 위: 이름 + 로그아웃만 (다운로드·업로드는 PC 전용) */
+            .navbar-right-stack { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 12px; width: auto; padding: 0; }
+            .navbar-right { width: auto; gap: 6px; }
+            .navbar-right .action-btn.util-icon, .user-profile { height: 34px; }
+            .navbar-right .action-btn.util-icon { width: 34px; }
+            .user-profile { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; line-height: 34px; padding: 0 11px; font-size: 12px; margin-left: 0; }
+            .crest-text { justify-content: flex-start; }
+
+            /* ---- 작전 띠 → 칩 한 줄 가로 스크롤 ---- */
+            .campaign { width: auto; max-width: none; margin: 12px 0 0; padding: 0 12px 2px; border: none; background: none; box-shadow: none;
+                flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 0; align-items: center; }
+            .campaign::-webkit-scrollbar { display: none; }
+            .campaign .sect { flex: 0 0 auto; padding: 0; gap: 0; background: none !important; box-shadow: none !important; flex-direction: row; }
+            .campaign .sect + .sect { margin-left: 13px; padding-left: 13px; }
+            .campaign .sect + .sect::before { top: 7px; bottom: 7px; }
+            .campaign .sect + .sect::after { display: none; }
+            .campaign .sect-h { display: none; }
+            .campaign .sect.hush { opacity: .55; }
+            .banners, .vault { flex-wrap: nowrap; gap: 6px; }
+            .banners .banner:first-child, .banner.banner-add { display: none; }
+            .journey { gap: 6px; }
+            .journey::before { display: none; }
+            .banner, .way, .tome { height: 34px !important; min-width: 0; padding: 0 11px !important; margin: 0 !important; gap: 6px; border-radius: 999px; font-size: 13px; }
+            .banner .bn-n, .way-n, .tome .tm-n { font-size: 14px; min-width: 0; }
+            .way-seal { display: none; }
+            .way-lbl { font-size: 13px; letter-spacing: 0; }
+            .tome svg { width: 14px; height: 14px; }
+
+            /* ---- 검색줄 (헤더와 같이 항상 위에 보임) ---- */
+            .filter-box { margin: 10px 0 0 !important; padding: 10px 12px !important; background: #0A1626 !important; border: none !important;
+                border-top: 1px solid rgba(214,180,106,.25) !important; border-bottom: 1px solid rgba(214,180,106,.38) !important; flex-direction: row; gap: 0; }
+            .filter-controls { display: flex; flex-wrap: nowrap; gap: 7px; width: 100%; }
+            .filter-controls input#searchInput { flex: 1 1 auto; height: 42px; border-radius: 10px; font-size: 16px; padding: 0 12px 0 36px; min-width: 0;
+                background: rgba(255,255,255,.08) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23D6B46A' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 11px center / 17px; }
+            .filter-controls select#filterRegion { flex: 0 0 96px; width: 96px; height: 42px; border-radius: 10px; font-size: 14px; font-weight: 700; padding: 0 8px; }
+            .filter-side-tools { display: none !important; }
+
+            /* ---- 카드 목록 ---- */
+            .container { padding: 10px 12px calc(96px + env(safe-area-inset-bottom)); background: #F1EBDD; }
+            .mobile-card-list { gap: 9px; padding-bottom: 0; }
+            .mc-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: #7C735F; padding: 2px 4px 0; }
+            .mc-meta b { color: #3B3427; }
+            .mc-hidden { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border-radius: 10px; background: #FFF6DC; border: 1px solid #EBD9A6; font-size: 12px; color: #6B5A33; }
+            .mc-hidden button { flex-shrink: 0; border: none; border-radius: 8px; padding: 7px 10px; font-weight: 700; font-size: 12px; background: #1F4E79; color: #fff; }
+            .mc-card { background: #FFFDF7; border: 1px solid #E3D8BE; border-radius: 12px; padding: 12px 13px 11px; box-shadow: 0 1px 3px rgba(60,40,10,.06); }
+            .mc-card.is-as { border-left: 4px solid #C0392B; }
+            .mc-card.is-wait { border-left: 4px solid #E8604C; }
+            .mc-card.is-ended { opacity: .8; }
+            .mc-top { display: flex; align-items: flex-start; gap: 8px; }
+            .mc-seal { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #E0574A, #9E1F17); color: #fff; font: 800 11px 'Public Sans', sans-serif;
+                display: grid; place-items: center; flex-shrink: 0; margin-top: 1px; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+            .mc-name { flex: 1; min-width: 0; font: 700 15.5px 'Public Sans', 'Noto Sans KR', sans-serif; line-height: 1.3; letter-spacing: -.2px; color: #1C2A39; cursor: pointer; }
+            .mc-tag { flex-shrink: 0; font: 700 10.5px 'Public Sans', sans-serif; padding: 3px 7px; border-radius: 6px; white-space: nowrap; }
+            .mc-tag.t-sale { background: #EEE7D6; color: #6B5A33; }
+            .mc-tag.t-lease { background: #ECE8FF; color: #5B4BC4; }
+            .mc-tag.t-warn { background: #FDE5DF; color: #B4442F; }
+            .mc-tag.t-ended { background: #E4E2DC; color: #5D5A52; }
+            .mc-sub2 { font-size: 12px; color: #6F6A5C; margin-top: 4px; }
+            .mc-memo { margin-top: 8px; font-size: 12.5px; color: #4A4638; background: #F5EFE0; border-radius: 8px; padding: 7px 9px; display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+            .mc-memo.red { background: #FBECE8; color: #7A2A1E; }
+            .mc-memo span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .mc-memo em { font-style: normal; font-size: 11px; color: #9A8F76; flex-shrink: 0; }
+            .mc-memo.red em { color: #C0392B; font-weight: 700; }
+            .mc-acts { display: grid; grid-template-columns: 1.25fr 1fr .9fr; gap: 6px; margin-top: 9px; }
+            .mc-ab { height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; gap: 6px; font: 700 13px 'Public Sans', sans-serif;
+                border: 1px solid #E3D8BE; background: #fff; color: #2B3A4A; text-decoration: none; cursor: pointer; white-space: nowrap; min-width: 0; padding: 0 6px; }
+            .mc-ab svg { width: 15px; height: 15px; flex-shrink: 0; }
+            .mc-ab small { font-weight: 600; opacity: .85; font-size: 11px; }
+            .mc-ab.call { background: #1F7A63; border-color: #1F7A63; color: #fff; }
+            .mc-ab.done { background: #1F4E79; border-color: #1F4E79; color: #fff; }
+            .mc-ab.off { color: #B5AE9C; background: #FAF7EF; pointer-events: none; }
+            .mc-ab:active { transform: scale(.97); }
+
+            /* ---- 신규등록 둥근 버튼 ---- */
+            .m-fab { position: fixed; right: 16px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 40; height: 50px; padding: 0 18px; border: 1px solid #E6C674; border-radius: 999px;
+                background: linear-gradient(180deg, #F3D68C, #D2AA55); color: #1A1206; font: 800 14px 'Public Sans', sans-serif; display: inline-flex !important; align-items: center; gap: 6px;
+                box-shadow: 0 8px 20px rgba(120,90,30,.45), inset 0 1px 0 rgba(255,255,255,.6); }
+
+            /* ---- 아래에서 올라오는 시트 (PC 말풍선 대신) ---- */
+            .m-sheet-dim { position: fixed; inset: 0; z-index: 4500; background: rgba(5,10,18,.55); opacity: 0; pointer-events: none; transition: opacity .2s; display: block !important; }
+            .m-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4501; max-height: 78vh; display: flex !important; flex-direction: column;
+                background: #101F33; color: #E6EEF4; border-radius: 20px 20px 0 0; border-top: 1px solid rgba(214,180,106,.5); box-shadow: 0 -16px 40px rgba(0,0,0,.5);
+                padding: 8px 0 calc(16px + env(safe-area-inset-bottom)); transform: translateY(105%); transition: transform .24s ease; }
+            body.m-sheet-open .m-sheet-dim { opacity: 1; pointer-events: auto; }
+            body.m-sheet-open .m-sheet { transform: translateY(0); }
+            .m-grab { width: 42px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.25); margin: 0 auto 10px; flex-shrink: 0; }
+            .m-sh { display: flex; align-items: center; gap: 9px; padding: 0 18px 4px; }
+            .m-sh-t { font: 700 17px var(--serif-c); color: #F3D68C; }
+            .m-sh-t.warn { color: #FFC9A6; }
+            .m-sh-c { margin-left: auto; font: 700 12px 'Public Sans', sans-serif; color: #8EA3B8; }
+            .m-ssub { padding: 0 18px 10px; font-size: 12px; color: #8EA3B8; }
+            .m-seg { display: flex; gap: 5px; padding: 0 14px 10px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+            .m-seg button { flex-shrink: 0; height: 32px; padding: 0 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.07);
+                color: #EEF3F8; font: 700 12.5px 'Public Sans', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
+            .m-seg button b { font-family: var(--display-c); color: #F3D68C; }
+            .m-seg button.warn { border-color: rgba(255,140,120,.6); background: rgba(232,96,76,.16); }
+            .m-seg button.warn b { color: #FFB79F; }
+            .m-seg button.on { background: linear-gradient(180deg, #F3D68C, #D2AA55); color: #1A1206; border-color: #F3D68C; }
+            .m-seg button.on b { color: #1A1206; }
+            .m-rows { overflow-y: auto; padding: 0 10px; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch; }
+            .m-r { display: flex; align-items: center; gap: 10px; padding: 11px 8px; border-top: 1px solid rgba(255,255,255,.07); }
+            .m-r:first-child { border-top: none; }
+            .m-rm { flex: 1; min-width: 0; cursor: pointer; }
+            .m-rn { font: 700 14.5px 'Public Sans', sans-serif; color: #FBF6E8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .m-rs { font-size: 11.5px; color: #8EA3B8; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .m-rt { font: 700 11px 'Public Sans', sans-serif; padding: 3px 7px; border-radius: 6px; background: rgba(255,255,255,.08); color: #C3D6E6; white-space: nowrap; flex-shrink: 0; }
+            .m-rt.warn { background: rgba(232,96,76,.22); color: #FF9F8A; }
+            .m-rc { width: 40px; height: 40px; border-radius: 50%; background: #1F7A63; display: grid; place-items: center; color: #fff; flex-shrink: 0; text-decoration: none; }
+            .m-rc svg { width: 18px; height: 18px; }
+            .m-rc.off { background: rgba(255,255,255,.08); color: #5F7388; pointer-events: none; }
+            .m-rb { height: 36px; padding: 0 11px; border-radius: 9px; background: #1F4E79; color: #fff; font: 700 12.5px 'Public Sans', sans-serif; border: 1px solid #3C77AE; flex-shrink: 0; }
+            .m-empty { padding: 18px 18px 22px; color: #8EA3B8; font-size: 13px; text-align: center; }
+            .m-sf { display: flex; gap: 8px; padding: 12px 16px 0; flex-shrink: 0; }
+            .m-sf button { flex: 1; height: 44px; border-radius: 10px; font: 700 13.5px 'Public Sans', sans-serif; }
+            .m-sf .a { background: linear-gradient(180deg, #F3D68C, #D2AA55); color: #1A1206; border: none; }
+            .m-sf .b { background: none; border: 1px solid rgba(255,255,255,.2); color: #DCE6EF; }
+        }
+        @media (max-width: 880px) and (prefers-reduced-motion: reduce) { .m-sheet, .m-sheet-dim { transition: none; } }
     </style>
 </head>
 <body>
@@ -1970,6 +2132,10 @@
 
             <!-- 모바일 전용 카드 리스트 (880px 이하에서만 보임, PC에서는 항상 display:none) -->
             <div class="mobile-card-list" id="mobileCardList"></div>
+            <!-- 📱 14차 모바일 전용: 신규등록 둥근 버튼 + 아래 시트 (PC에서는 .m-only로 숨김) -->
+            <button type="button" class="m-fab m-only" onclick="openModalForAdd()" aria-label="신규 업체 등록">＋ 신규등록</button>
+            <div class="m-sheet-dim m-only" id="mSheetDim"></div>
+            <div class="m-sheet m-only" id="mSheet" role="dialog" aria-label="목록"></div>
         </div>
     </div>
 
@@ -3196,7 +3362,7 @@ function showSyncStatus(msg, isError) {
                 if (asOnly) asOnly = false;
                 asPanel.classList.add('is-empty');
                 asPanel.classList.remove('active');
-                asPanel.innerHTML = `<div class="bc-fire">${fireSvg}</div><div class="bc-txt"><div class="bc-t1">봉화 · AS 요청</div><div class="bc-t2">요청 없음 · 평온함</div></div><span class="bc-cnt">0</span>`;
+                asPanel.innerHTML = `<div class="bc-fire">${fireSvg}</div><div class="bc-txt"><div class="bc-t1"><span class="bc-pre">봉화 · </span>AS 요청</div><div class="bc-t2">요청 없음 · 평온함</div></div><span class="bc-cnt">0</span>`;
             } else {
                 let oldest = null;
                 asItems.forEach(i => {
@@ -3208,7 +3374,7 @@ function showSyncStatus(msg, isError) {
                 const days = oldest ? Math.max(0, Math.round((t0 - oldest) / 86400000)) : null;
                 asPanel.classList.remove('is-empty');
                 asPanel.classList.toggle('active', asOnly);
-                asPanel.innerHTML = `<div class="bc-fire">${fireSvg}</div><div class="bc-txt"><div class="bc-t1">봉화 · AS 요청</div><div class="bc-t2">${days === null ? '마우스를 올리면 목록' : (days === 0 ? '가장 오래된 기록 오늘' : `가장 오래된 기록 ${days}일 전`)}</div></div><span class="bc-cnt">${asItems.length}</span>`;
+                asPanel.innerHTML = `<div class="bc-fire">${fireSvg}</div><div class="bc-txt"><div class="bc-t1"><span class="bc-pre">봉화 · </span>AS 요청</div><div class="bc-t2">${days === null ? '<span class="bc-long">마우스를 올리면 목록</span>' : (days === 0 ? '<span class="bc-long">가장 오래된 기록 </span>오늘' : `<span class="bc-long">가장 오래된 기록 </span>${days}일 전`)}</div></div><span class="bc-cnt">${asItems.length}</span>`;
             }
 
             // 2줄: 판매 그룹 (문장 배너)
@@ -4033,7 +4199,7 @@ function generateUniqueId() {
 
             // 모바일 카드 리스트도 같이 갱신 (PC 표 로직은 위에서 이미 끝났고, 이 아래는 순수 추가 기능이라
             // 여기서 에러가 나도 try/catch로 막아서 PC 화면(표)에는 절대 영향이 없게 함)
-            try { renderMobileCards(filteredData); } catch (e) { console.error('모바일 카드 렌더링 실패:', e); }
+            try { renderMobileCards(filteredData, hiddenByText); } catch (e) { console.error('모바일 카드 렌더링 실패:', e); }
 
             // 2026-09-23: 실시간 동기화 등으로 팝업이 열려있는 도중에도 renderTable()이 다시 불릴 수 있음 —
             // 표가 새로 그려지면 DOM이 통째로 교체되어 .detail-open-row 표시가 같이 사라지므로,
@@ -4050,62 +4216,205 @@ function generateUniqueId() {
            업체 데이터를 다시 읽거나 다시 필터링하지 않으므로, PC 표와 모바일 카드는 항상 100% 같은 목록을 보여줌.
            클릭 동작(상세보기/수정/AS이력)은 전부 기존 함수(openDetailModal 하나로 통합됨)를 그대로
            재사용 — 모바일 전용으로 새로 만든 로직이 아니라서 동작 방식이 PC와 항상 동일하게 유지됨. */
-        function renderMobileCards(filteredData) {
+        /* ===================== 📱 14차 모바일 전용 구역 — "지휘소 수첩" (2026-10-03) =====================
+           · 카드 목록(renderMobileCards): renderTable()이 이미 걸러둔 filteredData를 그대로 받아서 그리기만 함
+             → PC 표와 폰 카드는 항상 같은 목록. 데이터 계산·저장은 전부 PC와 같은 함수를 씀
+           · 아래 시트(openMobileSheet): PC 말풍선(봉화·임대 여정) 대신. 같은 필터(passesHeaderFilters)로 목록을 만듦
+           · 이 구역 코드는 880px 이하에서만 화면에 보이고, PC 동작은 바꾸지 않음 */
+        const M_ICON = {
+            call: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>',
+            map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'
+        };
+        const M_STAGE_LABEL = { upcoming: '예정', ongoing: '임대중', expiring: '종료임박', awaiting: '회수대기' };
+
+        function isMobileView() { return !!(window.matchMedia && window.matchMedia('(max-width: 880px)').matches); }
+
+        // 전화: 담당자 번호 우선, 없으면 소속 번호 (대장님 결정 2026-10-03)
+        function mPhoneOf(item) {
+            const raw = (item.managerContact || '').trim() ? item.managerContact : (item.orgContact || '');
+            const who = (item.managerContact || '').trim() ? '담당자' : '소속';
+            const num = String(raw || '').match(/\+?\d[\d\s\-().]{5,}\d/);
+            return num ? { tel: num[0].replace(/[^\d+]/g, ''), who } : null;
+        }
+        function mLatestMemo(item) {
+            const l = item.memoList || [];
+            if (!l.length) return null;
+            const m = l[l.length - 1];
+            const d = parseLooseDate(m.date);
+            return { text: m.text || '', ago: d ? daysBetween(todayZero(), d) : null };
+        }
+        function mAgoText(ago) { return ago === null ? '' : (ago <= 0 ? '오늘' : `${ago}일 전`); }
+        function mRegion(item) { return `${item.regionSi || ''} ${item.regionGu || ''}`.trim(); }
+
+        // 카드 오른쪽 위 꼬리표: 판매 = 그룹명 / 임대 = 여정 단계 + D-day / 종료 = 종료
+        function mCardTag(item) {
+            if (isEndedItem(item)) return '<span class="mc-tag t-ended">종료</span>';
+            if (!isLeaseItem(item)) return `<span class="mc-tag t-sale">${escapeHtml(groupNames[item.groupId] || '판매')}</span>`;
+            const st = getLeaseStage(item), t = todayZero();
+            if (st === 'upcoming') {
+                const s = parseLooseDate(item.installDate);
+                return `<span class="mc-tag t-lease">예정${s ? ' D-' + daysBetween(s, t) : ''}</span>`;
+            }
+            const end = getRentalEndDateObj(item);
+            if (!end) return '<span class="mc-tag t-lease">임대</span>';
+            const dd = daysBetween(end, t);
+            if (st === 'awaiting') return `<span class="mc-tag t-warn">회수대기 D+${-dd}</span>`;
+            if (st === 'expiring') return `<span class="mc-tag t-warn">종료임박 D-${dd}</span>`;
+            return `<span class="mc-tag t-lease">임대중 D-${dd}</span>`;
+        }
+
+        function renderMobileCards(filteredData, hiddenByText) {
             const wrap = document.getElementById('mobileCardList');
             if (!wrap) return;
-
-            if (!filteredData || filteredData.length === 0) {
-                wrap.innerHTML = `<div class="mc-empty">표시할 업체가 없습니다.</div>`;
+            const list = filteredData || [];
+            const head = `<div class="mc-meta"><span><b>${list.length}곳</b>${endedOnly ? ' · 종료 업체' : ''}</span><span>${asOnly ? 'AS 요청만' : (leaseStage ? M_STAGE_LABEL[leaseStage] + '만' : '')}</span></div>`;
+            const hidden = hiddenByText > 0
+                ? `<div class="mc-hidden"><span>🔎 검색·지역필터로 <b>${hiddenByText}곳</b> 숨겨짐</span><button type="button" onclick="clearTextFilters()">모두 보기</button></div>` : '';
+            if (!list.length) {
+                wrap.innerHTML = head + hidden + `<div class="mc-empty">표시할 업체가 없습니다.</div>`;
                 return;
             }
-
-            wrap.innerHTML = filteredData.map((item) => {
-                let badgeClass = 'badge-success';
-                if (item.status === '요청') badgeClass = 'badge-danger';
-                else if (item.status === '종료') badgeClass = 'badge-dark';
-
-                const memoList = item.memoList || [];
-                let latestMemoText = '등록된 AS 이력이 없습니다.';
-                let memoDateBadge = '';
-                if (memoList.length > 0) {
-                    const latest = memoList[memoList.length - 1];
-                    latestMemoText = latest.text || '';
-                    const shortDate = formatMemoDateShort(latest.date);
-                    if (shortDate) memoDateBadge = `<span class="mc-memo-date">${shortDate}</span>`;
-                }
-
-                const region = `${item.regionSi || ''} ${item.regionGu || ''}`.trim();
-                const subLine = [region, item.installLocation].filter(Boolean).join(' · ');
-                const orgLine = [item.orgDept, item.orgName].filter(Boolean).join(' · ');
-                const rentalRow = item.division === '임대'
-                    ? `<div class="mc-row"><span class="mc-row-label">임대만료</span><span class="mc-row-value rental-expiry-cell">${renderRentalExpiry(item)}</span></div>`
-                    : '';
-
+            wrap.innerHTML = head + hidden + list.map((item) => {
+                const isAs = item.status === '요청';
+                const isWait = getLeaseStage(item) === 'awaiting';
+                const memo = mLatestMemo(item);
+                const sub = [mRegion(item), item.installLocation].filter(Boolean).join(' · ');
+                const ph = mPhoneOf(item);
+                const callBtn = ph
+                    ? `<a class="mc-ab call" href="tel:${ph.tel}" onclick="event.stopPropagation()">${M_ICON.call}전화 <small>${ph.who}</small></a>`
+                    : `<span class="mc-ab call off">${M_ICON.call}번호 없음</span>`;
+                const addr = (item.installAddress || '').trim();
+                const midBtn = isWait
+                    ? `<button type="button" class="mc-ab done" onclick="mMarkReturned('${item.id}')">회수완료</button>`
+                    : (addr ? `<a class="mc-ab" href="https://map.naver.com/p/search/${encodeURIComponent(addr)}" target="_blank" rel="noopener">${M_ICON.map}길찾기</a>`
+                            : `<span class="mc-ab off">${M_ICON.map}주소 없음</span>`);
                 return `
-                <div class="mc-card">
-                    <div class="mc-card-top">
-                        <div class="mc-card-titlewrap">
-                            <b class="mc-place-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}</b>${isNewSaleItem(item) ? '<span class="new-badge">NEW</span>' : ''}
-                            <div class="mc-sub">${escapeHtml(subLine || '-')}</div>
-                        </div>
-                        <div class="mc-badges">
-                            ${renderDivisionBadge(item)}
-                            <span class="badge ${badgeClass}">${item.status || '정상'}</span>
-                        </div>
+                <div class="mc-card ${isAs ? 'is-as' : ''} ${isWait ? 'is-wait' : ''} ${isEndedItem(item) ? 'is-ended' : ''}">
+                    <div class="mc-top">
+                        ${isAs ? '<span class="mc-seal" title="AS 요청">!</span>' : ''}
+                        <div class="mc-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}${isNewSaleItem(item) ? '<span class="new-badge">NEW</span>' : ''}</div>
+                        ${mCardTag(item)}
                     </div>
-                    ${rentalRow}
-                    <div class="mc-row"><span class="mc-row-label">소속</span><span class="mc-row-value">${escapeHtml(orgLine || '-')}</span></div>
-                    <div class="mc-row"><span class="mc-row-label">담당자</span><span class="mc-row-value">${escapeHtml(item.managerContact || item.orgContact || '-')}</span></div>
-                    <div class="mc-memo-box" onclick="openDetailModal('${item.id}')">
-                        <div class="mc-memo-head"><span>📋 AS 메모</span>${memoDateBadge}</div>
-                        <div class="mc-memo-text">${escapeHtml(latestMemoText)}</div>
-                    </div>
-                    <div class="mc-actions">
-                        <button type="button" class="mc-btn mc-btn-detail" onclick="openDetailModal('${item.id}')">상세보기 · 수정 · AS이력</button>
-                    </div>
+                    <div class="mc-sub2">${escapeHtml(sub || '-')}</div>
+                    <div class="mc-memo ${isAs ? 'red' : ''}" onclick="openDetailModal('${item.id}')"><span>${escapeHtml(memo ? memo.text : 'AS 이력 없음')}</span>${memo ? `<em>${mAgoText(memo.ago)}</em>` : ''}</div>
+                    <div class="mc-acts">${callBtn}${midBtn}<button type="button" class="mc-ab" onclick="openDetailModal('${item.id}')">상세 ›</button></div>
                 </div>`;
             }).join('');
         }
+
+        /* ----- 아래에서 올라오는 시트 (봉화 · 임대 여정) ----- */
+        let mSheetKind = null;
+        function mSheetEls() { return { dim: document.getElementById('mSheetDim'), sheet: document.getElementById('mSheet') }; }
+
+        function openMobileSheet(kind) {
+            mSheetKind = kind;
+            renderMobileSheet();
+            document.body.classList.add('m-sheet-open');
+        }
+        function closeMobileSheet() {
+            document.body.classList.remove('m-sheet-open');
+            mSheetKind = null;
+        }
+        function renderMobileSheet() {
+            const { sheet } = mSheetEls();
+            if (!sheet || !mSheetKind) return;
+            const all = getAllGroupsFlatData();
+            const kind = mSheetKind;
+            const callHtml = (i) => { const ph = mPhoneOf(i); return ph ? `<a class="m-rc" href="tel:${ph.tel}" aria-label="${ph.who}에게 전화">${M_ICON.call}</a>` : `<span class="m-rc off">${M_ICON.call}</span>`; };
+            const row = (i, sub, tag, warn, right) => `
+                <div class="m-r"><div class="m-rm" onclick="closeMobileSheet(); openDetailModal('${i.id}')"><div class="m-rn">${escapeHtml(i.placeName || '-')}</div><div class="m-rs">${escapeHtml(sub)}</div></div>
+                ${tag ? `<span class="m-rt ${warn ? 'warn' : ''}">${tag}</span>` : ''}${right}</div>`;
+            let html = '<div class="m-grab"></div>';
+            if (kind === 'as') {
+                const items = all.filter(i => passesHeaderFilters(i, { division: 'all', group: ALL_GROUP_KEY, stage: null, ended: false, nw: false, as: true }));
+                const t = (i) => { const m = mLatestMemo(i); return m && m.ago !== null ? -m.ago : 0; };
+                items.sort((a, b) => t(a) - t(b)); // 오래된 순
+                const oldest = items.length ? mLatestMemo(items[0]) : null;
+                html += `<div class="m-sh"><span class="m-sh-t warn">🔥 봉화 · AS 요청</span><span class="m-sh-c">${items.length}곳 · 오래된 순</span></div>`;
+                if (oldest && oldest.ago !== null) html += `<div class="m-ssub">가장 오래된 기록 ${mAgoText(oldest.ago)}</div>`;
+                html += `<div class="m-rows">${items.map(i => { const m = mLatestMemo(i); return row(i, [mRegion(i), m ? m.text : 'AS 이력 없음'].filter(Boolean).join(' · '), m ? mAgoText(m.ago) : '', m && m.ago !== null && m.ago >= 3, callHtml(i)); }).join('') || '<div class="m-empty">AS 요청이 없어요 ✓</div>'}</div>`;
+                html += `<div class="m-sf"><button type="button" class="a" onclick="mSheetCollect()">${asOnly ? '모아보기 해제' : '목록에서 모아보기'}</button><button type="button" class="b" onclick="closeMobileSheet()">닫기</button></div>`;
+            } else {
+                const cnt = (st) => all.filter(i => passesHeaderFilters(i, { division: 'lease', group: ALL_GROUP_KEY, stage: st, ended: false, nw: false, as: false })).length;
+                const items = all.filter(i => passesHeaderFilters(i, { division: 'lease', group: ALL_GROUP_KEY, stage: kind, ended: false, nw: false, as: false }));
+                const t0 = todayZero();
+                items.sort((a, b) => ((getRentalEndDateObj(a) || t0) - (getRentalEndDateObj(b) || t0)));
+                html += `<div class="m-sh"><span class="m-sh-t">🗺 임대 여정</span><span class="m-sh-c">${M_STAGE_LABEL[kind]} ${items.length}곳</span></div>`;
+                html += `<div class="m-seg">${['upcoming', 'ongoing', 'expiring', 'awaiting'].map(st => { const n = cnt(st); return `<button type="button" class="${st === kind ? 'on' : ''} ${(st === 'expiring' || st === 'awaiting') && n ? 'warn' : ''}" onclick="openMobileSheet('${st}')">${M_STAGE_LABEL[st]}<b>${n}</b></button>`; }).join('')}</div>`;
+                html += `<div class="m-rows">${items.map(i => {
+                    const end = getRentalEndDateObj(i), start = parseLooseDate(i.installDate);
+                    let sub, tag = '', warn = false;
+                    if (kind === 'upcoming') { sub = `설치 ${start ? formatDateYMD(start).slice(5).replace('-', '/') : '미정'}`; if (start) tag = `D-${daysBetween(start, t0)}`; }
+                    else { sub = `임대종료 ${end ? formatDateYMD(end).slice(5).replace('-', '/') : '미입력'}`; if (end) { const dd = daysBetween(end, t0); tag = dd >= 0 ? `D-${dd}` : `D+${-dd}`; warn = kind !== 'ongoing'; } }
+                    const right = kind === 'awaiting' ? `<button type="button" class="m-rb" onclick="mMarkReturned('${i.id}')">회수완료</button>` : callHtml(i);
+                    return row(i, [mRegion(i), sub].filter(Boolean).join(' · '), tag, warn, right);
+                }).join('') || `<div class="m-empty">${M_STAGE_LABEL[kind]} 업체가 없어요</div>`}</div>`;
+                if (kind === 'awaiting' && items.length) html += `<div class="m-ssub" style="padding-top:10px">[회수완료]를 누르면 확인창 → 상태가 "종료"로 바뀌어요</div>`;
+                html += `<div class="m-sf"><button type="button" class="a" onclick="mSheetCollect()">${leaseStage === kind ? '모아보기 해제' : '목록에서 모아보기'}</button><button type="button" class="b" onclick="closeMobileSheet()">닫기</button></div>`;
+            }
+            sheet.innerHTML = html;
+        }
+        // [목록에서 모아보기] = PC에서 봉화·이정표를 "클릭"한 것과 같은 동작 (이미 모아보는 중이면 해제)
+        function mSheetCollect() {
+            const kind = mSheetKind;
+            closeMobileSheet();
+            if (kind === 'as') toggleAsFilter(); else setLeaseStage(kind);
+            const c = document.querySelector('.container'); if (c) c.scrollTop = 0;
+            setTimeout(() => { const on = document.querySelector('#headerFilterRow .way.active'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' }); }, 60);
+        }
+        // 회수완료: PC와 같은 markLeaseReturned(확인창 → 상태 "종료") 후 시트가 열려 있으면 새로 그림
+        async function mMarkReturned(id) {
+            await markLeaseReturned(id);
+            if (mSheetKind) renderMobileSheet();
+        }
+
+        // 폰에서 봉화·이정표를 누르면 표 필터 대신 시트를 엶 (캡처 단계에서 가로채서 원래 onclick은 실행 안 됨)
+        document.addEventListener('click', function(e) {
+            if (!isMobileView() || !e.target.closest) return;
+            const asEl = e.target.closest('#asPanel');
+            const stEl = !asEl && e.target.closest('#hfStageBox button[data-stage]');
+            if (asEl) {
+                if (asEl.classList.contains('is-empty') && !asOnly) return;
+                e.stopPropagation(); e.preventDefault();
+                openMobileSheet('as');
+            } else if (stEl) {
+                e.stopPropagation(); e.preventDefault();
+                openMobileSheet(stEl.dataset.stage);
+            }
+        }, true);
+        // 지역 드롭다운 첫 칸: 폰에선 "지역"으로 짧게 (PC는 "지역필터: 전체" 그대로)
+        (function initMobileRegionLabel() {
+            const sel = document.getElementById('filterRegion');
+            if (!sel || !window.matchMedia) return;
+            const mq = window.matchMedia('(max-width: 880px)');
+            const apply = () => { sel.options[0].text = mq.matches ? '지역 전체' : '지역필터: 전체'; };
+            apply(); mq.addEventListener('change', apply);
+        })();
+        // 시트 닫기: 바깥 누르기 · 손잡이를 아래로 끌기 · Esc · 화면이 PC 폭으로 넓어질 때
+        (function initMobileSheetGestures() {
+            const { dim, sheet } = mSheetEls();
+            if (!dim || !sheet) return;
+            dim.addEventListener('click', closeMobileSheet);
+            let y0 = null, dy = 0;
+            sheet.addEventListener('touchstart', (e) => {
+                const rows = e.target.closest('.m-rows');
+                if (rows && rows.scrollTop > 0) { y0 = null; return; }
+                y0 = e.touches[0].clientY; dy = 0; sheet.style.transition = 'none';
+            }, { passive: true });
+            sheet.addEventListener('touchmove', (e) => {
+                if (y0 === null) return;
+                dy = Math.max(0, e.touches[0].clientY - y0);
+                if (dy > 0) sheet.style.transform = `translateY(${dy}px)`;
+            }, { passive: true });
+            sheet.addEventListener('touchend', () => {
+                if (y0 === null) return;
+                sheet.style.transition = ''; sheet.style.transform = '';
+                if (dy > 90) closeMobileSheet();
+                y0 = null; dy = 0;
+            });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mSheetKind) closeMobileSheet(); });
+            if (window.matchMedia) window.matchMedia('(max-width: 880px)').addEventListener('change', (ev) => { if (!ev.matches) closeMobileSheet(); });
+        })();
 
         function escapeHtml(str) {
             if (!str) return '';
