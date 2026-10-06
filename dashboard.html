@@ -4817,12 +4817,22 @@ function generateUniqueId() {
             if (!value) return '';
             if (value instanceof Date) return formatDateYMD(value);
             if (typeof value === 'number') {
+                if (value < 1000) return normalizeExcelDate(String(value)); // 5.15처럼 숫자로 읽힌 "월.일"
                 const d = new Date(Math.round((value - 25569) * 86400 * 1000));
                 return formatDateYMD(d);
             }
             const str = String(value).trim();
-            const m = str.match(/^(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
-            if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+            // 16차-8: 연도 있는 날짜 (2026-05-15 / 2026.5.15 / 2026년 5월 15일)
+            const ok = (y, mo, d) => {
+                y = +y; mo = +mo; d = +d;
+                const dt = new Date(y, mo - 1, d);
+                return (dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d) ? `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}` : '';
+            };
+            let m = str.match(/^(\d{4})\s*[.\-/년]\s*(\d{1,2})\s*[.\-/월]\s*(\d{1,2})/);
+            if (m) return ok(m[1], m[2], m[3]);
+            // 연도 없는 날짜 (5월15일 / 5/15 / 5.15 / 5-15) → 올해
+            m = str.match(/^(\d{1,2})\s*월\s*(\d{1,2})\s*일?/) || str.match(/^(\d{1,2})\s*[./\-]\s*(\d{1,2})$/);
+            if (m) return ok(new Date().getFullYear(), m[1], m[2]);
             return '';
         }
 
@@ -6427,7 +6437,14 @@ function generateUniqueId() {
         //  - "-"(다운로드 엑셀의 빈칸 표시)는 빈칸으로  - 숫자로 읽힌 값은 글자로
         //  - 기기 여러 대: 모델명/옵션/설치날짜 칸의 " / " 로 나눠서 2대째부터 devices로
         //  - "지역" 한 칸(다운로드 엑셀)이면 첫 단어=시, 나머지=구
-        function excelRowToItem(row) {
+        function excelRowToItem(row, ctx) {
+            // 16차-8: 날짜 칸에 글이 있는데 날짜로 못 읽으면 ctx.badDate(칸 종류, 원래 글)로 알림 (조용히 빈칸 되지 않게)
+            const nd = (v, field) => {
+                const out = normalizeExcelDate(v);
+                const raw = (v === undefined || v === null) ? '' : String(v).trim();
+                if (!out && raw && raw !== '-' && ctx && ctx.badDate) ctx.badDate(field, raw);
+                return out;
+            };
             const clean = (v) => { if (v === undefined || v === null) return ''; const t = String(v).trim(); return t === '-' ? '' : t; };
             const rf = (key) => { const v = readField(row, key); return (v instanceof Date || typeof v === 'number') ? v : clean(v); };
             const txt = (key) => { const v = rf(key); return (v instanceof Date) ? formatDateYMD(v) : clean(v); };
@@ -6457,7 +6474,7 @@ function generateUniqueId() {
             const n = Math.max(models.length, types.length, dates.length);
             const devs = [];
             for (let i = 0; i < n; i++) {
-                const d = { model: models[i] || '', type: types[i] || '', date: normalizeExcelDate(dates[i] || '') };
+                const d = { model: models[i] || '', type: types[i] || '', date: nd(dates[i] || '', 'deviceOption') };
                 if (i === 0 || d.model || d.type || d.date) devs.push(d);
             }
 
@@ -6486,9 +6503,9 @@ function generateUniqueId() {
                     kioAdminId: txt('kioAdminId'),
                     reaCode: txt('reaCode'),
                     division,
-                    installDate: division === '임대' ? normalizeExcelDate(row['기기도입일'] || row['installDate'] || '') : '',
+                    installDate: division === '임대' ? nd(row['기기도입일'] || row['installDate'] || '', 'installDate') : '',
                     rentalPeriod: isValidRentalPeriod(period) ? period : '1개월',
-                    rentalEndDate: division === '임대' ? normalizeExcelDate(row['임대종료일'] || row['임대만료일'] || row['rentalEndDate'] || '') : '',
+                    rentalEndDate: division === '임대' ? nd(row['임대종료일'] || row['임대만료일'] || row['rentalEndDate'] || '', 'rentalEndDate') : '',
                     memoList: memoText ? [{ id: generateUniqueId(), date: '엑셀 대량등록', text: memoText }] : [],
                     status: ['정상', '요청', '종료'].includes(status) ? status : '정상',
                     checked: false
@@ -6506,7 +6523,27 @@ function generateUniqueId() {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     // 16차: 시트 전부 읽음 ("전체 다운로드" 엑셀은 그룹별 시트라서). 장소명 칸이 없는 시트(작성방법 등)는 저절로 건너뜀
-                    const jsonData = workbook.SheetNames.reduce((acc, nm) => acc.concat(XLSX.utils.sheet_to_json(workbook.Sheets[nm], { raw: true })), []);
+                    // 16차-8: 줄마다 시트 이름·실제 엑셀 줄번호·칸 이름→열 글자 표를 같이 들고 다님 (날짜 오류를 "C5"처럼 알려주려고)
+                    const jsonData = [];
+                    workbook.SheetNames.forEach(nm => {
+                        const ws = workbook.Sheets[nm];
+                        if (!ws || !ws['!ref']) return;
+                        const rg = XLSX.utils.decode_range(ws['!ref']);
+                        const colOf = {};
+                        for (let c = rg.s.c; c <= rg.e.c; c++) {
+                            const cell = ws[XLSX.utils.encode_cell({ r: rg.s.r, c })];
+                            if (cell && cell.v !== undefined && cell.v !== null) colOf[String(cell.v).trim()] = XLSX.utils.encode_col(c);
+                        }
+                        XLSX.utils.sheet_to_json(ws, { raw: true }).forEach(row => jsonData.push({ row, sheet: nm, rowNum: (row.__rowNum__ || 0) + 1, colOf }));
+                    });
+                    const dataSheets = new Set();
+                    const badDates = [];
+                    const DATE_HEADERS = {
+                        deviceOption: [getLabel('deviceOption'), DEFAULT_FIELD_LABELS.deviceOption, 'deviceOption', ...(LEGACY_HEADER_ALIASES.deviceOption || [])],
+                        installDate: ['기기도입일', 'installDate'],
+                        rentalEndDate: ['임대종료일', '임대만료일', 'rentalEndDate']
+                    };
+                    const FIELD_NAME = { deviceOption: getLabel('deviceOption'), installDate: '기기도입일', rentalEndDate: '임대종료일' };
 
                     if (jsonData.length === 0) {
                         alert('엑셀 파일에 데이터가 없습니다.');
@@ -6542,9 +6579,17 @@ function generateUniqueId() {
                         if (src.status === '요청') t.status = '요청';
                         (src.memoList || []).forEach(m => { if (!t.memoList.some(x => x.text === m.text)) t.memoList.push(m); });
                     };
-                    jsonData.forEach(row => {
-                        const r = excelRowToItem(row);
+                    jsonData.forEach(({ row, sheet, rowNum, colOf }) => {
+                        const pending = [];
+                        const r = excelRowToItem(row, { badDate: (field, raw) => pending.push({ field, raw }) });
                         if (!r) return;
+                        dataSheets.add(sheet);
+                        pending.forEach(b => {
+                            const h = DATE_HEADERS[b.field].find(x => colOf[x]);
+                            const where = (h ? colOf[h] : '') + rowNum;
+                            const who = r.item.placeName || (lastCo ? lastCo.item.placeName + ' (아래 줄)' : '장소명 없음');
+                            badDates.push({ sheet, where, who, field: FIELD_NAME[b.field], raw: b.raw });
+                        });
                         if (r.isCont) { if (lastCo) { mergeInto(lastCo.item, r.item); mergedRows++; lastCo.rowCount = (lastCo.rowCount || 1) + 1; } else orphanRows++; return; }
                         // 16차-7: 장소명이 완전히 같을 때만 합침 (띄어쓰기 차이만 무시). (1)(2)처럼 글자가 하나라도 다르면 다른 업체
                         const same = companies.find(c => norm(c.item.placeName) === norm(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
@@ -6571,6 +6616,9 @@ function generateUniqueId() {
                             (unknownGroups.size ? `\n\n※ 없는 그룹 이름: ${[...unknownGroups].join(', ')}` : ''));
                         return;
                     }
+                    const badDateText = badDates.length ? `\n\n⚠ 날짜로 못 읽어서 빈칸으로 들어가는 칸 ${badDates.length}개 (엑셀에서 2026-05-15처럼 고치면 돼요)\n` +
+                        badDates.slice(0, 10).map(b => `  · ${dataSheets.size > 1 ? b.sheet + '!' : ''}${b.where} ${b.who} — ${b.field} "${b.raw}"`).join('\n') +
+                        (badDates.length > 10 ? `\n  … 외 ${badDates.length - 10}개` : '') : '';
                     if (parsed.length === 0) {
                         alert('등록 가능한 유효한 데이터(장소명 누락 등)가 없습니다. 양식을 확인해주세요.\n(양식의 회색 예시 줄은 자동으로 건너뛰어요)');
                         return;
@@ -6585,12 +6633,13 @@ function generateUniqueId() {
                     const LIST_MAX = 10;
                     const listLines = (arr) => arr.slice(0, LIST_MAX).map(t => `  · ${t}`).join('\n') + (arr.length > LIST_MAX ? `\n  … 외 ${arr.length - LIST_MAX}곳` : '');
                     const multiDevCos = parsed.filter(p => p.item.devices.length > 0); // 16차-6: "추가 기기 대수" 대신 "여러 대인 업체 수"로 안내 (헷갈림 방지)
-                    const mergedCos = parsed.filter(p => p.rowCount > 1).map(p => `${p.item.placeName} (${p.rowCount}줄 → 기기 ${1 + p.item.devices.length}대)`);
+                    const mergedCos = parsed.filter(p => p.rowCount > 1).map(p => `${p.item.placeName} (${p.rowCount}줄 → ${p.item.devices.length ? `기기 ${1 + p.item.devices.length}대` : '한 업체'})`);
                     const summary = Object.entries(counts).map(([k, v]) => `${k} ${v}곳`).join(' · ');
                     const ok = confirm(`엑셀에서 업체 ${parsed.length}곳을 찾았어요.\n${summary}` +
                         (multiDevCos.length ? `\n(그중 기기 2대 이상인 업체 ${multiDevCos.length}곳)` : '') +
                         (mergedCos.length ? `\n\n▸ 여러 줄을 한 업체로 합친 곳 ${mergedCos.length}곳\n${listLines(mergedCos)}` : '') +
                         (orphanRows ? `\n\n※ 장소명 없는 줄 ${orphanRows}개는 위에 업체가 없어서 건너뜀` : '') +
+                        badDateText +
                         (dupNames.length ? `\n\n⚠ 이미 등록된 업체와 이름이 같은 곳 ${dupNames.length}곳 — 그대로 올리면 따로 하나 더 생겨요\n${listLines(dupNames)}` : '') +
                         (unknownGroups.size ? `\n\n※ 없는 그룹 이름(${[...unknownGroups].join(', ')})은 지금 고른 그룹으로 들어가요.` : '') +
                         (extraDevCount && !devicesColumnReady ? '\n\n⚠ 서버에 기기 여러 대 칸이 아직 없어서 2대째부터는 저장되지 않아요.' : '') +
@@ -6708,7 +6757,8 @@ function generateUniqueId() {
                 ['', '② 여러 줄로: 아래 줄에 장소명을 비우거나(셀 병합 OK) 같은 장소명을 다시 적고 기기 칸만 채우기 → 한 업체로 합쳐져요'],
                 ['', '   장소명이 완전히 같아야 합쳐져요. ○○캠퍼스(1), ○○캠퍼스(2)처럼 조금이라도 다르면 다른 업체로 등록돼요'],
                 ['키오에듀ID·레아코드', '기기마다 다르면 쉼표(,)로 이어 적기 — 예: qr99, qr100 (기기 순서대로)'],
-                ['날짜', '2026-01-15 처럼 연-월-일. 엑셀 날짜 서식도 괜찮아요.'],
+                ['날짜', '2026-01-15 처럼 연-월-일. 5월15일, 5/15처럼 연도 없이 쓰면 올해로 들어가요. 엑셀 날짜 서식도 괜찮아요.'],
+                ['', '날짜로 못 읽는 글(15일 오후, 다음주 등)은 등록 전 확인창에 몇 번 칸·장소명을 알려주고 빈칸으로 들어가요.'],
                 ['임대', '기기도입일 = 임대 시작일. 임대종료일을 비우면 도입일+임대기간으로 자동 계산.'],
                 ['상태', '정상 / 요청 / 종료 중 하나. 비우면 정상.'],
                 ['다시 올리기', '이 시스템에서 받은 엑셀(체크/보이는 업체/전체)도 이 양식처럼 그대로 다시 올릴 수 있어요. "-"는 빈칸으로 처리돼요.']
