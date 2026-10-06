@@ -1376,9 +1376,21 @@
         .dl-menu > * { position: relative; }
         .dl-menu .dl-sec { font: 700 10.5px 'Public Sans', sans-serif; color: #8EA3B8; letter-spacing: .4px; padding: 10px 14px 4px; }
         .dl-menu .dl-sec b { color: #F7D874; font-family: 'IBM Plex Mono', monospace; }
-        .dl-menu button { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: calc(100% - 12px); margin: 0 6px; padding: 8px 10px;
+        .dl-menu button.dl-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: calc(100% - 12px); margin: 0 6px; padding: 8px 10px;
             border: none; background: transparent; border-radius: 8px; cursor: pointer; font: 600 12.5px 'Public Sans', sans-serif; color: #E6EEF4; white-space: nowrap; text-align: left; }
-        .dl-menu button:hover { background: rgba(242,201,76,0.16); color: #F7D874; }
+        .dl-menu button.dl-item:hover { background: rgba(242,201,76,0.16); color: #F7D874; }
+        /* 16차-2: 데이터 메뉴 — 구역 제목 아이콘 + 엑셀/PDF 알약 버튼 줄 */
+        .dl-menu { min-width: 272px; }
+        .dl-menu .dl-sec { display: flex; align-items: center; gap: 6px; }
+        .dl-menu .dl-sec svg { width: 12px; height: 12px; fill: none; stroke: #F2C94C; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+        .dl-menu .dl-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 6px; padding: 5px 6px 5px 10px; border-radius: 8px; }
+        .dl-menu .dl-row:hover { background: rgba(255,255,255,0.04); }
+        .dl-menu .dl-lbl { font: 600 12.5px 'Public Sans', sans-serif; color: #E6EEF4; white-space: nowrap; }
+        .dl-menu .dl-lbl b { color: #F7D874; font-family: 'IBM Plex Mono', monospace; }
+        .dl-menu .dl-pills { display: inline-flex; gap: 4px; flex: none; }
+        .dl-menu .dl-pills button { padding: 4px 10px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.05); border-radius: 999px; cursor: pointer;
+            font: 700 11px 'Public Sans', sans-serif; color: #CFDAE4; letter-spacing: .2px; transition: background .15s, color .15s, border-color .15s; }
+        .dl-menu .dl-pills button:hover { background: rgba(242,201,76,0.18); border-color: rgba(242,201,76,0.55); color: #F7D874; }
         .dl-menu small { color: #8EA3B8; font-size: 11px; font-weight: 500; }
         .dl-menu hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 6px 12px; }
         .dl-menu .dl-foot { display: flex; align-items: center; gap: 6px; padding: 6px 14px 12px; font-size: 11px; color: #8EA3B8; white-space: nowrap; }
@@ -2099,37 +2111,32 @@
             <div class="navbar-right">
                 <input type="file" id="excelUploadInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
 
-                <!-- 2026-10-03 12차: 전체다운로드/PDF/엑셀/양식다운로드 4개 버튼 → "다운로드" 하나로 합침 (마우스 올리면 펼쳐짐).
-                     저장소/백업 카드도 메인 줄에서 빼고 이 메뉴 아래쪽으로 옮김 -->
+                <!-- 2026-10-06 16차-2: 다운로드 + 업로드 → "데이터" 메뉴 하나로 (내려받기 / 올리기 / 백업 3구역).
+                     엑셀·PDF는 한 줄에 작은 버튼 두 개로 붙여서 메뉴 길이를 줄임 -->
                 <div class="dl-wrap desktop-only-action" id="dlWrap">
-                    <button type="button" class="action-btn" onclick="toggleDownloadMenu(event)" title="다운로드 · 백업">
-                        <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                        <span class="util-txt">다운로드</span><span class="dl-caret">▾</span>
+                    <button type="button" class="action-btn" onclick="toggleDownloadMenu(event)" title="데이터 · 내려받기 / 올리기 / 백업">
+                        <svg class="btn-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20V5M3.5 8.5L7 5l3.5 3.5"/><path d="M17 4v15M13.5 15.5L17 19l3.5-3.5"/></svg>
+                        <span class="util-txt">데이터</span><span class="dl-caret">▾</span>
                     </button>
                     <div class="dl-menu" id="dlMenu">
-                        <div class="dl-sec">지금 보이는 업체 <b id="dlVisibleCount">0</b>건</div>
-                        <button type="button" onclick="exportVisible('excel')">엑셀<small>서식 포함</small></button>
-                        <button type="button" onclick="exportVisible('pdf')">PDF<small>디자인 그대로</small></button>
-                        <div class="dl-sec">체크한 업체</div>
-                        <button type="button" onclick="closeDownloadMenu(); exportSelectedToExcel()">엑셀<small>서식 포함</small></button>
-                        <button type="button" onclick="closeDownloadMenu(); exportSelectedToPDF(null)">PDF<small>디자인 그대로</small></button>
+                        <div class="dl-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>내려받기</div>
+                        <div class="dl-row"><span class="dl-lbl">지금 보이는 업체 <b id="dlVisibleCount">0</b>건</span>
+                            <span class="dl-pills"><button type="button" onclick="exportVisible('excel')" title="엑셀 (서식 포함)">엑셀</button><button type="button" onclick="exportVisible('pdf')" title="PDF (디자인 그대로)">PDF</button></span></div>
+                        <div class="dl-row"><span class="dl-lbl">체크한 업체</span>
+                            <span class="dl-pills"><button type="button" onclick="closeDownloadMenu(); exportSelectedToExcel()" title="엑셀 (서식 포함)">엑셀</button><button type="button" onclick="closeDownloadMenu(); exportSelectedToPDF(null)" title="PDF (디자인 그대로)">PDF</button></span></div>
+                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); exportAllGroupsToExcel()">전체 다운로드<small>모든 업체 엑셀</small></button>
                         <hr>
-                        <button type="button" onclick="closeDownloadMenu(); exportAllGroupsToExcel()">전체 다운로드<small>모든 업체 엑셀</small></button>
-                        <button type="button" onclick="closeDownloadMenu(); downloadTemplateExcel()">등록 양식<small>대량 등록용</small></button>
+                        <div class="dl-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>올리기</div>
+                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); triggerExcelUpload()" title="엑셀 파일로 대량 업체 등록">엑셀 대량 등록<small>파일 선택</small></button>
+                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); downloadTemplateExcel()">등록 양식 받기<small>대량 등록용</small></button>
                         <hr>
-                        <button type="button" onclick="closeDownloadMenu(); backupData()">데이터 백업 받기<small>JSON</small></button>
-                        <button type="button" id="restoreLinkBtn" onclick="closeDownloadMenu(); triggerRestoreUpload()">백업 불러오기<small>관리자</small></button>
-                        <div class="dl-foot"><span class="dl-dot" title="Supabase 클라우드 저장소"></span>마지막 백업 <span id="lastBackupNotice" class="backup-notice"></span></div>
+                        <div class="dl-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg>백업</div>
+                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); backupData()">데이터 백업 받기<small>JSON</small></button>
+                        <button type="button" class="dl-item" id="restoreLinkBtn" onclick="closeDownloadMenu(); triggerRestoreUpload()">백업 불러오기<small>관리자</small></button>
+                        <div class="dl-foot"><span class="dl-dot" title="Supabase 클라우드 저장소"></span><span id="lastBackupNotice" class="backup-notice"></span></div>
                         <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="handleRestoreFile(this)">
                     </div>
                 </div>
-
-                <button class="action-btn desktop-only-action" onclick="triggerExcelUpload()" title="엑셀 파일로 대량 업체 등록">
-                    <svg class="btn-icon" viewBox="0 0 24 24" width="14" height="14">
-                        <path fill="currentColor" d="M5 15h4v6h6v-6h4l-7-7-7 7zm0-8h14V5H5v2z"/>
-                    </svg>
-                    <span class="util-txt">업로드</span>
-                </button>
 
                 <!-- 📱 14차-3: 폰 전용 신규등록 + 버튼 (로고줄 빈 공간, 로그아웃 왼쪽). PC는 검색줄의 "+ 신규등록" 그대로 -->
                 <button type="button" class="m-add m-only" onclick="openModalForAdd()" aria-label="신규 업체 등록" title="신규 업체 등록"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
