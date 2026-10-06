@@ -2110,6 +2110,7 @@
         <div class="navbar-right-stack">
             <div class="navbar-right">
                 <input type="file" id="excelUploadInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
+                <input type="file" id="excelUpdateInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpdate(this)">
 
                 <!-- 2026-10-06 16차-2: 다운로드 + 업로드 → "데이터" 메뉴 하나로 (내려받기 / 올리기 / 백업 3구역).
                      엑셀·PDF는 한 줄에 작은 버튼 두 개로 붙여서 메뉴 길이를 줄임 -->
@@ -2127,7 +2128,8 @@
                         <button type="button" class="dl-item" onclick="closeDownloadMenu(); exportAllGroupsToExcel()">전체 다운로드<small>모든 업체 엑셀</small></button>
                         <hr>
                         <div class="dl-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>올리기</div>
-                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); triggerExcelUpload()" title="엑셀 파일로 대량 업체 등록">엑셀 대량 등록<small>파일 선택</small></button>
+                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); triggerExcelUpload()" title="엑셀 파일로 새 업체 여러 곳 등록">엑셀 대량 등록<small>새 업체 추가</small></button>
+                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); triggerExcelUpdate()" title="장소명이 같은 기존 업체를 찾아 엑셀에 적힌 칸만 고침">엑셀 대량 수정<small>있는 업체 고치기</small></button>
                         <button type="button" class="dl-item" onclick="closeDownloadMenu(); downloadTemplateExcel()">등록 양식 받기<small>대량 등록용</small></button>
                         <hr>
                         <div class="dl-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg>백업</div>
@@ -6481,8 +6483,11 @@ function generateUniqueId() {
             const status = txt('status');
             const memoText = txt('memo');
             const period = clean(row['임대기간'] || row['rentalPeriod']);
+            // 16차-9: 기기도입일·임대종료일은 구분과 상관없이 한 번만 읽어둠 (대량 수정에서 기존 임대 업체에 쓰려고)
+            const instD = nd(row['기기도입일'] || row['installDate'] || '', 'installDate');
+            const endD = nd(row['임대종료일'] || row['임대만료일'] || row['rentalEndDate'] || '', 'rentalEndDate');
             return {
-                groupCell, isCont,
+                groupCell, isCont, instD, endD, rawStatus: status, rawPeriod: period,
                 item: {
                     regionSi, regionGu, placeName,
                     installAddress: txt('installAddress'),
@@ -6503,9 +6508,9 @@ function generateUniqueId() {
                     kioAdminId: txt('kioAdminId'),
                     reaCode: txt('reaCode'),
                     division,
-                    installDate: division === '임대' ? nd(row['기기도입일'] || row['installDate'] || '', 'installDate') : '',
+                    installDate: division === '임대' ? instD : '',
                     rentalPeriod: isValidRentalPeriod(period) ? period : '1개월',
-                    rentalEndDate: division === '임대' ? nd(row['임대종료일'] || row['임대만료일'] || row['rentalEndDate'] || '', 'rentalEndDate') : '',
+                    rentalEndDate: division === '임대' ? endD : '',
                     memoList: memoText ? [{ id: generateUniqueId(), date: '엑셀 대량등록', text: memoText }] : [],
                     status: ['정상', '요청', '종료'].includes(status) ? status : '정상',
                     checked: false
@@ -6513,157 +6518,97 @@ function generateUniqueId() {
             };
         }
 
-        function handleExcelUpload(input) {
+        /* 16차-9: 엑셀 읽기 공통 — 대량 등록·대량 수정 둘 다 이걸로 읽음
+           - 1번 줄(머리줄) 칸 이름으로 읽음 (순서 무관)  - 시트 전부  - 줄마다 실제 엑셀 줄번호·열 글자 기억 (날짜 오류를 "C5"로 알려주려고)
+           - 여러 줄 합치기: ① 장소명 빈 줄 → 바로 위 업체 기기 추가  ② 장소명이 완전히 같은 줄 → 한 업체 */
+        const XL_LIST_MAX = 10;
+        function xlListLines(arr) {
+            return arr.slice(0, XL_LIST_MAX).map(t => `  · ${t}`).join('\n') + (arr.length > XL_LIST_MAX ? `\n  … 외 ${arr.length - XL_LIST_MAX}곳` : '');
+        }
+        const xlNorm = (t) => String(t || '').replace(/\s/g, '');
+
+        function parseUploadWorkbook(workbook) {
+            const jsonData = [];
+            workbook.SheetNames.forEach(nm => {
+                const ws = workbook.Sheets[nm];
+                if (!ws || !ws['!ref']) return;
+                const rg = XLSX.utils.decode_range(ws['!ref']);
+                const colOf = {};
+                for (let c = rg.s.c; c <= rg.e.c; c++) {
+                    const cell = ws[XLSX.utils.encode_cell({ r: rg.s.r, c })];
+                    if (cell && cell.v !== undefined && cell.v !== null) colOf[String(cell.v).trim()] = XLSX.utils.encode_col(c);
+                }
+                XLSX.utils.sheet_to_json(ws, { raw: true }).forEach(row => jsonData.push({ row, sheet: nm, rowNum: (row.__rowNum__ || 0) + 1, colOf }));
+            });
+            const DATE_HEADERS = {
+                deviceOption: [getLabel('deviceOption'), DEFAULT_FIELD_LABELS.deviceOption, 'deviceOption', ...(LEGACY_HEADER_ALIASES.deviceOption || [])],
+                installDate: ['기기도입일', 'installDate'],
+                rentalEndDate: ['임대종료일', '임대만료일', 'rentalEndDate']
+            };
+            const FIELD_NAME = { deviceOption: getLabel('deviceOption'), installDate: '기기도입일', rentalEndDate: '임대종료일' };
+            const res = { totalRows: jsonData.length, companies: [], badDates: [], dataSheets: new Set(), mergedRows: 0, orphanRows: 0 };
+            let lastCo = null;
+            const sameRegion = (a, b) => (!a.regionSi || !b.regionSi || xlNorm(a.regionSi) === xlNorm(b.regionSi)) && (!a.regionGu || !b.regionGu || xlNorm(a.regionGu) === xlNorm(b.regionGu));
+            const mergeInto = (co, r) => {
+                const t = co.item, src = r.item;
+                const srcDevs = [{ model: src.deviceModel, type: src.deviceType, date: src.deviceOption }].concat(src.devices || []).filter(d => d.model || d.type || d.date);
+                srcDevs.forEach(d => {
+                    if (!t.deviceModel && !t.deviceType && !t.deviceOption) { t.deviceModel = d.model; t.deviceType = d.type; t.deviceOption = d.date; }
+                    else t.devices.push(d);
+                });
+                ['kioId', 'reaCode'].forEach(k => { // 기기별 코드 → 쉼표로 이어붙임 (같은 값 반복이면 한 번만)
+                    const have = String(t[k] || '').split(',').map(x => x.trim()).filter(Boolean);
+                    String(src[k] || '').split(',').map(x => x.trim()).filter(Boolean).forEach(c => { if (!have.includes(c)) have.push(c); });
+                    t[k] = have.join(', ');
+                });
+                Object.keys(src).forEach(k => { // 나머지 칸은 비어 있을 때만 채움
+                    if (['devices', 'memoList', 'kioId', 'reaCode', 'deviceModel', 'deviceType', 'deviceOption', 'division', 'status', 'rentalPeriod', 'checked'].includes(k)) return;
+                    if (!t[k] && src[k]) t[k] = src[k];
+                });
+                if (src.status === '요청') t.status = '요청';
+                if (!co.rawStatus && r.rawStatus) co.rawStatus = r.rawStatus;
+                if (!co.rawPeriod && r.rawPeriod) co.rawPeriod = r.rawPeriod;
+                if (!co.instD && r.instD) co.instD = r.instD;
+                if (!co.endD && r.endD) co.endD = r.endD;
+                if (!co.groupCell && r.groupCell) co.groupCell = r.groupCell;
+                (src.memoList || []).forEach(m => { if (!t.memoList.some(x => x.text === m.text)) t.memoList.push(m); });
+                co.rowCount = (co.rowCount || 1) + 1;
+                res.mergedRows++;
+            };
+            jsonData.forEach(({ row, sheet, rowNum, colOf }) => {
+                const pending = [];
+                const r = excelRowToItem(row, { badDate: (field, raw) => pending.push({ field, raw }) });
+                if (!r) return;
+                res.dataSheets.add(sheet);
+                r.where = rowNum; r.sheet = sheet;
+                pending.forEach(b => {
+                    const h = DATE_HEADERS[b.field].find(x => colOf[x]);
+                    const who = r.item.placeName || (lastCo ? lastCo.item.placeName + ' (아래 줄)' : '장소명 없음');
+                    res.badDates.push({ sheet, where: (h ? colOf[h] : '') + rowNum, who, field: FIELD_NAME[b.field], raw: b.raw });
+                });
+                if (r.isCont) { if (lastCo) mergeInto(lastCo, r); else res.orphanRows++; return; }
+                const same = res.companies.find(c => xlNorm(c.item.placeName) === xlNorm(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
+                if (same) { mergeInto(same, r); lastCo = same; return; }
+                r.rowCount = 1;
+                res.companies.push(r); lastCo = r;
+            });
+            return res;
+        }
+        function xlBadDateText(p, tail) {
+            const b = p.badDates;
+            if (!b.length) return '';
+            return `\n\n⚠ 날짜로 못 읽은 칸 ${b.length}개 — ${tail} (엑셀에서 2026-05-15처럼 고치면 돼요)\n` +
+                b.slice(0, XL_LIST_MAX).map(x => `  · ${p.dataSheets.size > 1 ? x.sheet + '!' : ''}${x.where} ${x.who} — ${x.field} "${x.raw}"`).join('\n') +
+                (b.length > XL_LIST_MAX ? `\n  … 외 ${b.length - XL_LIST_MAX}개` : '');
+        }
+        function readExcelFile(input, handler) {
             const file = input.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    // 16차: 시트 전부 읽음 ("전체 다운로드" 엑셀은 그룹별 시트라서). 장소명 칸이 없는 시트(작성방법 등)는 저절로 건너뜀
-                    // 16차-8: 줄마다 시트 이름·실제 엑셀 줄번호·칸 이름→열 글자 표를 같이 들고 다님 (날짜 오류를 "C5"처럼 알려주려고)
-                    const jsonData = [];
-                    workbook.SheetNames.forEach(nm => {
-                        const ws = workbook.Sheets[nm];
-                        if (!ws || !ws['!ref']) return;
-                        const rg = XLSX.utils.decode_range(ws['!ref']);
-                        const colOf = {};
-                        for (let c = rg.s.c; c <= rg.e.c; c++) {
-                            const cell = ws[XLSX.utils.encode_cell({ r: rg.s.r, c })];
-                            if (cell && cell.v !== undefined && cell.v !== null) colOf[String(cell.v).trim()] = XLSX.utils.encode_col(c);
-                        }
-                        XLSX.utils.sheet_to_json(ws, { raw: true }).forEach(row => jsonData.push({ row, sheet: nm, rowNum: (row.__rowNum__ || 0) + 1, colOf }));
-                    });
-                    const dataSheets = new Set();
-                    const badDates = [];
-                    const DATE_HEADERS = {
-                        deviceOption: [getLabel('deviceOption'), DEFAULT_FIELD_LABELS.deviceOption, 'deviceOption', ...(LEGACY_HEADER_ALIASES.deviceOption || [])],
-                        installDate: ['기기도입일', 'installDate'],
-                        rentalEndDate: ['임대종료일', '임대만료일', 'rentalEndDate']
-                    };
-                    const FIELD_NAME = { deviceOption: getLabel('deviceOption'), installDate: '기기도입일', rentalEndDate: '임대종료일' };
-
-                    if (jsonData.length === 0) {
-                        alert('엑셀 파일에 데이터가 없습니다.');
-                        return;
-                    }
-
-                    // 그룹 정하기: 임대 → 임대 보관 그룹(화면엔 "임대") / 판매 → "그룹" 칸 이름 → 없으면 지금 고른 그룹 칩
-                    const norm = (t) => String(t || '').replace(/\s/g, '');
-                    const groupByName = (name) => groupOrder.find(k => norm(groupNames[k]) === norm(name));
-                    const parsed = [];
-                    const unresolved = [];
-                    const unknownGroups = new Set();
-                    // 16차-3: 한 업체 기기가 여러 줄로 적힌 엑셀 합치기
-                    //  ① 장소명이 빈 줄 → 바로 위 업체에 기기 추가  ② 같은 장소명(지역이 다르지 않으면) 반복 → 한 업체로 합침
-                    const companies = [];
-                    let lastCo = null, mergedRows = 0, orphanRows = 0;
-                    const sameRegion = (a, b) => (!a.regionSi || !b.regionSi || norm(a.regionSi) === norm(b.regionSi)) && (!a.regionGu || !b.regionGu || norm(a.regionGu) === norm(b.regionGu));
-                    const mergeInto = (t, src) => {
-                        const srcDevs = [{ model: src.deviceModel, type: src.deviceType, date: src.deviceOption }].concat(src.devices || []).filter(d => d.model || d.type || d.date);
-                        srcDevs.forEach(d => {
-                            if (!t.deviceModel && !t.deviceType && !t.deviceOption) { t.deviceModel = d.model; t.deviceType = d.type; t.deviceOption = d.date; }
-                            else t.devices.push(d);
-                        });
-                        ['kioId', 'reaCode'].forEach(k => { // 기기별 코드 → 쉼표로 이어붙임 (같은 값 반복이면 한 번만)
-                            const have = String(t[k] || '').split(',').map(x => x.trim()).filter(Boolean);
-                            String(src[k] || '').split(',').map(x => x.trim()).filter(Boolean).forEach(c => { if (!have.includes(c)) have.push(c); });
-                            t[k] = have.join(', ');
-                        });
-                        Object.keys(src).forEach(k => { // 나머지 칸은 비어 있을 때만 채움
-                            if (['devices', 'memoList', 'kioId', 'reaCode', 'deviceModel', 'deviceType', 'deviceOption', 'division', 'status', 'rentalPeriod', 'checked'].includes(k)) return;
-                            if (!t[k] && src[k]) t[k] = src[k];
-                        });
-                        if (src.status === '요청') t.status = '요청';
-                        (src.memoList || []).forEach(m => { if (!t.memoList.some(x => x.text === m.text)) t.memoList.push(m); });
-                    };
-                    jsonData.forEach(({ row, sheet, rowNum, colOf }) => {
-                        const pending = [];
-                        const r = excelRowToItem(row, { badDate: (field, raw) => pending.push({ field, raw }) });
-                        if (!r) return;
-                        dataSheets.add(sheet);
-                        pending.forEach(b => {
-                            const h = DATE_HEADERS[b.field].find(x => colOf[x]);
-                            const where = (h ? colOf[h] : '') + rowNum;
-                            const who = r.item.placeName || (lastCo ? lastCo.item.placeName + ' (아래 줄)' : '장소명 없음');
-                            badDates.push({ sheet, where, who, field: FIELD_NAME[b.field], raw: b.raw });
-                        });
-                        if (r.isCont) { if (lastCo) { mergeInto(lastCo.item, r.item); mergedRows++; lastCo.rowCount = (lastCo.rowCount || 1) + 1; } else orphanRows++; return; }
-                        // 16차-7: 장소명이 완전히 같을 때만 합침 (띄어쓰기 차이만 무시). (1)(2)처럼 글자가 하나라도 다르면 다른 업체
-                        const same = companies.find(c => norm(c.item.placeName) === norm(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
-                        if (same) {
-                            mergeInto(same.item, r.item); if (!same.groupCell) same.groupCell = r.groupCell; mergedRows++; same.rowCount = (same.rowCount || 1) + 1; lastCo = same; return;
-                        }
-                        companies.push(r); lastCo = r;
-                    });
-                    companies.forEach(r => {
-                        let gk = null;
-                        if (r.item.division === '임대') gk = getLeaseStorageGroupKey();
-                        else if (r.groupCell && groupByName(r.groupCell)) gk = groupByName(r.groupCell);
-                        else if (currentGroup && currentGroup !== ALL_GROUP_KEY) gk = currentGroup;
-                        if (r.groupCell && r.item.division !== '임대' && !groupByName(r.groupCell)) unknownGroups.add(r.groupCell);
-                        if (!gk) { unresolved.push(r.item.placeName); return; }
-                        parsed.push({ gk, item: r.item, rowCount: r.rowCount || 1 });
-                    });
-
-                    if (unresolved.length) {
-                        const names = groupOrder.map(k => groupNames[k]).join(', ');
-                        alert(`판매 업체 ${unresolved.length}곳은 어느 그룹에 넣을지 몰라서 등록을 멈췄어요.\n` +
-                            `(${unresolved.slice(0, 5).join(', ')}${unresolved.length > 5 ? ' 외' : ''})\n\n` +
-                            `엑셀 "그룹" 칸에 ${names} 중 하나를 적거나,\n판매 그룹 칩을 하나 누른 뒤 다시 올려주세요.` +
-                            (unknownGroups.size ? `\n\n※ 없는 그룹 이름: ${[...unknownGroups].join(', ')}` : ''));
-                        return;
-                    }
-                    const badDateText = badDates.length ? `\n\n⚠ 날짜로 못 읽어서 빈칸으로 들어가는 칸 ${badDates.length}개 (엑셀에서 2026-05-15처럼 고치면 돼요)\n` +
-                        badDates.slice(0, 10).map(b => `  · ${dataSheets.size > 1 ? b.sheet + '!' : ''}${b.where} ${b.who} — ${b.field} "${b.raw}"`).join('\n') +
-                        (badDates.length > 10 ? `\n  … 외 ${badDates.length - 10}개` : '') : '';
-                    if (parsed.length === 0) {
-                        alert('등록 가능한 유효한 데이터(장소명 누락 등)가 없습니다. 양식을 확인해주세요.\n(양식의 회색 예시 줄은 자동으로 건너뛰어요)');
-                        return;
-                    }
-
-                    const counts = {};
-                    parsed.forEach(p => { const lbl = p.item.division === '임대' ? '임대' : (groupNames[p.gk] || '-'); counts[lbl] = (counts[lbl] || 0) + 1; });
-                    const extraDevCount = parsed.reduce((s, p) => s + p.item.devices.length, 0);
-                    const existingNames = new Set(getAllGroupsFlatData().map(i => norm(i.placeName)));
-                    const dupNames = parsed.filter(p => existingNames.has(norm(p.item.placeName))).map(p => p.item.placeName);
-                    // 16차-5: 여러 줄이 합쳐진 업체 이름 목록 (몇 줄 → 기기 몇 대)
-                    const LIST_MAX = 10;
-                    const listLines = (arr) => arr.slice(0, LIST_MAX).map(t => `  · ${t}`).join('\n') + (arr.length > LIST_MAX ? `\n  … 외 ${arr.length - LIST_MAX}곳` : '');
-                    const multiDevCos = parsed.filter(p => p.item.devices.length > 0); // 16차-6: "추가 기기 대수" 대신 "여러 대인 업체 수"로 안내 (헷갈림 방지)
-                    const mergedCos = parsed.filter(p => p.rowCount > 1).map(p => `${p.item.placeName} (${p.rowCount}줄 → ${p.item.devices.length ? `기기 ${1 + p.item.devices.length}대` : '한 업체'})`);
-                    const summary = Object.entries(counts).map(([k, v]) => `${k} ${v}곳`).join(' · ');
-                    const ok = confirm(`엑셀에서 업체 ${parsed.length}곳을 찾았어요.\n${summary}` +
-                        (multiDevCos.length ? `\n(그중 기기 2대 이상인 업체 ${multiDevCos.length}곳)` : '') +
-                        (mergedCos.length ? `\n\n▸ 여러 줄을 한 업체로 합친 곳 ${mergedCos.length}곳\n${listLines(mergedCos)}` : '') +
-                        (orphanRows ? `\n\n※ 장소명 없는 줄 ${orphanRows}개는 위에 업체가 없어서 건너뜀` : '') +
-                        badDateText +
-                        (dupNames.length ? `\n\n⚠ 이미 등록된 업체와 이름이 같은 곳 ${dupNames.length}곳 — 그대로 올리면 따로 하나 더 생겨요\n${listLines(dupNames)}` : '') +
-                        (unknownGroups.size ? `\n\n※ 없는 그룹 이름(${[...unknownGroups].join(', ')})은 지금 고른 그룹으로 들어가요.` : '') +
-                        (extraDevCount && !devicesColumnReady ? '\n\n⚠ 서버에 기기 여러 대 칸이 아직 없어서 2대째부터는 저장되지 않아요.' : '') +
-                        `\n\n등록할까요?`);
-                    if (!ok) return;
-
-                    const inserted = [];
-                    for (let i = 0; i < parsed.length; i += 200) {
-                        const batch = parsed.slice(i, i + 200).map(p => itemToDbRow(p.item, p.gk));
-                        const { data: res, error } = await sb.from('companies').insert(batch).select();
-                        if (error) throw error;
-                        inserted.push(...res);
-                    }
-                    inserted.forEach(row => {
-                        const gk = row.group_id;
-                        if (!allGroupsData[gk]) allGroupsData[gk] = [];
-                        const it = dbRowToItem(row);
-                        it.checked = true; // 16차-5: 방금 올린 업체는 체크해둠 → 표에서 바로 구분 + "체크한 업체" 다운로드로 확인 가능
-                        allGroupsData[gk].push(it);
-                    });
-                    renderTable();
-                    alert(`성공적으로 ${inserted.length}개의 업체가 대량 등록되었습니다! (${summary})` +
-                        (mergedCos.length ? `\n\n▸ 여러 줄을 합친 업체 ${mergedCos.length}곳\n${listLines(mergedCos)}` : '') +
-                        `\n\n방금 등록한 업체는 체크(☑)해뒀어요. 새로고침하면 체크는 풀려요.`);
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    await handler(workbook);
                 } catch (error) {
                     console.error(error);
                     alert('엑셀 파일을 읽는 중 오류가 발생했습니다: ' + (error.message || error));
@@ -6672,6 +6617,172 @@ function generateUniqueId() {
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        // ===== 엑셀 대량 등록 (새 업체 추가) =====
+        function handleExcelUpload(input) {
+            readExcelFile(input, async (workbook) => {
+                const p = parseUploadWorkbook(workbook);
+                if (p.totalRows === 0) { alert('엑셀 파일에 데이터가 없습니다.'); return; }
+
+                // 그룹 정하기: 임대 → 임대 보관 그룹(화면엔 "임대") / 판매 → "그룹" 칸 이름 → 없으면 지금 고른 그룹 칩
+                const groupByName = (name) => groupOrder.find(k => xlNorm(groupNames[k]) === xlNorm(name));
+                const parsed = [], unresolved = [], unknownGroups = new Set();
+                p.companies.forEach(r => {
+                    let gk = null;
+                    if (r.item.division === '임대') gk = getLeaseStorageGroupKey();
+                    else if (r.groupCell && groupByName(r.groupCell)) gk = groupByName(r.groupCell);
+                    else if (currentGroup && currentGroup !== ALL_GROUP_KEY) gk = currentGroup;
+                    if (r.groupCell && r.item.division !== '임대' && !groupByName(r.groupCell)) unknownGroups.add(r.groupCell);
+                    if (!gk) { unresolved.push(r.item.placeName); return; }
+                    parsed.push({ gk, item: r.item, rowCount: r.rowCount || 1 });
+                });
+
+                if (unresolved.length) {
+                    const names = groupOrder.map(k => groupNames[k]).join(', ');
+                    alert(`판매 업체 ${unresolved.length}곳은 어느 그룹에 넣을지 몰라서 등록을 멈췄어요.\n` +
+                        `(${unresolved.slice(0, 5).join(', ')}${unresolved.length > 5 ? ' 외' : ''})\n\n` +
+                        `엑셀 "그룹" 칸에 ${names} 중 하나를 적거나,\n판매 그룹 칩을 하나 누른 뒤 다시 올려주세요.` +
+                        (unknownGroups.size ? `\n\n※ 없는 그룹 이름: ${[...unknownGroups].join(', ')}` : ''));
+                    return;
+                }
+                if (parsed.length === 0) {
+                    alert('등록 가능한 유효한 데이터(장소명 누락 등)가 없습니다. 양식을 확인해주세요.\n(양식의 회색 예시 줄은 자동으로 건너뛰어요)');
+                    return;
+                }
+
+                const counts = {};
+                parsed.forEach(x => { const lbl = x.item.division === '임대' ? '임대' : (groupNames[x.gk] || '-'); counts[lbl] = (counts[lbl] || 0) + 1; });
+                const extraDevCount = parsed.reduce((s, x) => s + x.item.devices.length, 0);
+                const existingNames = new Set(getAllGroupsFlatData().map(i => xlNorm(i.placeName)));
+                const dupNames = parsed.filter(x => existingNames.has(xlNorm(x.item.placeName))).map(x => x.item.placeName);
+                const multiDevCos = parsed.filter(x => x.item.devices.length > 0);
+                const mergedCos = parsed.filter(x => x.rowCount > 1).map(x => `${x.item.placeName} (${x.rowCount}줄 → ${x.item.devices.length ? `기기 ${1 + x.item.devices.length}대` : '한 업체'})`);
+                const summary = Object.entries(counts).map(([k, v]) => `${k} ${v}곳`).join(' · ');
+                const ok = confirm(`엑셀에서 새 업체 ${parsed.length}곳을 찾았어요.\n${summary}` +
+                    (multiDevCos.length ? `\n(그중 기기 2대 이상인 업체 ${multiDevCos.length}곳)` : '') +
+                    (mergedCos.length ? `\n\n▸ 여러 줄을 한 업체로 합친 곳 ${mergedCos.length}곳\n${xlListLines(mergedCos)}` : '') +
+                    (p.orphanRows ? `\n\n※ 장소명 없는 줄 ${p.orphanRows}개는 위에 업체가 없어서 건너뜀` : '') +
+                    xlBadDateText(p, '빈칸으로 들어가요') +
+                    (dupNames.length ? `\n\n⚠ 이미 등록된 업체와 이름이 같은 곳 ${dupNames.length}곳 — 그대로 올리면 따로 하나 더 생겨요\n   (있는 업체를 고치려면 "엑셀 대량 수정"을 쓰세요)\n${xlListLines(dupNames)}` : '') +
+                    (unknownGroups.size ? `\n\n※ 없는 그룹 이름(${[...unknownGroups].join(', ')})은 지금 고른 그룹으로 들어가요.` : '') +
+                    (extraDevCount && !devicesColumnReady ? '\n\n⚠ 서버에 기기 여러 대 칸이 아직 없어서 2대째부터는 저장되지 않아요.' : '') +
+                    `\n\n등록할까요?`);
+                if (!ok) return;
+
+                const inserted = [];
+                for (let i = 0; i < parsed.length; i += 200) {
+                    const batch = parsed.slice(i, i + 200).map(x => itemToDbRow(x.item, x.gk));
+                    const { data: res, error } = await sb.from('companies').insert(batch).select();
+                    if (error) throw error;
+                    inserted.push(...res);
+                }
+                inserted.forEach(row => {
+                    const gk = row.group_id;
+                    if (!allGroupsData[gk]) allGroupsData[gk] = [];
+                    const it = dbRowToItem(row);
+                    it.checked = true; // 방금 올린 업체는 체크해둠 → 표에서 바로 구분 + "체크한 업체" 다운로드로 확인 가능
+                    allGroupsData[gk].push(it);
+                });
+                renderTable();
+                alert(`성공적으로 ${inserted.length}개의 업체가 대량 등록되었습니다! (${summary})` +
+                    (mergedCos.length ? `\n\n▸ 여러 줄을 합친 업체 ${mergedCos.length}곳\n${xlListLines(mergedCos)}` : '') +
+                    `\n\n방금 등록한 업체는 체크(☑)해뒀어요. 새로고침하면 체크는 풀려요.`);
+            });
+        }
+
+        // ===== 16차-9: 엑셀 대량 수정 (있는 업체 고치기) =====
+        // 장소명이 완전히 같은 기존 업체를 찾아서, 엑셀에 "적힌 칸만" 고침. 빈칸은 안 건드림.
+        // 그룹·구분(판매/임대)은 안 바꿈. 메모 칸은 기존 메모를 지우지 않고 새 메모로 추가.
+        // 기기: 모델명/옵션/설치날짜는 기기 순서대로(" / " 또는 여러 줄) 적힌 칸만 고침
+        function triggerExcelUpdate() {
+            document.getElementById('excelUpdateInput').click();
+        }
+        function handleExcelUpdate(input) {
+            readExcelFile(input, async (workbook) => {
+                const p = parseUploadWorkbook(workbook);
+                if (p.totalRows === 0 || p.companies.length === 0) { alert('엑셀에서 고칠 업체(장소명)를 찾지 못했어요.\n(양식의 회색 예시 줄은 자동으로 건너뛰어요)'); return; }
+
+                const all = getAllGroupsFlatData();
+                const TEXT_KEYS = ['regionSi', 'regionGu', 'installAddress', 'installLocation', 'orgDept', 'orgName', 'orgTitle', 'orgContact', 'orgEmail',
+                    'managerContact', 'managerEmail', 'managerNote', 'kioId', 'kioAdminId', 'reaCode'];
+                const labelOf = (k) => ({ regionSi: '지역 시', installDate: '기기도입일', rentalEndDate: '임대종료일', rentalPeriod: '임대기간' }[k] || getLabel(k));
+                const short = (v) => { const t = String(v || '').replace(/\s+/g, ' ').trim(); return t ? `"${t.length > 22 ? t.slice(0, 22) + '…' : t}"` : '(없음)'; };
+                const today = formatDateYMD(new Date());
+                const plans = [], notFound = [], ambiguous = [], noChange = [];
+
+                p.companies.forEach(r => {
+                    const src = r.item;
+                    let cands = all.filter(i => xlNorm(i.placeName) === xlNorm(src.placeName));
+                    if (cands.length > 1 && (src.regionSi || src.regionGu)) {
+                        cands = cands.filter(i => (!src.regionSi || xlNorm(i.regionSi) === xlNorm(src.regionSi)) && (!src.regionGu || xlNorm(i.regionGu) === xlNorm(src.regionGu)));
+                    }
+                    if (cands.length === 0) { notFound.push(`${src.placeName} (${r.sheet && p.dataSheets.size > 1 ? r.sheet + " " : ""}${r.where}번 줄)`); return; }
+                    if (cands.length > 1) { ambiguous.push(`${src.placeName} — ${cands.length}곳 (지역 시/구 칸을 같이 적으면 구분돼요)`); return; }
+                    const ex = cands[0];
+                    const nw = Object.assign({}, ex, { devices: (ex.devices || []).map(d => Object.assign({}, d)), memoList: (ex.memoList || []).slice() });
+                    const changes = [];
+                    const setF = (k, v, lbl) => { if (v && String(v) !== String(nw[k] || '')) { changes.push(`${lbl || labelOf(k)}: ${short(nw[k])} → ${short(v)}`); nw[k] = v; } };
+                    TEXT_KEYS.forEach(k => setF(k, src[k]));
+                    // 기기: 순서대로 적힌 칸만
+                    const srcDevs = [{ model: src.deviceModel, type: src.deviceType, date: src.deviceOption }].concat(src.devices || []);
+                    const multi = srcDevs.length > 1 || (nw.devices || []).length > 0;
+                    srcDevs.forEach((d, i) => {
+                        if (!d.model && !d.type && !d.date) return;
+                        const num = multi ? (DEV_NUMS[i] || (i + 1)) + ' ' : '';
+                        if (i === 0) {
+                            setF('deviceModel', d.model, num + getLabel('deviceModel'));
+                            setF('deviceType', d.type, num + getLabel('deviceType'));
+                            setF('deviceOption', d.date, num + getLabel('deviceOption'));
+                        } else {
+                            while (nw.devices.length < i) nw.devices.push({ model: '', type: '', date: '' });
+                            const td = nw.devices[i - 1];
+                            [['model', 'deviceModel'], ['type', 'deviceType'], ['date', 'deviceOption']].forEach(([f, lk]) => {
+                                if (d[f] && d[f] !== td[f]) { changes.push(`${num}${getLabel(lk)}: ${short(td[f])} → ${short(d[f])}`); td[f] = d[f]; }
+                            });
+                        }
+                    });
+                    if (ex.division === '임대') {
+                        setF('installDate', r.instD);
+                        setF('rentalEndDate', r.endD);
+                        if (r.rawPeriod && isValidRentalPeriod(r.rawPeriod)) setF('rentalPeriod', r.rawPeriod);
+                    }
+                    if (['정상', '요청', '종료'].includes(r.rawStatus)) setF('status', r.rawStatus, '상태');
+                    (src.memoList || []).forEach(m => {
+                        if (nw.memoList.some(x => x.text === m.text)) return; // 같은 메모가 이미 있으면 또 안 넣음
+                        nw.memoList.push({ id: generateUniqueId(), date: today, text: m.text, author: currentUserDisplayName() });
+                        changes.push(`메모 추가: ${short(m.text)}`);
+                    });
+                    if (!changes.length) { noChange.push(src.placeName); return; }
+                    plans.push({ ex, nw, changes, name: ex.placeName });
+                });
+
+                const planLines = plans.map(pl => `${pl.name}\n      ${pl.changes.slice(0, 3).join('\n      ')}${pl.changes.length > 3 ? `\n      … 외 ${pl.changes.length - 3}칸` : ''}`);
+                const head = `엑셀에서 업체 ${p.companies.length}곳을 읽었어요.` +
+                    `\n✏ 고칠 업체 ${plans.length}곳` + (noChange.length ? ` · 바뀌는 것 없음 ${noChange.length}곳` : '') +
+                    (plans.length ? `\n${xlListLines(planLines)}` : '') +
+                    (notFound.length ? `\n\n❓ 이름이 같은 업체를 못 찾은 곳 ${notFound.length}곳 (안 고쳐져요 · 새 업체면 "엑셀 대량 등록"으로)\n${xlListLines(notFound)}` : '') +
+                    (ambiguous.length ? `\n\n⚠ 같은 이름 업체가 여러 곳이라 건너뛴 곳 ${ambiguous.length}곳\n${xlListLines(ambiguous)}` : '') +
+                    (p.orphanRows ? `\n\n※ 장소명 없는 줄 ${p.orphanRows}개는 위에 업체가 없어서 건너뜀` : '') +
+                    xlBadDateText(p, '그 칸은 안 고쳐요');
+                if (!plans.length) { alert(head + '\n\n고칠 내용이 없어요.'); return; }
+                if (!confirm(head + `\n\n${plans.length}곳을 고칠까요? (빈칸은 안 건드려요)`)) return;
+
+                let done = 0; const failed = [];
+                for (const pl of plans) {
+                    const loc = findItemLocation(pl.ex.id);
+                    if (loc.index === -1) { failed.push(pl.name); continue; }
+                    try {
+                        const { data, error } = await sb.from('companies').update(itemToDbRow(pl.nw, loc.groupKey)).eq('id', pl.ex.id).select();
+                        if (error) throw error;
+                        if (data && data.length) { loc.arr[loc.index] = Object.assign(dbRowToItem(data[0]), { checked: true }); done++; }
+                        else failed.push(pl.name);
+                    } catch (err) { console.error(err); failed.push(pl.name); }
+                }
+                renderTable();
+                alert(`${done}곳을 고쳤어요!` + (failed.length ? `\n\n⚠ 저장 못 한 곳 ${failed.length}곳\n${xlListLines(failed)}` : '') +
+                    `\n\n고친 업체는 체크(☑)해뒀어요. 새로고침하면 체크는 풀려요.`);
+            });
         }
 
         async function downloadTemplateExcel() {
@@ -6761,6 +6872,9 @@ function generateUniqueId() {
                 ['', '날짜로 못 읽는 글(15일 오후, 다음주 등)은 등록 전 확인창에 몇 번 칸·장소명을 알려주고 빈칸으로 들어가요.'],
                 ['임대', '기기도입일 = 임대 시작일. 임대종료일을 비우면 도입일+임대기간으로 자동 계산.'],
                 ['상태', '정상 / 요청 / 종료 중 하나. 비우면 정상.'],
+                ['대량 수정', '데이터 → 엑셀 대량 수정: 장소명이 완전히 같은 기존 업체를 찾아 엑셀에 적힌 칸만 고쳐요. 빈칸은 안 건드림.'],
+                ['', '고칠 칸만 남겨도 돼요 (예: 장소명 + 담당자 연락처). 1번 줄 칸 이름으로 읽어서 칸 순서는 상관없어요.'],
+                ['', '그룹·구분은 안 바뀌고, 메모는 기존 메모에 새로 추가돼요. 바뀔 내용을 먼저 보여주고 확인 후 저장해요.'],
                 ['다시 올리기', '이 시스템에서 받은 엑셀(체크/보이는 업체/전체)도 이 양식처럼 그대로 다시 올릴 수 있어요. "-"는 빈칸으로 처리돼요.']
             ].forEach((r, i) => {
                 const row = guide.addRow(r);
