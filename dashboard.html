@@ -4832,6 +4832,13 @@ function generateUniqueId() {
                 return r;
             };
             wrap('setDetailDivision'); wrap('setDetailStatus'); wrap('handleDetailRentalDateChange');
+            // 16차-12: 상세 팝업 열면 브라우저 탭 제목 = 업체 이름 (작업표시줄·다른 탭에서도 어느 업체인지 보이게). 닫으면 원래대로
+            const BASE_TITLE = document.title || 'RheaOps';
+            const setTitle = () => { const n = (document.getElementById('detailPlaceName') || {}).value || ''; document.title = n.trim() ? `${n.trim()} - ${BASE_TITLE}` : BASE_TITLE; };
+            const openForTitle = openDetailModal;
+            openDetailModal = function() { const r = openForTitle.apply(this, arguments); try { setTitle(); } catch (e) {} return r; };
+            const origClose = closeDetailModal;
+            closeDetailModal = function() { const r = origClose.apply(this, arguments); document.title = BASE_TITLE; return r; };
             const endInp = document.getElementById('detailRentalEndDate');
             if (endInp) endInp.addEventListener('change', () => { try { updateDetailStageChip(); } catch (e) {} });
             ['detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', () => { try { updateDetailStageChip(); } catch (e) {} }); });
