@@ -6432,7 +6432,10 @@ function generateUniqueId() {
             const rf = (key) => { const v = readField(row, key); return (v instanceof Date || typeof v === 'number') ? v : clean(v); };
             const txt = (key) => { const v = rf(key); return (v instanceof Date) ? formatDateYMD(v) : clean(v); };
             const placeName = txt('placeName');
-            if (!placeName || placeName === TEMPLATE_EXAMPLE_PLACE) return null;
+            if (placeName === TEMPLATE_EXAMPLE_PLACE) return null;
+            // 16차-3: 장소명이 빈 줄 = 위 업체의 2대째·3대째 기기 줄 (셀 병합해서 쓴 엑셀). 기기/코드 정보가 하나도 없으면 그냥 빈 줄
+            const isCont = !placeName;
+            if (isCont && !['deviceModel', 'deviceType', 'deviceOption', 'kioId', 'reaCode'].some(k => txt(k))) return null;
 
             let regionSi = clean(row['지역 시'] || row['regionSi']);
             let regionGu = txt('regionGu');
@@ -6462,7 +6465,7 @@ function generateUniqueId() {
             const memoText = txt('memo');
             const period = clean(row['임대기간'] || row['rentalPeriod']);
             return {
-                groupCell,
+                groupCell, isCont,
                 item: {
                     regionSi, regionGu, placeName,
                     installAddress: txt('installAddress'),
@@ -6516,9 +6519,38 @@ function generateUniqueId() {
                     const parsed = [];
                     const unresolved = [];
                     const unknownGroups = new Set();
+                    // 16차-3: 한 업체 기기가 여러 줄로 적힌 엑셀 합치기
+                    //  ① 장소명이 빈 줄 → 바로 위 업체에 기기 추가  ② 같은 장소명(지역이 다르지 않으면) 반복 → 한 업체로 합침
+                    const companies = [];
+                    let lastCo = null, mergedRows = 0, orphanRows = 0;
+                    const sameRegion = (a, b) => (!a.regionSi || !b.regionSi || norm(a.regionSi) === norm(b.regionSi)) && (!a.regionGu || !b.regionGu || norm(a.regionGu) === norm(b.regionGu));
+                    const mergeInto = (t, src) => {
+                        const srcDevs = [{ model: src.deviceModel, type: src.deviceType, date: src.deviceOption }].concat(src.devices || []).filter(d => d.model || d.type || d.date);
+                        srcDevs.forEach(d => {
+                            if (!t.deviceModel && !t.deviceType && !t.deviceOption) { t.deviceModel = d.model; t.deviceType = d.type; t.deviceOption = d.date; }
+                            else t.devices.push(d);
+                        });
+                        ['kioId', 'reaCode'].forEach(k => { // 기기별 코드 → 쉼표로 이어붙임 (같은 값 반복이면 한 번만)
+                            const have = String(t[k] || '').split(',').map(x => x.trim()).filter(Boolean);
+                            String(src[k] || '').split(',').map(x => x.trim()).filter(Boolean).forEach(c => { if (!have.includes(c)) have.push(c); });
+                            t[k] = have.join(', ');
+                        });
+                        Object.keys(src).forEach(k => { // 나머지 칸은 비어 있을 때만 채움
+                            if (['devices', 'memoList', 'kioId', 'reaCode', 'deviceModel', 'deviceType', 'deviceOption', 'division', 'status', 'rentalPeriod', 'checked'].includes(k)) return;
+                            if (!t[k] && src[k]) t[k] = src[k];
+                        });
+                        if (src.status === '요청') t.status = '요청';
+                        (src.memoList || []).forEach(m => { if (!t.memoList.some(x => x.text === m.text)) t.memoList.push(m); });
+                    };
                     jsonData.forEach(row => {
                         const r = excelRowToItem(row);
                         if (!r) return;
+                        if (r.isCont) { if (lastCo) { mergeInto(lastCo.item, r.item); mergedRows++; } else orphanRows++; return; }
+                        const same = companies.find(c => norm(c.item.placeName) === norm(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
+                        if (same) { mergeInto(same.item, r.item); if (!same.groupCell) same.groupCell = r.groupCell; mergedRows++; lastCo = same; return; }
+                        companies.push(r); lastCo = r;
+                    });
+                    companies.forEach(r => {
                         let gk = null;
                         if (r.item.division === '임대') gk = getLeaseStorageGroupKey();
                         else if (r.groupCell && groupByName(r.groupCell)) gk = groupByName(r.groupCell);
@@ -6544,9 +6576,14 @@ function generateUniqueId() {
                     const counts = {};
                     parsed.forEach(p => { const lbl = p.item.division === '임대' ? '임대' : (groupNames[p.gk] || '-'); counts[lbl] = (counts[lbl] || 0) + 1; });
                     const extraDevCount = parsed.reduce((s, p) => s + p.item.devices.length, 0);
+                    const existingNames = new Set(getAllGroupsFlatData().map(i => norm(i.placeName)));
+                    const dupNames = parsed.filter(p => existingNames.has(norm(p.item.placeName))).map(p => p.item.placeName);
                     const summary = Object.entries(counts).map(([k, v]) => `${k} ${v}곳`).join(' · ');
                     const ok = confirm(`엑셀에서 업체 ${parsed.length}곳을 찾았어요.\n${summary}` +
                         (extraDevCount ? `\n(2대째 이상 기기 ${extraDevCount}대 포함)` : '') +
+                        (mergedRows ? `\n(여러 줄로 적힌 기기 ${mergedRows}줄 → 해당 업체에 합침)` : '') +
+                        (orphanRows ? `\n\n※ 장소명 없는 줄 ${orphanRows}개는 위에 업체가 없어서 건너뜀` : '') +
+                        (dupNames.length ? `\n\n⚠ 이미 등록된 업체와 이름이 같은 곳 ${dupNames.length}곳 (${dupNames.slice(0, 3).join(', ')}${dupNames.length > 3 ? ' 외' : ''}) — 그대로 올리면 따로 하나 더 생겨요.` : '') +
                         (unknownGroups.size ? `\n\n※ 없는 그룹 이름(${[...unknownGroups].join(', ')})은 지금 고른 그룹으로 들어가요.` : '') +
                         (extraDevCount && !devicesColumnReady ? '\n\n⚠ 서버에 기기 여러 대 칸이 아직 없어서 2대째부터는 저장되지 않아요.' : '') +
                         `\n\n등록할까요?`);
@@ -6655,7 +6692,8 @@ function generateUniqueId() {
                 ['예시 줄', `회색 예시 줄(장소명 "${TEMPLATE_EXAMPLE_PLACE}")은 지우지 않아도 자동으로 건너뛰어요.`],
                 ['그룹', `판매 업체가 들어갈 그룹 이름 (${gname}). 비우면 업로드할 때 골라둔 그룹 칩으로 들어가요.`],
                 ['구분', '"임대"라고 적으면 임대 업체 (그룹 칸은 무시). 비우거나 다른 값이면 판매.'],
-                ['기기 여러 대', '모델명·옵션·설치날짜 칸에 " / " (띄어쓰기+슬래시+띄어쓰기)로 이어 적으면 순서대로 1대째, 2대째…로 들어가요.'],
+                ['기기 여러 대', '① 한 줄에: 모델명·옵션·설치날짜 칸에 " / " (띄어쓰기+슬래시+띄어쓰기)로 이어 적기'],
+                ['', '② 여러 줄로: 아래 줄에 장소명을 비우거나(셀 병합 OK) 같은 장소명을 다시 적고 기기 칸만 채우기 → 한 업체로 합쳐져요'],
                 ['키오에듀ID·레아코드', '기기마다 다르면 쉼표(,)로 이어 적기 — 예: qr99, qr100 (기기 순서대로)'],
                 ['날짜', '2026-01-15 처럼 연-월-일. 엑셀 날짜 서식도 괜찮아요.'],
                 ['임대', '기기도입일 = 임대 시작일. 임대종료일을 비우면 도입일+임대기간으로 자동 계산.'],
