@@ -6545,13 +6545,11 @@ function generateUniqueId() {
                     jsonData.forEach(row => {
                         const r = excelRowToItem(row);
                         if (!r) return;
-                        if (r.isCont) { if (lastCo) { mergeInto(lastCo.item, r.item); mergedRows++; } else orphanRows++; return; }
-                        // 16차-4: "○○캠퍼스(1)", "○○캠퍼스(2)"처럼 끝에 (숫자)만 다른 이름도 같은 업체로 봄 → 합치면 (숫자) 뗀 이름으로 저장
-                        const baseName = (n) => norm(String(n || '').replace(/\s*[(（]\s*\d+\s*[)）]\s*$/, ''));
-                        const same = companies.find(c => baseName(c.item.placeName) === baseName(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
+                        if (r.isCont) { if (lastCo) { mergeInto(lastCo.item, r.item); mergedRows++; lastCo.rowCount = (lastCo.rowCount || 1) + 1; } else orphanRows++; return; }
+                        // 16차-7: 장소명이 완전히 같을 때만 합침 (띄어쓰기 차이만 무시). (1)(2)처럼 글자가 하나라도 다르면 다른 업체
+                        const same = companies.find(c => norm(c.item.placeName) === norm(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
                         if (same) {
-                            if (norm(same.item.placeName) !== norm(r.item.placeName) || /[(（]\s*\d+\s*[)）]\s*$/.test(same.item.placeName)) same.item.placeName = String(same.item.placeName).replace(/\s*[(（]\s*\d+\s*[)）]\s*$/, '').trim();
-                            mergeInto(same.item, r.item); if (!same.groupCell) same.groupCell = r.groupCell; mergedRows++; lastCo = same; return;
+                            mergeInto(same.item, r.item); if (!same.groupCell) same.groupCell = r.groupCell; mergedRows++; same.rowCount = (same.rowCount || 1) + 1; lastCo = same; return;
                         }
                         companies.push(r); lastCo = r;
                     });
@@ -6562,7 +6560,7 @@ function generateUniqueId() {
                         else if (currentGroup && currentGroup !== ALL_GROUP_KEY) gk = currentGroup;
                         if (r.groupCell && r.item.division !== '임대' && !groupByName(r.groupCell)) unknownGroups.add(r.groupCell);
                         if (!gk) { unresolved.push(r.item.placeName); return; }
-                        parsed.push({ gk, item: r.item });
+                        parsed.push({ gk, item: r.item, rowCount: r.rowCount || 1 });
                     });
 
                     if (unresolved.length) {
@@ -6583,12 +6581,17 @@ function generateUniqueId() {
                     const extraDevCount = parsed.reduce((s, p) => s + p.item.devices.length, 0);
                     const existingNames = new Set(getAllGroupsFlatData().map(i => norm(i.placeName)));
                     const dupNames = parsed.filter(p => existingNames.has(norm(p.item.placeName))).map(p => p.item.placeName);
+                    // 16차-5: 여러 줄이 합쳐진 업체 이름 목록 (몇 줄 → 기기 몇 대)
+                    const LIST_MAX = 10;
+                    const listLines = (arr) => arr.slice(0, LIST_MAX).map(t => `  · ${t}`).join('\n') + (arr.length > LIST_MAX ? `\n  … 외 ${arr.length - LIST_MAX}곳` : '');
+                    const multiDevCos = parsed.filter(p => p.item.devices.length > 0); // 16차-6: "추가 기기 대수" 대신 "여러 대인 업체 수"로 안내 (헷갈림 방지)
+                    const mergedCos = parsed.filter(p => p.rowCount > 1).map(p => `${p.item.placeName} (${p.rowCount}줄 → 기기 ${1 + p.item.devices.length}대)`);
                     const summary = Object.entries(counts).map(([k, v]) => `${k} ${v}곳`).join(' · ');
                     const ok = confirm(`엑셀에서 업체 ${parsed.length}곳을 찾았어요.\n${summary}` +
-                        (extraDevCount ? `\n(2대째 이상 기기 ${extraDevCount}대 포함)` : '') +
-                        (mergedRows ? `\n(여러 줄로 적힌 기기 ${mergedRows}줄 → 해당 업체에 합침)` : '') +
+                        (multiDevCos.length ? `\n(그중 기기 2대 이상인 업체 ${multiDevCos.length}곳)` : '') +
+                        (mergedCos.length ? `\n\n▸ 여러 줄을 한 업체로 합친 곳 ${mergedCos.length}곳\n${listLines(mergedCos)}` : '') +
                         (orphanRows ? `\n\n※ 장소명 없는 줄 ${orphanRows}개는 위에 업체가 없어서 건너뜀` : '') +
-                        (dupNames.length ? `\n\n⚠ 이미 등록된 업체와 이름이 같은 곳 ${dupNames.length}곳 (${dupNames.slice(0, 3).join(', ')}${dupNames.length > 3 ? ' 외' : ''}) — 그대로 올리면 따로 하나 더 생겨요.` : '') +
+                        (dupNames.length ? `\n\n⚠ 이미 등록된 업체와 이름이 같은 곳 ${dupNames.length}곳 — 그대로 올리면 따로 하나 더 생겨요\n${listLines(dupNames)}` : '') +
                         (unknownGroups.size ? `\n\n※ 없는 그룹 이름(${[...unknownGroups].join(', ')})은 지금 고른 그룹으로 들어가요.` : '') +
                         (extraDevCount && !devicesColumnReady ? '\n\n⚠ 서버에 기기 여러 대 칸이 아직 없어서 2대째부터는 저장되지 않아요.' : '') +
                         `\n\n등록할까요?`);
@@ -6604,10 +6607,14 @@ function generateUniqueId() {
                     inserted.forEach(row => {
                         const gk = row.group_id;
                         if (!allGroupsData[gk]) allGroupsData[gk] = [];
-                        allGroupsData[gk].push(dbRowToItem(row));
+                        const it = dbRowToItem(row);
+                        it.checked = true; // 16차-5: 방금 올린 업체는 체크해둠 → 표에서 바로 구분 + "체크한 업체" 다운로드로 확인 가능
+                        allGroupsData[gk].push(it);
                     });
                     renderTable();
-                    alert(`성공적으로 ${inserted.length}개의 업체가 대량 등록되었습니다! (${summary})`);
+                    alert(`성공적으로 ${inserted.length}개의 업체가 대량 등록되었습니다! (${summary})` +
+                        (mergedCos.length ? `\n\n▸ 여러 줄을 합친 업체 ${mergedCos.length}곳\n${listLines(mergedCos)}` : '') +
+                        `\n\n방금 등록한 업체는 체크(☑)해뒀어요. 새로고침하면 체크는 풀려요.`);
                 } catch (error) {
                     console.error(error);
                     alert('엑셀 파일을 읽는 중 오류가 발생했습니다: ' + (error.message || error));
@@ -6699,7 +6706,7 @@ function generateUniqueId() {
                 ['구분', '"임대"라고 적으면 임대 업체 (그룹 칸은 무시). 비우거나 다른 값이면 판매.'],
                 ['기기 여러 대', '① 한 줄에: 모델명·옵션·설치날짜 칸에 " / " (띄어쓰기+슬래시+띄어쓰기)로 이어 적기'],
                 ['', '② 여러 줄로: 아래 줄에 장소명을 비우거나(셀 병합 OK) 같은 장소명을 다시 적고 기기 칸만 채우기 → 한 업체로 합쳐져요'],
-                ['', '   ○○캠퍼스(1), ○○캠퍼스(2)처럼 끝 (숫자)만 다른 이름도 한 업체로 합치고, 이름은 (숫자)를 떼고 저장해요'],
+                ['', '   장소명이 완전히 같아야 합쳐져요. ○○캠퍼스(1), ○○캠퍼스(2)처럼 조금이라도 다르면 다른 업체로 등록돼요'],
                 ['키오에듀ID·레아코드', '기기마다 다르면 쉼표(,)로 이어 적기 — 예: qr99, qr100 (기기 순서대로)'],
                 ['날짜', '2026-01-15 처럼 연-월-일. 엑셀 날짜 서식도 괜찮아요.'],
                 ['임대', '기기도입일 = 임대 시작일. 임대종료일을 비우면 도입일+임대기간으로 자동 계산.'],
