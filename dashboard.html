@@ -6546,8 +6546,13 @@ function generateUniqueId() {
                         const r = excelRowToItem(row);
                         if (!r) return;
                         if (r.isCont) { if (lastCo) { mergeInto(lastCo.item, r.item); mergedRows++; } else orphanRows++; return; }
-                        const same = companies.find(c => norm(c.item.placeName) === norm(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
-                        if (same) { mergeInto(same.item, r.item); if (!same.groupCell) same.groupCell = r.groupCell; mergedRows++; lastCo = same; return; }
+                        // 16차-4: "○○캠퍼스(1)", "○○캠퍼스(2)"처럼 끝에 (숫자)만 다른 이름도 같은 업체로 봄 → 합치면 (숫자) 뗀 이름으로 저장
+                        const baseName = (n) => norm(String(n || '').replace(/\s*[(（]\s*\d+\s*[)）]\s*$/, ''));
+                        const same = companies.find(c => baseName(c.item.placeName) === baseName(r.item.placeName) && c.item.division === r.item.division && sameRegion(c.item, r.item));
+                        if (same) {
+                            if (norm(same.item.placeName) !== norm(r.item.placeName) || /[(（]\s*\d+\s*[)）]\s*$/.test(same.item.placeName)) same.item.placeName = String(same.item.placeName).replace(/\s*[(（]\s*\d+\s*[)）]\s*$/, '').trim();
+                            mergeInto(same.item, r.item); if (!same.groupCell) same.groupCell = r.groupCell; mergedRows++; lastCo = same; return;
+                        }
                         companies.push(r); lastCo = r;
                     });
                     companies.forEach(r => {
@@ -6694,6 +6699,7 @@ function generateUniqueId() {
                 ['구분', '"임대"라고 적으면 임대 업체 (그룹 칸은 무시). 비우거나 다른 값이면 판매.'],
                 ['기기 여러 대', '① 한 줄에: 모델명·옵션·설치날짜 칸에 " / " (띄어쓰기+슬래시+띄어쓰기)로 이어 적기'],
                 ['', '② 여러 줄로: 아래 줄에 장소명을 비우거나(셀 병합 OK) 같은 장소명을 다시 적고 기기 칸만 채우기 → 한 업체로 합쳐져요'],
+                ['', '   ○○캠퍼스(1), ○○캠퍼스(2)처럼 끝 (숫자)만 다른 이름도 한 업체로 합치고, 이름은 (숫자)를 떼고 저장해요'],
                 ['키오에듀ID·레아코드', '기기마다 다르면 쉼표(,)로 이어 적기 — 예: qr99, qr100 (기기 순서대로)'],
                 ['날짜', '2026-01-15 처럼 연-월-일. 엑셀 날짜 서식도 괜찮아요.'],
                 ['임대', '기기도입일 = 임대 시작일. 임대종료일을 비우면 도입일+임대기간으로 자동 계산.'],
