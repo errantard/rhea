@@ -2068,6 +2068,31 @@
             .m-dcall b { flex: 0 0 auto; max-width: none; overflow: visible; }
             .m-dcall span { flex-shrink: 0; white-space: nowrap; margin-left: auto; padding-left: 8px; }
         }
+
+        /* ===== 16차-11: 상세 팝업 임대 단계 칩 (임대 버튼 아래, 오른쪽 정렬) ===== */
+        .detail-stage { position: absolute; right: 0; top: calc(100% + 10px); z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; pointer-events: none; }
+        .detail-stage .ds-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px 6px 10px; border-radius: 999px; font: 800 13.5px 'Public Sans', 'Pretendard', sans-serif; letter-spacing: .2px; color: #fff;
+            background: rgba(10,18,32,.72); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 4px 14px rgba(0,0,0,.35); white-space: nowrap; }
+        .detail-stage .ds-chip svg { width: 15px; height: 15px; flex: none; }
+        .detail-stage .ds-chip .ds-sep { opacity: .5; font-weight: 500; }
+        .detail-stage .ds-chip .ds-d { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 12.5px; }
+        .detail-stage .ds-hint { font: 600 11.5px 'Public Sans', 'Pretendard', sans-serif; color: #FFD9C2; text-shadow: 0 1px 3px rgba(0,0,0,.8); white-space: nowrap; }
+        .detail-stage .ds-hint b { color: #fff; }
+        .detail-stage.st-upcoming .ds-chip { border-color: rgba(120,180,255,.6); color: #CFE3FF; }
+        .detail-stage.st-ongoing  .ds-chip { border-color: rgba(110,226,170,.6); color: #C9F5DE; }
+        .detail-stage.st-expiring .ds-chip { border-color: rgba(255,190,90,.75); color: #FFE2B0; box-shadow: 0 0 14px rgba(255,170,60,.35), 0 4px 14px rgba(0,0,0,.35); }
+        .detail-stage.st-awaiting .ds-chip { border-color: rgba(255,120,90,.85); color: #FFD3C4; background: rgba(60,16,10,.72); box-shadow: 0 0 16px rgba(255,100,70,.45), 0 4px 14px rgba(0,0,0,.35); }
+        .detail-stage.st-closing .ds-chip { border-color: rgba(255,255,255,.35); color: #E3E8EE; }
+        .detail-hero.has-stage .detail-hero-titlewrap { margin-right: 250px; }
+        /* 회수대기인데 아직 종료 안 누름 → [종료] 버튼이 숨쉬듯 빛남 */
+        @keyframes dsEndPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,110,90,.0), 0 0 6px rgba(255,110,90,.35); } 50% { box-shadow: 0 0 0 4px rgba(255,110,90,.18), 0 0 18px rgba(255,110,90,.75); } }
+        .detail-pick-opt.pick-end.ds-glow:not(.active) { color: #FFD3C4; border-color: rgba(255,120,90,.8); animation: dsEndPulse 1.8s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .detail-pick-opt.pick-end.ds-glow:not(.active) { animation: none; box-shadow: 0 0 12px rgba(255,110,90,.6); } }
+        @media (max-width: 880px) {
+            .detail-stage { position: static; order: 5; width: 100%; align-items: flex-end; margin-top: 2px; }
+            .detail-hero.has-stage .detail-hero-titlewrap { margin-right: 0; }
+            .detail-stage .ds-chip { font-size: 12.5px; padding: 5px 11px 5px 9px; }
+        }
     </style>
 </head>
 <body>
@@ -2523,6 +2548,8 @@
                             <svg viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
                         </span>
                     </div>
+                    <!-- 16차-11: 임대 단계 칩 (임대 버튼 아래 오른쪽). 회수대기면 [종료] 버튼이 빛나며 안내 -->
+                    <div class="detail-stage" id="detailStageChip" style="display:none;"></div>
                 </div>
 
                 <div class="detail-hero-titlewrap">
@@ -4753,6 +4780,62 @@ function generateUniqueId() {
             const _mOpenDetail = openDetailModal;
             openDetailModal = function(id) { const r = _mOpenDetail.apply(this, arguments); try { mRenderDetailCalls(); } catch (e) {} return r; };
         }
+
+        /* ===== 16차-11: 상세 팝업 임대 단계 칩 — 폼에 지금 입력된 값(구분·상태·날짜)으로 바로 계산 ===== */
+        function updateDetailStageChip() {
+            const box = document.getElementById('detailStageChip');
+            const hero = box ? box.closest('.detail-hero') : null;
+            const endBtn = document.getElementById('detailPickEnd');
+            if (!box) return;
+            const v = (id) => (document.getElementById(id) || {}).value || '';
+            const tmp = {
+                division: v('detailDivisionValue'), status: v('detailStatusValue'),
+                installDate: v('detailInstallDate'), rentalEndDate: v('detailRentalEndDate'),
+                rentalPeriod: (typeof readRentalPeriodValue === 'function') ? readRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit') : '1개월'
+            };
+            const hide = () => { box.style.display = 'none'; box.innerHTML = ''; if (hero) hero.classList.remove('has-stage'); if (endBtn) { endBtn.classList.remove('ds-glow'); endBtn.title = ''; } };
+            if (tmp.division !== '임대') return hide();
+            // 16차-11b: 대장님 "복잡하다" → 안내 문구 없이 칩 하나 + [종료] 빛남만. [종료] 누르면 칩은 그냥 사라짐
+            if (tmp.status === '종료') return hide();
+            const st = getLeaseStage(tmp);
+            if (!st) return hide();
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const end = getRentalEndDateObj(tmp);
+            const dd = end ? Math.round((end - today) / 86400000) : null;
+            let d = '';
+            if (st === 'upcoming') { const s0 = parseLooseDate(tmp.installDate); const n = s0 ? Math.round((s0 - today) / 86400000) : null; d = n != null ? `시작 D-${n}` : ''; }
+            else if (st === 'awaiting') d = dd != null ? `만료 D+${-dd}` : '';
+            else if (dd != null) d = dd === 0 ? '오늘 종료' : `D-${dd}`;
+            else d = '종료일 미입력';
+            const label = { upcoming: '예정', ongoing: '임대중', expiring: '종료임박', awaiting: '회수대기' }[st];
+            box.className = 'detail-stage st-' + st;
+            box.innerHTML = `<span class="ds-chip">${STAGE_ICONS[st]}${label}${d ? `<span class="ds-sep">·</span><span class="ds-d">${d}</span>` : ''}</span>`;
+            box.style.display = ''; if (hero) hero.classList.add('has-stage');
+            if (endBtn) { endBtn.classList.toggle('ds-glow', st === 'awaiting'); endBtn.title = st === 'awaiting' ? '기기 회수가 끝나면 눌러서 저장' : ''; }
+        }
+        (function wireDetailStageChip() {
+            const wrap = (name, before) => {
+                const orig = window[name];
+                if (typeof orig !== 'function') return;
+                window[name] = function() { if (before) before.apply(this, arguments); const r = orig.apply(this, arguments); try { updateDetailStageChip(); } catch (e) { console.error(e); } return r; };
+            };
+            // 열 때: 처음 단계 기억 (종료 누른 뒤 안내용)
+            const origOpen = openDetailModal;
+            openDetailModal = function(id) {
+                const r = origOpen.apply(this, arguments);
+                try {
+                    const box = document.getElementById('detailStageChip');
+                    const it = (findItemLocation(id) || {}).item;
+                    if (box) box.dataset.openedStage = it ? (getLeaseStage(it) || '') : '';
+                    updateDetailStageChip();
+                } catch (e) { console.error(e); }
+                return r;
+            };
+            wrap('setDetailDivision'); wrap('setDetailStatus'); wrap('handleDetailRentalDateChange');
+            const endInp = document.getElementById('detailRentalEndDate');
+            if (endInp) endInp.addEventListener('change', () => { try { updateDetailStageChip(); } catch (e) {} });
+            ['detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', () => { try { updateDetailStageChip(); } catch (e) {} }); });
+        })();
 
         // 폰에서 봉화·이정표를 누르면 표 필터 대신 시트를 엶 (캡처 단계에서 가로채서 원래 onclick은 실행 안 됨)
         document.addEventListener('click', function(e) {
