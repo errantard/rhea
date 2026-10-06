@@ -2919,7 +2919,9 @@ function showSyncStatus(msg, isError) {
             kioId: ['키오에듀번호'], kioAdminId: ['키오드민번호'],
             // 2026-09-23: 유형→옵션, 옵션→설치날짜로 기본 라벨명이 바뀌면서, 예전 라벨을 헤더로 쓴
             // 엑셀 업로드 파일도 계속 올바른 필드에 매칭되도록 옛 라벨을 legacy alias로 남겨둠
-            deviceType: ['유형'], deviceOption: ['옵션']
+            deviceType: ['유형'], deviceOption: ['옵션'],
+            // 16차: 등록양식의 "지역 구" 헤더가 라벨(지역 시/군/구)로 바뀌어 나가는데, 옛 양식/직접 만든 파일의 "지역 구"도 읽히게
+            regionGu: ['지역 구']
         };
         const DEFAULT_GROUP_LABELS = {
             region: '지역', address: '주소', org: '소속',
@@ -5934,10 +5936,11 @@ function generateUniqueId() {
         /* ===================== ⑰ 내보내기(PDF/엑셀) 공통 준비 — 컬럼 정의, 표시컬럼 필터링, 내보낼 데이터 가공 ===================== */
         const EXPORT_COLUMN_DEFS = [
             { key: 'no',              label: 'No',       group: null,            width: 5,  align: 'center', pdfWeight: 4,  pdfFixedPercent: 4  },
+            { key: 'groupName',       label: '그룹',      group: null,            width: 9,  align: 'center', pdfWeight: 8 }, // 16차: 판매=그룹명, 임대="임대"
             { key: 'region',          label: '지역',      group: 'region-group',  width: 14, pdfWeight: 10 },
             { key: 'placeName',       label: '장소명',     group: 'region-group',  width: 20, pdfWeight: 12, pdfFixedPercent: 13, compact: false },
-            { key: 'installAddress',  label: '설치주소',   group: 'address-group', width: 28, pdfWeight: 17 },
-            { key: 'installLocation', label: '설치위치',   group: 'address-group', width: 20, pdfWeight: 13 },
+            { key: 'installAddress',  label: '설치주소',   group: 'address-group', width: 28, pdfWeight: 14 },
+            { key: 'installLocation', label: '설치위치',   group: 'address-group', width: 20, pdfWeight: 11 },
             { key: 'orgDept',         label: '소속부서',   group: 'org-group',     width: 14, pdfWeight: 9  },
             { key: 'orgName',         label: '소속성명',   group: 'org-group',     width: 10, pdfWeight: 7  },
             { key: 'orgTitle',        label: '소속직책',   group: 'org-group',     width: 10, pdfWeight: 7  },
@@ -5947,14 +5950,15 @@ function generateUniqueId() {
             { key: 'managerEmail',    label: '담당자이메일', group: 'manager-group', width: 20, pdfWeight: 9,  compact: true },
             { key: 'managerNote',     label: '담당자비고',  group: 'manager-group', width: 16, pdfWeight: 8,  compact: true },
             { key: 'deviceModel',     label: '모델명',     group: 'device-group',  width: 14, pdfWeight: 8  },
-            { key: 'deviceType',      label: '옵션',       group: 'device-group',  width: 10, pdfWeight: 6  },
-            { key: 'deviceOption',    label: '설치날짜',   group: 'device-group',  width: 12, pdfWeight: 7  },
+            { key: 'deviceType',      label: '옵션',       group: 'device-group',  width: 10, pdfWeight: 8  },
+            { key: 'deviceOption',    label: '설치날짜',   group: 'device-group',  width: 12, pdfWeight: 11 },
             { key: 'kioId',           label: '키오에듀번호', group: 'sys-group',    width: 14, pdfWeight: 8,  compact: true },
             { key: 'kioAdminId',      label: '키오드민번호', group: 'sys-group',    width: 14, pdfWeight: 8,  compact: true },
-            { key: 'reaCode',         label: '레아코드',   group: 'sys-group',     width: 10, pdfWeight: 6,  compact: true },
+            { key: 'reaCode',         label: '레아코드',   group: 'sys-group',     width: 10, pdfWeight: 8,  compact: true },
             { key: 'division',        label: '구분',       group: 'rental-group',  width: 8,  pdfWeight: 6,  align: 'center' },
-            { key: 'rentalExpiry',    label: '임대만료일', group: 'rental-group',  width: 14, pdfWeight: 9 },
-            { key: 'memo',            label: '메모',       group: null,           width: 24, pdfWeight: 15 },
+            { key: 'installDate',     label: '기기도입일', group: 'rental-group',  width: 13, pdfWeight: 11 }, // 16차: 임대 시작일
+            { key: 'rentalExpiry',    label: '임대만료일', group: 'rental-group',  width: 14, pdfWeight: 11 },
+            { key: 'memo',            label: '메모',       group: null,           width: 24, pdfWeight: 13 },
             { key: 'status',          label: '상태',       group: null,           width: 10, align: 'center', pdfWeight: 8 }
         ];
 
@@ -5998,7 +6002,32 @@ function generateUniqueId() {
             return filterByVisibleGroups(EXPORT_COLUMN_DEFS);
         }
 
+        // 16차: 업체 id → 실제 소속 그룹 (그룹 이동 후에도 정확하게)
+        function buildGroupKeyMap() {
+            const m = new Map();
+            groupOrder.forEach(gk => (allGroupsData[gk] || []).forEach(it => m.set(it.id, gk)));
+            return m;
+        }
+        function exportGroupName(item, gmap) {
+            if (item.division === '임대') return '임대';
+            const gk = (gmap && gmap.get(item.id)) || item.groupId;
+            return groupNames[gk] || '-';
+        }
+        // 16차: 다운로드 제목/파일명 — 지금 헤더에서 고른 보기(구분·그룹·단계·특수보기)를 그대로 이름으로
+        function exportViewLabel() {
+            if (asOnly) return 'AS 요청';
+            const parts = [];
+            if (currentDivision === 'sale') parts.push('판매');
+            else if (currentDivision === 'lease') parts.push('임대');
+            if (currentGroup && currentGroup !== ALL_GROUP_KEY && groupNames[currentGroup]) parts.push(groupNames[currentGroup]);
+            if (leaseStage) parts.push({ upcoming: '예정', ongoing: '임대중', expiring: '종료임박', awaiting: '회수대기' }[leaseStage]);
+            if (newOnly) parts.push('신규');
+            if (endedOnly) parts.push('종료');
+            return parts.join(' · ') || '전체';
+        }
+
         function mapItemsForExport(items) {
+            const gmap = buildGroupKeyMap();
             return items.map((item, idx) => {
                 let latestMemo = '';
                 if (item.memoList && item.memoList.length > 0) {
@@ -6006,6 +6035,7 @@ function generateUniqueId() {
                 }
                 return {
                     no: idx + 1,
+                    groupName: exportGroupName(item, gmap),
                     region: `${item.regionSi || ''} ${item.regionGu || ''}`.trim() || '-',
                     placeName: item.placeName || '-',
                     installAddress: item.installAddress || '-',
@@ -6025,6 +6055,7 @@ function generateUniqueId() {
                     kioAdminId: item.kioAdminId || '-',
                     reaCode: item.reaCode || '-',
                     division: item.division || '판매',
+                    installDate: item.division === '임대' ? (item.installDate || '-') : '-',
                     rentalExpiry: item.division === '임대' ? (formatDateYMD(getRentalEndDateObj(item)) || '종료일 미입력') : '-',
                     memo: latestMemo || '-',
                     status: item.status || '정상'
@@ -6055,8 +6086,11 @@ function generateUniqueId() {
         async function exportSelectedToPDF(evt) {
             const rows = getSelectedItemsForExport();
             if (!rows) return;
+            const pickText = exportVisibleMode ? '지금 보이는 업체' : '선택 업체'; // 첫 await 전에 읽어둠
 
-            const columns = getVisibleExportColumns();
+            // 16차: PDF는 가로 한 장이라 칸이 많으면 글자가 세로로 쪼개짐 → 내보낼 업체 모두 비어있는("-") 칸은 PDF에서만 뺌 (엑셀은 그대로)
+            const columns = getVisibleExportColumns().filter(c => ['no', 'placeName', 'status'].includes(c.key) || rows.some(r => r[c.key] && r[c.key] !== '-'));
+            const DEV_KEYS = ['deviceModel', 'deviceType', 'deviceOption']; // 기기 여러 대는 " / " 대신 줄바꿈으로
             const btn = evt ? evt.currentTarget : null;
             const originalBtnHtml = btn ? btn.innerHTML : null;
             if (btn) { btn.disabled = true; btn.innerHTML = '<span>PDF 생성 중...</span>'; }
@@ -6068,7 +6102,7 @@ function generateUniqueId() {
                     return 'print-badge-success';
                 };
 
-                const groupLabel = groupNames[currentGroup] || '전체';
+                const groupLabel = exportViewLabel();
                 const colWidths = computePdfColumnWidths(columns);
 
                 const theadHtml = `<tr>${columns.map((col, i) =>
@@ -6086,10 +6120,11 @@ function generateUniqueId() {
                         if (col.key === 'placeName') {
                             return `<td style="text-align:center;"><span class="print-place-badge">${escapeHtml(r.placeName)}</span></td>`;
                         }
+                        const cellHtml = DEV_KEYS.includes(col.key) ? String(r[col.key]).split(' / ').map(escapeHtml).join('<br>') : escapeHtml(r[col.key]);
                         if (col.compact) {
-                            return `<td class="print-td-compact">${escapeHtml(r[col.key])}</td>`;
+                            return `<td class="print-td-compact">${cellHtml}</td>`;
                         }
-                        return `<td>${escapeHtml(r[col.key])}</td>`;
+                        return `<td>${cellHtml}</td>`;
                     }).join('');
                     return `<tr>${cells}</tr>`;
                 };
@@ -6101,7 +6136,7 @@ function generateUniqueId() {
                             <div class="deck-title">업체관리 리스트</div>
                             <span class="deck-group-pill">${escapeHtml(groupLabel)}</span>
                         </div>
-                        <div class="deck-sub">선택 업체 <b>${rows.length}건</b> · (주)레아비전 업체관리 시스템</div>
+                        <div class="deck-sub">${pickText} <b>${rows.length}건</b> · (주)레아비전 업체관리 시스템</div>
                         <div class="deck-header-deco2"></div>
                     </div>
                 `;
@@ -6209,7 +6244,7 @@ function generateUniqueId() {
                     pdf.text(`${p} / ${pageCount}`, pageWidthFull - margin, pageHeightFull - 3.2, { align: 'right' });
                 }
 
-                pdf.save(`${sanitizeFileName(groupLabel)}.pdf`);
+                pdf.save(`${sanitizeFileName(groupLabel.replace(/ · /g, '_'))}_${formatDateYMD(new Date())}.pdf`);
 
                 printArea.innerHTML = '';
             } catch (err) {
@@ -6225,11 +6260,12 @@ function generateUniqueId() {
             const rows = getSelectedItemsForExport();
             if (!rows) return;
 
+            const pickText = exportVisibleMode ? '보이는업체' : '선택업체';
             const columns = getVisibleExportColumns();
-            const groupLabel = groupNames[currentGroup] || '전체';
+            const groupLabel = exportViewLabel();
 
             const workbook = new ExcelJS.Workbook();
-            const sheet = workbook.addWorksheet(`${groupLabel} 선택리스트`.slice(0, 31));
+            const sheet = workbook.addWorksheet(`${groupLabel} ${pickText}`.replace(/[\\/?*\[\]:]/g, '').slice(0, 31));
 
             sheet.columns = columns.map(col => ({ header: col.label, key: col.key, width: col.width }));
 
@@ -6283,7 +6319,7 @@ function generateUniqueId() {
 
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/octet-stream' });
-            saveAs(blob, `${sanitizeFileName(groupLabel)}.xlsx`);
+            saveAs(blob, `${sanitizeFileName(groupLabel.replace(/ · /g, '_'))}_${formatDateYMD(new Date())}.xlsx`);
         }
 
         async function exportAllGroupsToExcel() {
@@ -6304,11 +6340,17 @@ function generateUniqueId() {
             const hasStatusCol = columns.some(col => col.key === 'status');
             const usedSheetNames = new Set();
 
-            groupOrder.forEach(groupKey => {
-                const items = allGroupsData[groupKey] || [];
-                const rows = mapItemsForExport(items);
+            // 16차: 판매 업체는 그룹별 시트, 임대 업체는 어느 그룹에 저장돼 있든 "임대" 시트 하나로 모음 (화면 구분과 똑같이)
+            const sheetsPlan = groupOrder
+                .map(gk => ({ name: groupNames[gk] || gk, items: (allGroupsData[gk] || []).filter(i => i.division !== '임대') }))
+                .filter(sp => sp.items.length > 0);
+            const leaseItems = getAllGroupsFlatData().filter(i => i.division === '임대');
+            if (leaseItems.length) sheetsPlan.push({ name: '임대', items: leaseItems });
 
-                const baseName = sanitizeFileName(groupNames[groupKey] || groupKey).slice(0, 28) || 'Sheet';
+            sheetsPlan.forEach(sp => {
+                const rows = mapItemsForExport(sp.items);
+
+                const baseName = sanitizeFileName(sp.name).replace(/[\[\]]/g, '').slice(0, 28) || 'Sheet';
                 let finalName = baseName;
                 let suffix = 2;
                 while (usedSheetNames.has(finalName)) {
@@ -6364,16 +6406,84 @@ function generateUniqueId() {
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/octet-stream' });
             const dateStr = formatDateYMD(new Date());
-            saveAs(blob, `업체관리_전체그룹_${dateStr}.xlsx`);
+            saveAs(blob, `업체관리_전체_${dateStr}.xlsx`);
         }
 
         /* ===================== ⑳ 엑셀 업로드(대량등록) / 등록양식 템플릿 다운로드 ===================== */
+        // 16차: 그룹은 엑셀의 "그룹" 칸으로 정함 → 어느 화면에서든 업로드 가능 (그룹 칸이 빈 판매 업체만 지금 고른 그룹 칩을 씀)
         function triggerExcelUpload() {
-            if (currentGroup === ALL_GROUP_KEY) {
-                alert('엑셀 대량등록은 넣을 그룹을 먼저 골라야 해요.\n판매 그룹(니아/개별) 칩을 하나 누른 뒤 다시 업로드해주세요.\n(임대 업체는 엑셀의 구분 칸에 "임대"라고 적으면 임대로 들어가요)');
-                return;
-            }
             document.getElementById('excelUploadInput').click();
+        }
+        const TEMPLATE_EXAMPLE_PLACE = '예시디지털배움터';
+
+        // 16차: 엑셀 한 줄 → 업체 아이템. 등록양식/우리 다운로드 엑셀 둘 다 그대로 다시 올릴 수 있게 맞춤
+        //  - "-"(다운로드 엑셀의 빈칸 표시)는 빈칸으로  - 숫자로 읽힌 값은 글자로
+        //  - 기기 여러 대: 모델명/옵션/설치날짜 칸의 " / " 로 나눠서 2대째부터 devices로
+        //  - "지역" 한 칸(다운로드 엑셀)이면 첫 단어=시, 나머지=구
+        function excelRowToItem(row) {
+            const clean = (v) => { if (v === undefined || v === null) return ''; const t = String(v).trim(); return t === '-' ? '' : t; };
+            const rf = (key) => { const v = readField(row, key); return (v instanceof Date || typeof v === 'number') ? v : clean(v); };
+            const txt = (key) => { const v = rf(key); return (v instanceof Date) ? formatDateYMD(v) : clean(v); };
+            const placeName = txt('placeName');
+            if (!placeName || placeName === TEMPLATE_EXAMPLE_PLACE) return null;
+
+            let regionSi = clean(row['지역 시'] || row['regionSi']);
+            let regionGu = txt('regionGu');
+            if (!regionSi && !regionGu && clean(row['지역'])) {
+                const parts = clean(row['지역']).split(/\s+/);
+                regionSi = parts.shift() || '';
+                regionGu = parts.join(' ');
+            }
+
+            const groupCell = clean(row['그룹'] || row['groupName']);
+            const divCell = clean(row['구분'] || row['division']);
+            const division = (divCell === '임대' || groupCell === '임대') ? '임대' : '판매';
+
+            const splitDev = (v) => String(v).split(/\s+\/\s+/).map(clean);
+            const models = splitDev(txt('deviceModel'));
+            const types = splitDev(txt('deviceType'));
+            const rawDate = rf('deviceOption');
+            const dates = (rawDate instanceof Date || typeof rawDate === 'number') ? [rawDate] : splitDev(rawDate);
+            const n = Math.max(models.length, types.length, dates.length);
+            const devs = [];
+            for (let i = 0; i < n; i++) {
+                const d = { model: models[i] || '', type: types[i] || '', date: normalizeExcelDate(dates[i] || '') };
+                if (i === 0 || d.model || d.type || d.date) devs.push(d);
+            }
+
+            const status = txt('status');
+            const memoText = txt('memo');
+            const period = clean(row['임대기간'] || row['rentalPeriod']);
+            return {
+                groupCell,
+                item: {
+                    regionSi, regionGu, placeName,
+                    installAddress: txt('installAddress'),
+                    installLocation: txt('installLocation'),
+                    orgDept: txt('orgDept'),
+                    orgName: txt('orgName'),
+                    orgTitle: txt('orgTitle'),
+                    orgContact: txt('orgContact'),
+                    orgEmail: txt('orgEmail'),
+                    managerContact: txt('managerContact'),
+                    managerEmail: txt('managerEmail'),
+                    managerNote: txt('managerNote'),
+                    deviceModel: devs[0].model,
+                    deviceType: devs[0].type,
+                    deviceOption: devs[0].date,
+                    devices: devs.slice(1),
+                    kioId: txt('kioId'),
+                    kioAdminId: txt('kioAdminId'),
+                    reaCode: txt('reaCode'),
+                    division,
+                    installDate: division === '임대' ? normalizeExcelDate(row['기기도입일'] || row['installDate'] || '') : '',
+                    rentalPeriod: isValidRentalPeriod(period) ? period : '1개월',
+                    rentalEndDate: division === '임대' ? normalizeExcelDate(row['임대종료일'] || row['임대만료일'] || row['rentalEndDate'] || '') : '',
+                    memoList: memoText ? [{ id: generateUniqueId(), date: '엑셀 대량등록', text: memoText }] : [],
+                    status: ['정상', '요청', '종료'].includes(status) ? status : '정상',
+                    checked: false
+                }
+            };
         }
 
         function handleExcelUpload(input) {
@@ -6385,66 +6495,70 @@ function generateUniqueId() {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    // 16차: 시트 전부 읽음 ("전체 다운로드" 엑셀은 그룹별 시트라서). 장소명 칸이 없는 시트(작성방법 등)는 저절로 건너뜀
+                    const jsonData = workbook.SheetNames.reduce((acc, nm) => acc.concat(XLSX.utils.sheet_to_json(workbook.Sheets[nm], { raw: true })), []);
 
                     if (jsonData.length === 0) {
                         alert('엑셀 파일에 데이터가 없습니다.');
                         return;
                     }
 
-                    const newRows = [];
+                    // 그룹 정하기: 임대 → 임대 보관 그룹(화면엔 "임대") / 판매 → "그룹" 칸 이름 → 없으면 지금 고른 그룹 칩
+                    const norm = (t) => String(t || '').replace(/\s/g, '');
+                    const groupByName = (name) => groupOrder.find(k => norm(groupNames[k]) === norm(name));
+                    const parsed = [];
+                    const unresolved = [];
+                    const unknownGroups = new Set();
                     jsonData.forEach(row => {
-                        const placeName = readField(row, "placeName");
-                        if (placeName) {
-                            const memoText = readField(row, "memo");
-                            const item = {
-                                regionSi: row["지역 시"] || row["regionSi"] || "",
-                                regionGu: row["지역 구"] || row["regionGu"] || "",
-                                placeName: placeName,
-                                installAddress: readField(row, "installAddress"),
-                                installLocation: readField(row, "installLocation"),
-                                orgDept: readField(row, "orgDept"),
-                                orgName: readField(row, "orgName"),
-                                orgTitle: readField(row, "orgTitle"),
-                                orgContact: readField(row, "orgContact"),
-                                orgEmail: readField(row, "orgEmail"),
-                                managerContact: readField(row, "managerContact"),
-                                managerEmail: readField(row, "managerEmail"),
-                                managerNote: readField(row, "managerNote"),
-                                deviceModel: readField(row, "deviceModel"),
-                                deviceType: readField(row, "deviceType"),
-                                deviceOption: normalizeExcelDate(readField(row, "deviceOption")),
-                                kioId: readField(row, "kioId"),
-                                kioAdminId: readField(row, "kioAdminId"),
-                                reaCode: readField(row, "reaCode"),
-                                division: (row["구분"] === "임대") ? "임대" : "판매",
-                                installDate: normalizeExcelDate(row["기기도입일"] || row["installDate"] || ""),
-                                rentalPeriod: isValidRentalPeriod(row["임대기간"]) ? String(row["임대기간"]).trim() : "1개월",
-                                rentalEndDate: normalizeExcelDate(row["임대종료일"] || row["rentalEndDate"] || ""),
-                                memoList: memoText ? [{ id: generateUniqueId(), date: "엑셀 대량등록", text: String(memoText) }] : [],
-                                status: readField(row, "status") || "정상",
-                                checked: false
-                            };
-                            newRows.push(itemToDbRow(item, currentGroup));
-                        }
+                        const r = excelRowToItem(row);
+                        if (!r) return;
+                        let gk = null;
+                        if (r.item.division === '임대') gk = getLeaseStorageGroupKey();
+                        else if (r.groupCell && groupByName(r.groupCell)) gk = groupByName(r.groupCell);
+                        else if (currentGroup && currentGroup !== ALL_GROUP_KEY) gk = currentGroup;
+                        if (r.groupCell && r.item.division !== '임대' && !groupByName(r.groupCell)) unknownGroups.add(r.groupCell);
+                        if (!gk) { unresolved.push(r.item.placeName); return; }
+                        parsed.push({ gk, item: r.item });
                     });
 
-                    if (newRows.length > 0) {
-                        const inserted = [];
-                        for (let i = 0; i < newRows.length; i += 200) {
-                            const batch = newRows.slice(i, i + 200);
-                            const { data: res, error } = await sb.from('companies').insert(batch).select();
-                            if (error) throw error;
-                            inserted.push(...res);
-                        }
-                        inserted.forEach(row => allGroupsData[currentGroup].push(dbRowToItem(row)));
-                        renderTable();
-                        alert(`성공적으로 ${inserted.length}개의 업체가 대량 등록되었습니다! (${groupNames[currentGroup]})`);
-                    } else {
-                        alert('등록 가능한 유효한 데이터(장소명 누락 등)가 없습니다. 양식을 확인해주세요.');
+                    if (unresolved.length) {
+                        const names = groupOrder.map(k => groupNames[k]).join(', ');
+                        alert(`판매 업체 ${unresolved.length}곳은 어느 그룹에 넣을지 몰라서 등록을 멈췄어요.\n` +
+                            `(${unresolved.slice(0, 5).join(', ')}${unresolved.length > 5 ? ' 외' : ''})\n\n` +
+                            `엑셀 "그룹" 칸에 ${names} 중 하나를 적거나,\n판매 그룹 칩을 하나 누른 뒤 다시 올려주세요.` +
+                            (unknownGroups.size ? `\n\n※ 없는 그룹 이름: ${[...unknownGroups].join(', ')}` : ''));
+                        return;
                     }
+                    if (parsed.length === 0) {
+                        alert('등록 가능한 유효한 데이터(장소명 누락 등)가 없습니다. 양식을 확인해주세요.\n(양식의 회색 예시 줄은 자동으로 건너뛰어요)');
+                        return;
+                    }
+
+                    const counts = {};
+                    parsed.forEach(p => { const lbl = p.item.division === '임대' ? '임대' : (groupNames[p.gk] || '-'); counts[lbl] = (counts[lbl] || 0) + 1; });
+                    const extraDevCount = parsed.reduce((s, p) => s + p.item.devices.length, 0);
+                    const summary = Object.entries(counts).map(([k, v]) => `${k} ${v}곳`).join(' · ');
+                    const ok = confirm(`엑셀에서 업체 ${parsed.length}곳을 찾았어요.\n${summary}` +
+                        (extraDevCount ? `\n(2대째 이상 기기 ${extraDevCount}대 포함)` : '') +
+                        (unknownGroups.size ? `\n\n※ 없는 그룹 이름(${[...unknownGroups].join(', ')})은 지금 고른 그룹으로 들어가요.` : '') +
+                        (extraDevCount && !devicesColumnReady ? '\n\n⚠ 서버에 기기 여러 대 칸이 아직 없어서 2대째부터는 저장되지 않아요.' : '') +
+                        `\n\n등록할까요?`);
+                    if (!ok) return;
+
+                    const inserted = [];
+                    for (let i = 0; i < parsed.length; i += 200) {
+                        const batch = parsed.slice(i, i + 200).map(p => itemToDbRow(p.item, p.gk));
+                        const { data: res, error } = await sb.from('companies').insert(batch).select();
+                        if (error) throw error;
+                        inserted.push(...res);
+                    }
+                    inserted.forEach(row => {
+                        const gk = row.group_id;
+                        if (!allGroupsData[gk]) allGroupsData[gk] = [];
+                        allGroupsData[gk].push(dbRowToItem(row));
+                    });
+                    renderTable();
+                    alert(`성공적으로 ${inserted.length}개의 업체가 대량 등록되었습니다! (${summary})`);
                 } catch (error) {
                     console.error(error);
                     alert('엑셀 파일을 읽는 중 오류가 발생했습니다: ' + (error.message || error));
@@ -6457,6 +6571,7 @@ function generateUniqueId() {
 
         async function downloadTemplateExcel() {
             const TEMPLATE_COLUMN_DEFS = [
+                { header: '그룹',        key: 'groupName',       group: null,            width: 12, example: '니아' }, // 16차
                 { header: '지역 시',     key: 'regionSi',        group: 'region-group',  width: 12, example: '서울' },
                 { header: '지역 구',     key: 'regionGu',        group: 'region-group',  width: 12, example: '종로구' },
                 { header: '장소명',      key: 'placeName',       group: 'region-group',  width: 22, example: '예시디지털배움터' },
@@ -6469,18 +6584,19 @@ function generateUniqueId() {
                 { header: '소속이메일',  key: 'orgEmail',        group: 'org-group',     width: 22, example: 'test@korea.kr' },
                 { header: '담당자연락처', key: 'managerContact',  group: 'manager-group', width: 16, example: '010-9876-5432' },
                 { header: '담당자이메일', key: 'managerEmail',    group: 'manager-group', width: 22, example: 'manager@test.com' },
-                { header: '모델명',      key: 'deviceModel',     group: 'device-group',  width: 16, example: 'KIO-EDU-24' },
-                { header: '옵션',        key: 'deviceType',      group: 'device-group',  width: 12, example: '터치스크린 포함' },
-                { header: '설치날짜',    key: 'deviceOption',    group: 'device-group',  width: 14, example: '2026-01-15' },
+                { header: '담당자비고',  key: 'managerNote',     group: 'manager-group', width: 22, example: '김주무관 02-123-4567' }, // 16차: 빠져 있던 칸
+                { header: '모델명',      key: 'deviceModel',     group: 'device-group',  width: 22, example: 'KIO-EDU-24 / KIO-EDU-32' },
+                { header: '옵션',        key: 'deviceType',      group: 'device-group',  width: 16, example: '터치스크린 / 기본' },
+                { header: '설치날짜',    key: 'deviceOption',    group: 'device-group',  width: 24, example: '2026-01-15 / 2026-03-02' },
                 { header: '키오에듀번호', key: 'kioId',           group: 'sys-group',     width: 16, example: 'a1b2c3d4' },
                 { header: '키오드민번호', key: 'kioAdminId',      group: 'sys-group',     width: 16, example: 'e5f6g7h8' },
-                { header: '레아코드',    key: 'reaCode',         group: 'sys-group',     width: 10, example: 'qr99' },
+                { header: '레아코드',    key: 'reaCode',         group: 'sys-group',     width: 14, example: 'qr99, qr100' },
                 { header: '구분',        key: 'division',        group: 'rental-group',  width: 8,  example: '판매 또는 임대' },
                 { header: '기기도입일',  key: 'installDate',     group: 'rental-group',  width: 14, example: '2026-08-01 (임대일 때만 입력, YYYY-MM-DD)' },
                 { header: '임대기간',    key: 'rentalPeriod',    group: 'rental-group',  width: 10, example: '1개월/15일/1주일/1일 또는 2개월,3주일처럼 숫자+단위 직접입력 가능' },
                 { header: '임대종료일',  key: 'rentalEndDate',   group: 'rental-group',  width: 14, example: '비워두면 도입일+임대기간으로 자동계산' },
                 { header: '메모',        key: 'memo',            group: null,            width: 26, example: '초기 점검 완료' },
-                { header: '상태',        key: 'status',          group: null,            width: 10, example: '정상' }
+                { header: '상태',        key: 'status',          group: null,            width: 10, example: '정상 / 요청 / 종료' }
             ];
 
             const columns = filterByVisibleGroups(TEMPLATE_COLUMN_DEFS);
@@ -6520,6 +6636,30 @@ function generateUniqueId() {
             });
 
             sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+            // 16차: 작성 방법 시트 (업로드는 첫 시트만 읽으니 여기 적힌 내용은 등록 안 됨)
+            const guide = workbook.addWorksheet('작성방법');
+            guide.getColumn(1).width = 16;
+            guide.getColumn(2).width = 86;
+            const gname = groupOrder.map(k => groupNames[k]).join(', ');
+            [
+                ['작성 방법', ''],
+                ['시트', '시트가 여러 개면 전부 읽어요 (이 작성방법 시트는 저절로 건너뜀).'],
+                ['예시 줄', `회색 예시 줄(장소명 "${TEMPLATE_EXAMPLE_PLACE}")은 지우지 않아도 자동으로 건너뛰어요.`],
+                ['그룹', `판매 업체가 들어갈 그룹 이름 (${gname}). 비우면 업로드할 때 골라둔 그룹 칩으로 들어가요.`],
+                ['구분', '"임대"라고 적으면 임대 업체 (그룹 칸은 무시). 비우거나 다른 값이면 판매.'],
+                ['기기 여러 대', '모델명·옵션·설치날짜 칸에 " / " (띄어쓰기+슬래시+띄어쓰기)로 이어 적으면 순서대로 1대째, 2대째…로 들어가요.'],
+                ['키오에듀ID·레아코드', '기기마다 다르면 쉼표(,)로 이어 적기 — 예: qr99, qr100 (기기 순서대로)'],
+                ['날짜', '2026-01-15 처럼 연-월-일. 엑셀 날짜 서식도 괜찮아요.'],
+                ['임대', '기기도입일 = 임대 시작일. 임대종료일을 비우면 도입일+임대기간으로 자동 계산.'],
+                ['상태', '정상 / 요청 / 종료 중 하나. 비우면 정상.'],
+                ['다시 올리기', '이 시스템에서 받은 엑셀(체크/보이는 업체/전체)도 이 양식처럼 그대로 다시 올릴 수 있어요. "-"는 빈칸으로 처리돼요.']
+            ].forEach((r, i) => {
+                const row = guide.addRow(r);
+                row.getCell(1).font = { bold: true, color: { argb: i === 0 ? 'FFFFFFFF' : 'FF2F3640' } };
+                row.getCell(2).alignment = { wrapText: true, vertical: 'middle' };
+                if (i === 0) row.eachCell({ includeEmpty: true }, c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2F3640' } }; });
+            });
 
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/octet-stream' });
