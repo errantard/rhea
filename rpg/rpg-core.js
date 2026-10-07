@@ -10,7 +10,7 @@
    - 레벨 = 무기를 "살 자격"(등급별 needLv), 포인트 = "돈"(등급별 cost). 몽둥이는 기본 지급
    - 남은 포인트는 저장 안 하고 (기본 5P + Lv × 5 + bonus − 산 무기 값 합)으로 계산 → 숫자가 꼬일 일 없음
    - 저장 위치: 각자 계정 user_metadata.rpg = { days, last, owned[], icon } (닉네임과 같은 곳, 새 테이블 없음)
-   - 마스터(관리자)는 모든 아이콘 무료 + 왕관, 게스트는 목동 지팡이 고정(무기고 안 열림)
+   - 마스터(관리자)는 모든 아이콘 무료 + 룬 흑검(마스터 전용 연출), 게스트는 목동 지팡이 고정(무기고 안 열림)
    - 등급 추가(정예·전설): RPG_ICONS에 그림 넣고 RPG_TIERS에 한 줄 추가하면 무기고에 줄이 자동으로 생김 */
 const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club', RPG_START_PTS = 5; // 17차-7: 처음 5P 기본 지급
 let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0 };
@@ -26,16 +26,47 @@ function rpgIconSvg(key, cls) {
     return `<svg class="${cls || 'rpg-ic'}" viewBox="0 0 64 64" aria-hidden="true">${ic[1]}</svg>`;
 }
 // 17차-6: 무기별 효과를 줄 수 있게 아이콘을 <span class="w fx-종류">로 감쌈 (마우스 올리면 rpg.css 애니메이션)
+// 17차-8: 희귀 = 모션 따라 바람(풍압) 자국. 무기는 돌아도 바람 자국은 제자리에 남게 .w 바깥(형제)에 그림
+// 17차-10: 바람 자국 = 칼끝이 실제로 지나가는 호를 무기마다 계산 (RPG_GEO 축·끝 + 모션 각도). 시작→끝 = 휘두르는 방향
+const RPG_MOTION_ANG = { swing: [-38, 26], chop: [-48, 22], slash: [-55, 40], reap: [35, -50] }; // rpg.css 키프레임의 "들어올림 → 내려침" 각도와 같게
+function rpgArcPath(pivot, tip, a0, a1, scale) {
+    const T = (u) => (u / 64 + 0.16) / 1.32 * 100; // 아이콘 64칸 → 바람 그림 0~100칸 (바람 그림은 아이콘보다 16%씩 큼)
+    const dx = tip[0] - pivot[0], dy = tip[1] - pivot[1], r = Math.hypot(dx, dy) * scale, base = Math.atan2(dy, dx) * 180 / Math.PI;
+    const pt = (a) => { const rad = (base + a) * Math.PI / 180; return [T(pivot[0] + r * Math.cos(rad)).toFixed(1), T(pivot[1] + r * Math.sin(rad)).toFixed(1)]; };
+    const [x0, y0] = pt(a0), [x1, y1] = pt(a1), R = (r / 64 / 1.32 * 100).toFixed(1);
+    return `M${x0} ${y0} A${R} ${R} 0 0 ${a1 > a0 ? 1 : 0} ${x1} ${y1}`;
+}
+const RPG_TRAILS = {
+    stab:  '<path class="t1" d="M62 40 L98 4"/><path class="t2" d="M56 34 L84 6"/><path class="t2" d="M70 48 L96 22"/>',
+    shot:  '<path class="t1" d="M60 50 L104 50"/><path class="t2" d="M62 43 L94 43"/><path class="t2" d="M62 57 L94 57"/>',
+    twin:  '<path class="t1" d="M42.1 7.4 A63.9 63.9 0 0 1 89.6 47.2"/><path class="t1" d="M57.9 7.4 A63.9 63.9 0 0 0 10.4 47.2"/>',
+    swirl: '<ellipse class="s1" cx="50" cy="40" rx="26" ry="7"/><ellipse class="s1 s2" cx="50" cy="60" rx="20" ry="6"/>',
+    ring:  '<circle class="t1" cx="50" cy="50" r="36"/>'
+};
+const RPG_TRAIL_OF = { swing: 'arc', chop: 'chop', slash: 'h', reap: 'h', twin: 'twin', stab: 'stab', screw: 'swirl', throw: 'ring', spin: 'ring', flail: 'ring', whirl: 'ring', pluck: 'shot', pluckY: 'stab' };
 function rpgFxIcon(key, cls) {
-    const [fx, ang] = String((typeof RPG_FX !== 'undefined' && RPG_FX[key]) || 'swing').split(':');
+    // 17차-11: 마스터 룬 흑검 = 전용 연출 (내려베기·충격파 → 360° 횡베기·빛무리 → 룬 점등) + 평소 10초마다 흑색 오오라가 피어오름
+    if (key === 'master_sword' && typeof RPG_RUNEBLADE !== 'undefined') {
+        return `<span class="fxb rb-frame"><span class="rb-quake"><span class="rb-ringwrap">${RPG_RUNEBLADE.ring}</span><span class="rb-rig"><svg viewBox="0 0 200 200" aria-hidden="true">${RPG_RUNEBLADE.sword}</svg></span>${RPG_RUNEBLADE.fx1}</span></span>`;
+    }
+    const [fx, arg] = String((typeof RPG_FX !== 'undefined' && RPG_FX[key]) || 'swing').split(':');
     const t = rpgTierOf(key);
-    const glow = key === 'crown' ? '#FFD86A' : (t && t.glow) || ''; // 17차-7: 희귀부터 모션 이펙트
-    const style = (ang !== undefined ? `--pa:${ang}deg;` : '') + (glow ? `--gl:${glow};` : '');
-    return `<span class="w fx-${fx}${glow ? ' fx-glow' : ''}"${style ? ` style="${style}"` : ''}>${rpgIconSvg(key, cls)}</span>`;
+    const glow = (t && t.glow) || ''; // 빛무리 = 정예부터
+    const geo = (typeof RPG_GEO !== 'undefined' && RPG_GEO[key]) || { pivot: [15.4, 49.9], tip: [61, 7] };
+    const ang = RPG_MOTION_ANG[fx];
+    let style = (arg !== undefined ? `--ax:${arg};` : '') + (glow ? `--gl:${glow};` : '');
+    if (ang) style += `transform-origin:${(geo.pivot[0] / 64 * 100).toFixed(1)}% ${(geo.pivot[1] / 64 * 100).toFixed(1)}%;`;
+    const tr = t && t.trail && RPG_TRAIL_OF[fx];
+    let trailSvg = '';
+    if (tr) {
+        const inner = ang ? `<path class="t1" d="${rpgArcPath(geo.pivot, geo.tip, ang[0], ang[1], 1)}"/><path class="t2" d="${rpgArcPath(geo.pivot, geo.tip, ang[0] + 8 * Math.sign(ang[1] - ang[0]), ang[1] - 4 * Math.sign(ang[1] - ang[0]), 0.82)}"/>` : RPG_TRAILS[tr];
+        trailSvg = `<svg class="rpg-trail tr-${tr}" viewBox="0 0 100 100" aria-hidden="true"><g filter="url(#ri-blur)">${inner}</g></svg>`;
+    }
+    return `<span class="fxb"><span class="w fx-${fx}${glow ? ' fx-glow' : ''}"${style ? ` style="${style}"` : ''}>${rpgIconSvg(key, cls)}</span>${trailSvg}</span>`;
 }
 // 메달 테두리 색 = 등급 색 (왕관 금, 지팡이 나무색)
 function rpgTierColor(key) {
-    if (key === 'crown') return '#F2C94C';
+    if (key === 'master_sword' || key === 'crown') return '#F2C94C';
     if (key === 'crook') return '#C08A55';
     const t = rpgTierOf(key); return t ? t.color : '#F2C94C';
 }
@@ -55,8 +86,11 @@ function rpgOwns(key) { return isAdminUser() || key === RPG_DEFAULT_ICON || (rpg
 function rpgCurrentIcon() {
     if (isGuestUser()) return 'crook';
     const k = rpgState.icon;
-    if (k && RPG_ICONS[k] && (k !== 'crown' || isAdminUser()) && (k === 'crown' || rpgOwns(k))) return k;
-    return isAdminUser() ? 'crown' : RPG_DEFAULT_ICON;
+    // 17차-10: 마스터 기본 = 마검 (예전 왕관 장착값도 마검으로)
+    if (isAdminUser() && (!k || k === 'crown' || !RPG_ICONS[k])) return 'master_sword';
+    if (k && RPG_ICONS[k] && k !== 'master_sword' && k !== 'crown' && rpgOwns(k)) return k;
+    if (k === 'master_sword' && isAdminUser()) return k;
+    return isAdminUser() ? 'master_sword' : RPG_DEFAULT_ICON;
 }
 function rpgTodayKST() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
 function rpgLoad(user) {

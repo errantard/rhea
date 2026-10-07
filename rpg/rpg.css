@@ -11,7 +11,7 @@
 .user-profile .up-ic { position: relative; display: inline-flex; flex-shrink: 0; width: 44px; height: 44px; margin: -4px 9px -4px -18px; border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #1E3554, #0A1729); border: 2.5px solid var(--tc, #F2C94C); align-items: center; justify-content: center;
     box-shadow: 0 0 0 2px #0A1729, 0 4px 10px rgba(0,0,0,.45), 0 0 8px color-mix(in srgb, var(--tc, #F2C94C) 35%, transparent); transition: box-shadow .35s, transform .2s; }
-.user-profile .up-ic svg { width: 31px; height: 31px; display: block; }
+.user-profile .up-ic .rpg-ic { width: 31px; height: 31px; display: block; }
 .user-profile:hover .up-ic { transform: scale(1.05);
     box-shadow: 0 0 0 2px #0A1729, 0 4px 10px rgba(0,0,0,.45), 0 0 14px 3px color-mix(in srgb, var(--tc, #F2C94C) 75%, transparent), 0 0 26px 6px color-mix(in srgb, var(--tc, #F2C94C) 35%, transparent); }
 .user-profile .up-role { margin-left: 4px; }
@@ -23,7 +23,7 @@
 .rpg-modal { width: min(860px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; background: linear-gradient(180deg,#14263e,#0b182a); border: 1px solid rgba(242,201,76,.45); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.6); color: #E8DFC6; overflow: hidden; }
 .rpg-top { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid rgba(242,201,76,.2); background: rgba(242,201,76,.05); }
 .rpg-av { width: 56px; height: 56px; flex-shrink: 0; border-radius: 12px; border: 1px solid #F2C94C; display: flex; align-items: center; justify-content: center; background: #0d1c2f; }
-.rpg-av svg { width: 44px; height: 44px; }
+.rpg-av .rpg-ic { width: 44px; height: 44px; display: block; }
  { min-width: 0; flex: 1; } .rpg-who b { font-size: 17px; word-break: break-all; } .rpg-role { color: #C9A06A; font-weight: 700; }
 .rpg-sub { font-size: 12px; color: #B8C4D2; margin-top: 3px; }
 .rpg-bar { width: min(220px, 40vw); height: 7px; border-radius: 4px; background: #22344c; margin-top: 6px; overflow: hidden; }
@@ -39,17 +39,17 @@
 .rpg-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; }
 .rpg-cell { display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0; background: none; border: none; cursor: pointer; font-family: inherit; }
 .rpg-cb { position: relative; width: 100%; aspect-ratio: 1 / .93; border-radius: 9px; background: #0d1c2f; border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; transition: transform .12s, box-shadow .12s; }
-.rpg-cb svg { width: 74%; height: 74%; }
+.rpg-cb .fxb { width: 74%; height: 74%; } .rpg-cb .rpg-ic { width: 100%; height: 100%; display: block; }
 .rpg-cell:hover .rpg-cb { transform: translateY(-2px); }
 .rpg-nm { font-size: 10px; color: #C3D6E6; margin-top: 3px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rpg-lb { font-size: 10px; color: #8C9AAA; height: 12px; line-height: 12px; }
 .rpg-cell.own .rpg-cb { border-color: rgba(242,201,76,.55); } .rpg-cell.own .rpg-lb { color: #F2C94C; }
 .rpg-cell.cur .rpg-cb { box-shadow: 0 0 0 2px #F2C94C; }
 .rpg-cb i { position: absolute; top: -5px; right: -5px; font-style: normal; color: #0A1729; background: #F2C94C; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; line-height: 15px; text-align: center; }
-.rpg-cell.buy svg, .rpg-cell.poor svg { filter: brightness(0); opacity: .9; }
+.rpg-cell.buy .rpg-ic, .rpg-cell.poor .rpg-ic { filter: brightness(0); opacity: .9; }
 .rpg-cell.buy .rpg-cb { border-color: #F2C94C; box-shadow: 0 0 8px rgba(242,201,76,.4); animation: rpgGlow 2.2s ease-in-out infinite; }
 .rpg-cell.buy .rpg-lb { color: #F2C94C; font-weight: 700; } .rpg-cell.poor .rpg-lb { color: #E08A6A; }
-.rpg-cell.lock svg { filter: brightness(0); opacity: .4; } .rpg-cell.lock .rpg-nm { color: #56657A; } .rpg-cell.lock { cursor: default; }
+.rpg-cell.lock .rpg-ic { filter: brightness(0); opacity: .4; } .rpg-cell.lock .rpg-nm { color: #56657A; } .rpg-cell.lock { cursor: default; }
 @keyframes rpgGlow { 0%,100% { box-shadow: 0 0 4px rgba(242,201,76,.25); } 50% { box-shadow: 0 0 12px rgba(242,201,76,.6); } }
 .rpg-foot { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 11px; color: #7C8A9A; border-top: 1px solid rgba(255,255,255,.06); }
 .rpg-nick { margin-left: auto; flex-shrink: 0; background: transparent; border: 1px solid rgba(242,201,76,.5); color: #F2C94C; border-radius: 16px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; }
@@ -68,24 +68,28 @@
    종류는 rpg-data.js RPG_FX. 희귀부터(.fx-glow) 모션과 함께 빛 + 반짝이 */
 .w { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; transform-origin: 50% 50%; }
 .user-profile .w, .rpg-av .w { width: auto; height: auto; }
-.fx-swing, .fx-chop, .fx-slash { transform-origin: 24% 78%; }
-.fx-flail { transform-origin: 22% 82%; }
-.fx-whirl { transform-origin: 18% 14%; }
+.fx-swing, .fx-chop, .fx-slash, .fx-reap { transform-origin: 24% 78%; } /* 무기별 축은 RPG_GEO로 덮어씀 */
+.fx-flail { transform-origin: 20% 88%; }
+.fx-ball { transform-box: view-box; transform-origin: 20.5px 37.5px; } /* 철구는 손잡이 끝을 축으로 */
+.fx-whirl { transform-origin: 17% 14%; } /* 투석끈: 손(고리)을 축으로 흔들기 */
 .fx-str { transform-box: fill-box; transform-origin: center; }
-.fx-l, .fx-r { transform-box: view-box; }
+.fx-l, .fx-r, .fx-ball { transform-box: view-box; }
 .fx-r { transform-origin: 15px 49px; }   /* 오른쪽 위로 뻗은 검 = 손잡이 왼쪽 아래 */
 .fx-l { transform-origin: 49px 49px; }   /* 왼쪽 위로 뻗은 검 = 손잡이 오른쪽 아래 */
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-swing { animation: rpgSwing .6s cubic-bezier(.3,.1,.3,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-chop  { animation: rpgChop .75s cubic-bezier(.5,0,.2,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-slash { animation: rpgSlash .65s cubic-bezier(.4,0,.2,1) 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-reap  { animation: rpgReap .7s cubic-bezier(.4,0,.2,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-twin .fx-r { animation: rpgTwinR .6s cubic-bezier(.3,.1,.3,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-twin .fx-l { animation: rpgTwinL .6s cubic-bezier(.3,.1,.3,1) .08s 1 both; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-stab  { animation: rpgStab .5s cubic-bezier(.3,0,.2,1) 1; }
-:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-screw { animation: rpgScrew .9s ease-in-out 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-screw { animation: rpgScrew3d 1s cubic-bezier(.45,.05,.35,1) 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-screw .rpg-ic { animation: rpgShade 1s cubic-bezier(.45,.05,.35,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-flip  { animation: rpgFlip .8s ease-in-out 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-spin  { animation: rpgSpin .7s cubic-bezier(.4,.1,.3,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-whirl { animation: rpgWhirl .8s ease-in-out 1; }
-:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-flail { animation: rpgFlail .9s cubic-bezier(.4,.1,.3,1) 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-flail { animation: rpgFlailHand .9s ease-in-out 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-flail .fx-ball { animation: rpgFlail .9s cubic-bezier(.4,.1,.3,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-throw { animation: rpgThrow 1s cubic-bezier(.4,.1,.3,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-pluck  { animation: rpgRecoil .55s ease-out 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-pluck .fx-str  { animation: rpgPluck .55s ease-out 1; }
@@ -93,17 +97,20 @@
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-pluckY .fx-str { animation: rpgPluckY .55s ease-out 1; }
 @keyframes rpgSwing { 0% { transform: rotate(0); } 30% { transform: rotate(-38deg); } 62% { transform: rotate(26deg); } 82% { transform: rotate(-6deg); } 100% { transform: rotate(0); } }
 @keyframes rpgChop  { 0% { transform: rotate(0); } 40% { transform: rotate(-48deg); } 58% { transform: rotate(22deg); } 64% { transform: rotate(16deg) translateY(1.5px); } 70% { transform: rotate(20deg); } 76% { transform: rotate(17deg) translateY(.8px); } 100% { transform: rotate(0); } }
-@keyframes rpgSlash { 0% { transform: rotate(0) translateX(0); } 28% { transform: rotate(34deg) translateX(-8%); } 58% { transform: rotate(-58deg) translateX(10%); } 80% { transform: rotate(-14deg) translateX(2%); } 100% { transform: rotate(0) translateX(0); } }
+@keyframes rpgSlash { 0% { transform: rotate(0) translateX(0); } 28% { transform: rotate(-55deg) translateX(-6%); } 58% { transform: rotate(40deg) translateX(8%); } 80% { transform: rotate(10deg) translateX(2%); } 100% { transform: rotate(0) translateX(0); } } /* 17차-9: 들어올렸다가 위→아래로 크게 베기 */
 @keyframes rpgTwinR { 0% { transform: rotate(0); } 30% { transform: rotate(-34deg); } 62% { transform: rotate(24deg); } 84% { transform: rotate(-5deg); } 100% { transform: rotate(0); } }
 @keyframes rpgTwinL { 0% { transform: rotate(0); } 30% { transform: rotate(34deg); } 62% { transform: rotate(-24deg); } 84% { transform: rotate(5deg); } 100% { transform: rotate(0); } }
 @keyframes rpgStab  { 0% { transform: translate(0,0); } 30% { transform: translate(-9%,9%); } 55% { transform: translate(20%,-20%); } 70% { transform: translate(16%,-16%); } 100% { transform: translate(0,0); } }
-@keyframes rpgScrew { 0% { transform: rotate(var(--pa,45deg)) scaleX(1) rotate(calc(-1 * var(--pa,45deg))); }
-    25% { transform: rotate(var(--pa,45deg)) scaleX(-1) rotate(calc(-1 * var(--pa,45deg))); } 50% { transform: rotate(var(--pa,45deg)) scaleX(1) rotate(calc(-1 * var(--pa,45deg))); }
-    75% { transform: rotate(var(--pa,45deg)) scaleX(-1) rotate(calc(-1 * var(--pa,45deg))); } 100% { transform: rotate(var(--pa,45deg)) scaleX(1) rotate(calc(-1 * var(--pa,45deg))); } }
+/* 17차-8: 창 = 창대(--ax 방향)를 축으로 원근감 있는 3D 두 바퀴 + 돌 때 밝기 변화 */
+@keyframes rpgScrew3d { 0% { transform: perspective(220px) rotate3d(var(--ax, 0.707,-0.707,0), 0deg); } 15% { transform: perspective(220px) rotate3d(var(--ax, 0.707,-0.707,0), -25deg); }
+    85% { transform: perspective(220px) rotate3d(var(--ax, 0.707,-0.707,0), 735deg); } 100% { transform: perspective(220px) rotate3d(var(--ax, 0.707,-0.707,0), 720deg); } }
+@keyframes rpgShade { 0%, 100% { filter: none; } 20%, 45%, 70% { filter: brightness(.65); } 32%, 58%, 82% { filter: brightness(1.35); } }
 @keyframes rpgFlip  { 0% { transform: perspective(200px) rotateY(0); } 100% { transform: perspective(200px) rotateY(360deg); } }
 @keyframes rpgSpin  { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
-@keyframes rpgWhirl { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
-@keyframes rpgFlail { 0% { transform: rotate(0); } 22% { transform: rotate(-28deg); } 85% { transform: rotate(372deg); } 100% { transform: rotate(360deg); } }
+@keyframes rpgWhirl { 0% { transform: rotate(0); } 22% { transform: rotate(32deg); } 48% { transform: rotate(-38deg); } 70% { transform: rotate(22deg); } 86% { transform: rotate(-8deg); } 100% { transform: rotate(0); } }
+@keyframes rpgFlail { 0% { transform: rotate(0); } 18% { transform: rotate(40deg); } 85% { transform: rotate(-372deg); } 100% { transform: rotate(-360deg); } }
+@keyframes rpgFlailHand { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-8deg); } 65% { transform: rotate(6deg); } }
+@keyframes rpgReap { 0% { transform: rotate(0); } 28% { transform: rotate(35deg) translateX(4%); } 58% { transform: rotate(-50deg) translateX(-8%); } 80% { transform: rotate(-12deg); } 100% { transform: rotate(0); } } /* 낫: 오른쪽으로 들었다가 왼쪽 아래로 베기 */
 @keyframes rpgThrow { 0% { transform: translate(0,0) rotate(0) scale(1); } 45% { transform: translate(26%,-22%) rotate(380deg) scale(.82); } 100% { transform: translate(0,0) rotate(720deg) scale(1); } }
 @keyframes rpgPluck { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 40% { transform: translateX(2.5px); } 52% { transform: translateX(-1.8px); } 64% { transform: translateX(1.2px); } 78% { transform: translateX(-.6px); } 100% { transform: translateX(0); } }
 @keyframes rpgRecoil { 0%, 25% { transform: translateX(0); } 40% { transform: translateX(2px); } 60% { transform: translateX(-1px); } 100% { transform: translateX(0); } }
@@ -123,7 +130,7 @@
 @media (max-width: 880px) {
     .user-profile { display: inline-flex !important; overflow: visible !important; padding-left: 8px !important; margin-left: 14px !important; }
     .user-profile .up-ic { width: 32px; height: 32px; margin: -2px 6px -2px -12px; border-width: 2px; }
-    .user-profile .up-ic svg { width: 23px; height: 23px; }
+    .user-profile .up-ic .rpg-ic { width: 23px; height: 23px; }
 }
 @media (prefers-reduced-motion: reduce) { .w, .fx-str, .fx-l, .fx-r, .w::before, .w::after, .w > svg { animation: none !important; } }
 
@@ -138,3 +145,78 @@
 .rpg-btn.ok:disabled { opacity: .45; cursor: default; }
 .rpg-foot .rpg-nick { margin-left: 0; }
 @media (max-width: 880px) { .rpg-btns { width: 100%; } .rpg-btn { flex: 1; padding: 9px 0; } }
+
+/* ===== 17차-8: 희귀 = 바람(풍압) 자국 — 선이 안 보이게 흐리고 옅게 (번진 공기 느낌) ===== */
+.fxb { position: relative; display: flex; align-items: center; justify-content: center; }
+.rpg-trail { position: absolute; left: -16%; top: -16%; width: 132%; height: 132%; pointer-events: none; overflow: visible; }
+.rpg-trail path, .rpg-trail circle { fill: none; stroke: url(#ri-wind); stroke-linecap: round; stroke-width: 9; stroke-dasharray: 150; stroke-dashoffset: 150; opacity: 0; }
+.rpg-trail .t2 { stroke-width: 5; }
+.rpg-trail ellipse { fill: none; stroke: #E3F2FF; stroke-width: 4; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.rpg-cell:not(.own):not(.sel) .rpg-trail { display: none; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-arc :is(.t1,.t2), :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-chop :is(.t1,.t2), :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-twin .t1 { animation: rpgWind .7s ease-out 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-twin .t1 + .t1 { animation-delay: .08s; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-h :is(.t1,.t2) { animation: rpgWindH .65s ease-out 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-stab :is(.t1,.t2), :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-shot :is(.t1,.t2) { animation: rpgGust .5s ease-out 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-ring .t1 { stroke-dasharray: 230; animation: rpgWindRing 1s ease-out 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-swirl ellipse { animation: rpgSwirl 1s ease-in-out 1; } :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .tr-swirl .s2 { animation-delay: .12s; }
+@keyframes rpgWind { 0%, 32% { stroke-dashoffset: 150; opacity: 0; } 48% { opacity: .32; } 62% { stroke-dashoffset: 0; opacity: .28; } 100% { stroke-dashoffset: -70; opacity: 0; } }
+@keyframes rpgWindH { 0%, 26% { stroke-dashoffset: 150; opacity: 0; } 40% { opacity: .32; } 58% { stroke-dashoffset: 0; opacity: .28; } 100% { stroke-dashoffset: -70; opacity: 0; } }
+@keyframes rpgWindR { 0%, 28% { stroke-dashoffset: -150; opacity: 0; } 42% { opacity: .32; } 58% { stroke-dashoffset: 0; opacity: .28; } 100% { stroke-dashoffset: 70; opacity: 0; } }
+@keyframes rpgGust { 0%, 35% { stroke-dashoffset: 150; opacity: 0; } 52% { opacity: .3; } 62% { stroke-dashoffset: 70; opacity: .26; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes rpgWindRing { 0%, 15% { stroke-dashoffset: 230; opacity: 0; } 32% { opacity: .3; } 60% { stroke-dashoffset: 0; opacity: .22; } 100% { stroke-dashoffset: -90; opacity: 0; } }
+@keyframes rpgSwirl { 0%, 10% { opacity: 0; transform: scale(.5) rotate(0); } 38% { opacity: .3; } 80% { opacity: .18; } 100% { opacity: 0; transform: scale(1.3) rotate(160deg); } }
+@media (prefers-reduced-motion: reduce) { .rpg-trail * { animation: none !important; } }
+
+/* ===== 17차-11: 마스터 룬 흑검 — 마우스 올리면 3.6초 연출 =====
+   ① 살짝 들어올림 → 수직 내려베기 → 바닥 충격(붉은·보라 충격파, 파편·먼지·마법 불꽃, 흔들림) → 원위치
+   ② 다시 들어올림 → 수평으로 눕혀 360° 횡베기(앞에선 커지고 뒤에선 작아짐, 풍압 + 칼끝을 따라가는 붉은·보라 빛무리·광입자) → 처음 위치·각도로 복귀
+   ③ 룬이 칼끝(위)→손잡이(아래) 순서로 은은한 붉은 마법광. 평소엔 10초마다 2~3초 흑색 오오라가 칼날에서 피어올라 흘러감
+   크기에 맞춰 원근감(--pp)만 다르게: 이름표 메달 150px · 무기고 칸 260px · 무기고 프로필 190px */
+.rb-frame { position: relative; width: 100%; height: 100%; --pp: 260px; }
+.user-profile .up-ic .rb-frame { width: 34px; height: 34px; --pp: 150px; }
+.rpg-av .rb-frame { width: 46px; height: 46px; --pp: 190px; }
+.rb-frame .rb-quake { position: absolute; inset: 0; }
+.rb-frame .rb-rig, .rb-frame .rb-ringwrap { position: absolute; left: -78%; top: -22%; width: 200%; height: 200%; transform-origin: 50% 50%; pointer-events: none; transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(-45deg) scale(0.86); }
+.rb-frame .rb-ringwrap { transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) scale(0.86); }
+.rb-frame .rb-rig svg, .rb-frame .rb-ringwrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.rb-frame .rb-fx1 { position: absolute; left: -30%; top: -30%; width: 160%; height: 160%; overflow: visible; pointer-events: none; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-rig { animation: rbSword 3.6s linear 1; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-ringwrap { animation: rbRing 3.6s linear 1; }
+@keyframes rbSword { 0.00%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(-45deg) scale(0.86);animation-timing-function:cubic-bezier(.35,0,.55,1)}7.22%{transform:translate(4.00%,-10.00%) perspective(var(--pp)) rotateX(0deg) rotateZ(-74deg) scale(0.66);animation-timing-function:cubic-bezier(.75,0,.95,.55)}12.22%{transform:translate(12.00%,-19.00%) perspective(var(--pp)) rotateX(0deg) rotateZ(88deg) scale(0.62);animation-timing-function:ease-out}14.44%{transform:translate(12.00%,-18.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(84deg) scale(0.62);animation-timing-function:ease-in-out}17.22%{transform:translate(12.00%,-19.00%) perspective(var(--pp)) rotateX(0deg) rotateZ(88deg) scale(0.62);animation-timing-function:cubic-bezier(.4,0,.2,1)}27.78%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(-45deg) scale(0.86);animation-timing-function:linear}33.33%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(-45deg) scale(0.86);animation-timing-function:cubic-bezier(.35,0,.55,1)}40.28%{transform:translate(2.50%,-4.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(-58deg) scale(0.86);animation-timing-function:cubic-bezier(.4,0,.3,1)}50.00%{transform:translate(14.00%,-10.50%) perspective(var(--pp)) rotateX(62deg) rotateZ(-40deg) scale(0.78);animation-timing-function:linear}67.22%{transform:translate(14.00%,-10.50%) perspective(var(--pp)) rotateX(62deg) rotateZ(320deg) scale(0.78);animation-timing-function:cubic-bezier(.3,0,.2,1)}77.22%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(315deg) scale(0.86);animation-timing-function:linear}100.00%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) rotateZ(315deg) scale(0.86);animation-timing-function:linear} }
+@keyframes rbRing { 0.00%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) scale(0.86);animation-timing-function:cubic-bezier(.35,0,.55,1)}7.22%{transform:translate(4.00%,-10.00%) perspective(var(--pp)) rotateX(0deg) scale(0.66);animation-timing-function:cubic-bezier(.75,0,.95,.55)}12.22%{transform:translate(12.00%,-19.00%) perspective(var(--pp)) rotateX(0deg) scale(0.62);animation-timing-function:ease-out}14.44%{transform:translate(12.00%,-18.50%) perspective(var(--pp)) rotateX(0deg) scale(0.62);animation-timing-function:ease-in-out}17.22%{transform:translate(12.00%,-19.00%) perspective(var(--pp)) rotateX(0deg) scale(0.62);animation-timing-function:cubic-bezier(.4,0,.2,1)}27.78%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) scale(0.86);animation-timing-function:linear}33.33%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) scale(0.86);animation-timing-function:cubic-bezier(.35,0,.55,1)}40.28%{transform:translate(2.50%,-4.50%) perspective(var(--pp)) rotateX(0deg) scale(0.86);animation-timing-function:cubic-bezier(.4,0,.3,1)}50.00%{transform:translate(14.00%,-10.50%) perspective(var(--pp)) rotateX(62deg) scale(0.78);animation-timing-function:linear}67.22%{transform:translate(14.00%,-10.50%) perspective(var(--pp)) rotateX(62deg) scale(0.78);animation-timing-function:cubic-bezier(.3,0,.2,1)}77.22%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) scale(0.86);animation-timing-function:linear}100.00%{transform:translate(1.50%,-1.50%) perspective(var(--pp)) rotateX(0deg) scale(0.86);animation-timing-function:linear} }
+.rb-frame :is(.rb-flash,.rb-shock,.rb-deb,.rb-dust,.rb-spark,.rb-mote) { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.rb-frame .rb-shock { fill: none; stroke-width: 1.6; } .rb-frame .rb-spark { stroke-width: 1.4; stroke-linecap: round; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-flash { animation: rbFlash 3.6s ease-out 1; }
+@keyframes rbFlash { 0%,11.67% { opacity: 0; transform: scale(.3); } 13.06% { opacity: 1; transform: scale(1); } 22.22% { opacity: 0; transform: scale(1.5); } 100% { opacity: 0; } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-sR { animation: rbShock 3.6s ease-out 1; } :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-sP { animation: rbShock 3.6s ease-out .07s 1; } :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-sR2 { animation: rbShock2 3.6s ease-out .14s 1; }
+@keyframes rbShock { 0%,12.22% { opacity: 0; transform: scale(.3); } 13.33% { opacity: .95; } 27.78% { opacity: 0; transform: scale(3); } 100% { opacity: 0; } }
+@keyframes rbShock2 { 0%,12.22% { opacity: 0; transform: scale(.3); } 13.89% { opacity: .6; } 30.56% { opacity: 0; transform: scale(3.8); } 100% { opacity: 0; } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-deb { animation: rbDeb 3.6s cubic-bezier(.2,.7,.4,1) 1; }
+@keyframes rbDeb { 0%,12.22% { opacity: 0; transform: translate(0,0); } 13.06% { opacity: 1; } 26.39% { opacity: 0; transform: translate(var(--dx),var(--dy)); } 100% { opacity: 0; } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-dust { animation: rbDust 3.6s ease-out 1; }
+@keyframes rbDust { 0%,12.50% { opacity: 0; transform: translate(0,0) scale(.4); } 15.28% { opacity: .55; } 34.72% { opacity: 0; transform: translate(var(--dx),-6px) scale(1.6); } 100% { opacity: 0; } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-spark { animation: rbSpark 3.6s ease-out 1; }
+@keyframes rbSpark { 0%,12.22% { opacity: 0; transform: translate(0,0); } 13.06% { opacity: 1; } 21.67% { opacity: 0; transform: translate(var(--dx),var(--dy)); } 100% { opacity: 0; } }
+:is(.rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-quake { animation: rbQuake 3.6s linear 1; }
+@keyframes rbQuake { 0%,12.22% { transform: translate(0,0); } 13.06% { transform: translate(-2px,2px); } 13.89% { transform: translate(2px,-1px); } 14.72% { transform: translate(-1px,1px); } 16.67%, 100% { transform: translate(0,0); } }
+.rb-frame :is(.rb-press,.rb-trailR,.rb-trailP) { fill: none; stroke-linecap: round; stroke-dasharray: 32 68; stroke-dashoffset: 32; opacity: 0; }
+.rb-frame .rb-press { stroke: #E8D8F0; stroke-width: 22; } .rb-frame .rb-trailR { stroke: #FF4A2A; stroke-width: 11; } .rb-frame .rb-trailP { stroke: #9A40F0; stroke-width: 10; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-press { animation: rbPress 3.6s linear 1; } :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame :is(.rb-trailR,.rb-trailP) { animation: rbTrail 3.6s linear 1; }
+@keyframes rbPress { 0%,50.00% { stroke-dashoffset: 32; opacity: 0; } 51.67% { opacity: .2; } 67.22% { stroke-dashoffset: -68; opacity: .16; } 74.17% { stroke-dashoffset: -90; opacity: 0; } 100% { opacity: 0; } }
+@keyframes rbTrail { 0%,50.00% { stroke-dashoffset: 32; opacity: 0; } 51.67% { opacity: .6; } 67.22% { stroke-dashoffset: -68; opacity: .5; } 75.56% { stroke-dashoffset: -95; opacity: 0; } 100% { opacity: 0; } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-mote { animation: rbMote .85s cubic-bezier(.2,.6,.3,1) both; }
+@keyframes rbMote { 0% { opacity: 0; transform: translate(0,0) scale(.4); } 20% { opacity: 1; transform: translate(0,0) scale(1.1); } 100% { opacity: 0; transform: translate(var(--dx),var(--dy)) scale(.2); } }
+.rb-frame .rb-runes > g { opacity: .38; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-runes > g:nth-child(1) { animation: rbRune 1.1s ease-out 2.85s both; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-runes > g:nth-child(2) { animation: rbRune 1.1s ease-out 3.01s both; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-runes > g:nth-child(3) { animation: rbRune 1.1s ease-out 3.17s both; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-runes > g:nth-child(4) { animation: rbRune 1.1s ease-out 3.33s both; }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-runes > g:nth-child(5) { animation: rbRune 1.1s ease-out 3.49s both; }
+@keyframes rbRune { 0% { opacity: .38; } 45% { opacity: 1; stroke: #FFB08A; } 100% { opacity: .92; stroke: #FF6A3A; } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-bladeglow { animation: rbBlade 1.8s ease-out 2.95s both; } @keyframes rbBlade { 0% { opacity: 0; } 40% { opacity: .45; } 100% { opacity: .18; } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-pgem { animation: rbGem 1.2s ease-out 3.60s both; } @keyframes rbGem { 0%, 100% { filter: url(#rbGlow); } 40% { filter: url(#rbGlow) brightness(1.7); } }
+/* 평소: 오오라는 거의 안 보이게 → 10초마다 칼날에서 피어올라 칼끝 쪽으로 흘러가며 흩어짐 (2.5초). 연출 중엔 쉼 */
+.rb-frame .rb-aura { opacity: .12; transform-box: view-box; transform-origin: 120px 100px; animation: rbAuraIdle 10s ease-in-out infinite; }
+@keyframes rbAuraIdle { 0%, 72% { opacity: .12; transform: translateX(0) scale(1, .9); } 82% { opacity: .85; transform: translateX(4px) scale(1.05, 1.15); } 92% { opacity: .35; transform: translateX(12px) scale(1.12, 1.3); } 100% { opacity: .12; transform: translateX(16px) scale(1, .9); } }
+:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-aura { animation: none; opacity: .12; }
+@media (prefers-reduced-motion: reduce) { .rb-frame * { animation: none !important; } }

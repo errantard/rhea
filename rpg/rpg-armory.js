@@ -46,7 +46,7 @@ function renderArmory() {
     const cell = (key, t) => {
         const ic = RPG_ICONS[key];
         let st, lab, name = ic[0];
-        if (rpgOwns(key) || (key === 'crown' && admin)) { st = 'own'; lab = key === sel && sel !== cur ? '선택' : (key === cur ? '장착중' : '보유'); }
+        if (rpgOwns(key) || (key === 'master_sword' && admin)) { st = 'own'; lab = key === sel && sel !== cur ? '선택' : (key === cur ? '장착중' : '보유'); }
         else if (lv < t.needLv) { st = 'lock'; lab = ''; name = '???'; }
         else if (pts >= t.cost) { st = 'buy'; lab = `${t.cost}P`; }
         else { st = 'poor'; lab = `${t.cost}P`; }
@@ -54,7 +54,7 @@ function renderArmory() {
         return `<button type="button" class="rpg-cell ${st}${key === cur ? ' cur' : ''}${key === sel && sel !== cur ? ' sel' : ''}" data-rpg="${key}" title="${escapeHtml(name + ' · ' + tip)}">
             <span class="rpg-cb">${rpgFxIcon(key)}${key === cur ? '<i>✓</i>' : ''}</span><span class="rpg-nm">${escapeHtml(name)}</span><span class="rpg-lb">${lab}</span></button>`;
     };
-    const masterRow = admin ? `<div class="rpg-sec"><div class="rpg-sh"><span class="rpg-gt" style="color:#F2C94C;border-color:#F2C94C">마스터</span><span class="rpg-gs">마스터 전용</span></div><div class="rpg-grid">${cell('crown', { cost: 0, needLv: 0 })}</div></div>` : '';
+    const masterRow = admin ? `<div class="rpg-sec"><div class="rpg-sh"><span class="rpg-gt" style="color:#F2C94C;border-color:#F2C94C">마스터</span><span class="rpg-gs">마스터 전용</span></div><div class="rpg-grid">${cell('master_sword', { cost: 0, needLv: 0 })}</div></div>` : '';
     const secs = RPG_TIERS.map(t => {
         const locked = !admin && lv < t.needLv;
         return `<div class="rpg-sec"><div class="rpg-sh"><span class="rpg-gt" style="color:${t.color};border-color:${t.color}">${t.name}</span>
@@ -76,7 +76,7 @@ function renderArmory() {
 async function rpgOnPick(key) {
     if (isGuestUser() || !RPG_ICONS[key]) return;
     const t = rpgTierOf(key), lv = rpgLevel();
-    if (rpgOwns(key) || (key === 'crown' && isAdminUser())) { rpgPending = key; renderArmory(); return; } // 선택만 (적용 눌러야 장착)
+    if (rpgOwns(key) || (key === 'master_sword' && isAdminUser())) { rpgPending = key; renderArmory(); return; } // 선택만 (적용 눌러야 장착)
     if (!t) return;
     if (lv < t.needLv) { showSyncStatus(`🔒 Lv.${t.needLv} ${rpgTitle(t.needLv)}부터 열 수 있어요`, true); return; }
     const pts = rpgPoints();
