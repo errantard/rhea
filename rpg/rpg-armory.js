@@ -40,7 +40,7 @@ function renderArmory() {
         else { st = 'poor'; lab = `${t.cost}P`; }
         const tip = st === 'lock' ? `Lv.${t.needLv} ${rpgTitle(t.needLv)}부터` : st === 'buy' ? `${t.cost}P로 열기` : st === 'poor' ? `${t.cost}P 필요` : (key === cur ? '장착중' : '눌러서 장착');
         return `<button type="button" class="rpg-cell ${st}${key === cur ? ' cur' : ''}" data-rpg="${key}" title="${escapeHtml(name + ' · ' + tip)}">
-            <span class="rpg-cb">${rpgIconSvg(key)}${key === cur ? '<i>✓</i>' : ''}</span><span class="rpg-nm">${escapeHtml(name)}</span><span class="rpg-lb">${lab}</span></button>`;
+            <span class="rpg-cb">${rpgFxIcon(key)}${key === cur ? '<i>✓</i>' : ''}</span><span class="rpg-nm">${escapeHtml(name)}</span><span class="rpg-lb">${lab}</span></button>`;
     };
     const masterRow = admin ? `<div class="rpg-sec"><div class="rpg-sh"><span class="rpg-gt" style="color:#F2C94C;border-color:#F2C94C">마스터</span><span class="rpg-gs">마스터 전용</span></div><div class="rpg-grid">${cell('crown', { cost: 0, needLv: 0 })}</div></div>` : '';
     const secs = RPG_TIERS.map(t => {
@@ -52,7 +52,7 @@ function renderArmory() {
     const who = admin ? `<span class="rpg-role" style="color:#F2C94C">· ${ROLE_LABELS.admin}</span><div class="rpg-sub">모든 무기를 공짜로 쓸 수 있어요 👑 (출석 ${days}일)</div>`
         : `<span class="rpg-role">· ${rpgTitle(lv)} Lv.${lv}</span><div class="rpg-sub">출석 ${days}일 · 다음 레벨까지 ${left}일</div><div class="rpg-bar"><i style="width:${((days % RPG_DAYS_PER_LV) / RPG_DAYS_PER_LV) * 100}%"></i></div>`;
     el.innerHTML = `<div class="rpg-modal" role="dialog" aria-modal="true" aria-label="무기고">
-        <div class="rpg-top"><div class="rpg-av">${rpgIconSvg(cur)}</div>
+        <div class="rpg-top"><div class="rpg-av" style="--tc:${rpgTierColor(cur)}">${rpgFxIcon(cur)}</div>
             <div class="rpg-who"><b>${escapeHtml(currentUserDisplayName())}</b> ${who}</div>
             ${admin ? '' : `<div class="rpg-pt"><b>${pts}P</b><div>보유 포인트</div></div>`}<button type="button" class="rpg-x" aria-label="닫기">✕</button></div>
         <div class="rpg-body">${masterRow}${secs}</div>

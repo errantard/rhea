@@ -25,6 +25,22 @@ function rpgIconSvg(key, cls) {
     const ic = RPG_ICONS[key] || RPG_ICONS[RPG_DEFAULT_ICON];
     return `<svg class="${cls || 'rpg-ic'}" viewBox="0 0 64 64" aria-hidden="true">${ic[1]}</svg>`;
 }
+// 17차-6: 무기별 효과를 줄 수 있게 아이콘을 <span class="w fx-종류">로 감쌈 (마우스 올리면 rpg.css 애니메이션)
+function rpgFxIcon(key, cls) {
+    const fx = (typeof RPG_FX !== 'undefined' && RPG_FX[key]) || 'swing';
+    return `<span class="w fx-${fx}">${rpgIconSvg(key, cls)}</span>`;
+}
+// 메달 테두리 색 = 등급 색 (왕관 금, 지팡이 나무색)
+function rpgTierColor(key) {
+    if (key === 'crown') return '#F2C94C';
+    if (key === 'crook') return '#C08A55';
+    const t = rpgTierOf(key); return t ? t.color : '#F2C94C';
+}
+// 이름표 메달 (A안 + 롤오버: 테두리 빛 + 무기 효과)
+function rpgBadgeIcon() {
+    const k = rpgCurrentIcon();
+    return `<span class="up-ic" style="--tc:${rpgTierColor(k)}">${rpgFxIcon(k)}</span>`;
+}
 function rpgLevel() { return Math.floor((rpgState.days || 0) / RPG_DAYS_PER_LV); }
 function rpgTitle(lv) { let t = RPG_TITLES[0].name; RPG_TITLES.forEach(x => { if (lv >= x.lv) t = x.name; }); return t; }
 function rpgTierOf(key) { return RPG_TIERS.find(t => t.keys.includes(key)); }
@@ -83,6 +99,7 @@ window.RheaRPG = {
     load: rpgLoad,                                   // 로그인 직후: 계정 정보에서 출석·무기 불러오기
     checkIn: rpgDailyCheckIn,                        // 데이터 로딩 후: 하루 첫 접속이면 출석 +1
     iconSvg: (key, cls) => (RPG_ICONS[key] ? rpgIconSvg(key, cls) : ''),
+    badgeIcon: rpgBadgeIcon,                         // 17차-6: 이름표 메달 html
     currentIcon: rpgCurrentIcon,                     // 지금 장착한 아이콘 키 (AS메모에 같이 저장)
     roleText: () => `${rpgTitle(rpgLevel())} Lv.${rpgLevel()}`, // 이름표 "칭호 Lv.N"
     ensureDefs: rpgInjectDefs,

@@ -2103,7 +2103,7 @@
         }
     </style>
     <!-- 17차-5: 모험가(RPG) 모듈 — 업무 기능과 분리. 없어도 업체관리는 정상 -->
-    <link rel="stylesheet" href="rpg/rpg.css?v=176">
+    <link rel="stylesheet" href="rpg/rpg.css?v=177">
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════
@@ -2748,9 +2748,9 @@
         </div>
     </div>
 
-    <script src="rpg/rpg-data.js?v=176"></script>
-    <script src="rpg/rpg-core.js?v=176"></script>
-    <script src="rpg/rpg-armory.js?v=176"></script>
+    <script src="rpg/rpg-data.js?v=177"></script>
+    <script src="rpg/rpg-core.js?v=177"></script>
+    <script src="rpg/rpg-armory.js?v=177"></script>
     <script>
         /* ═══════════════════════════════════════════════════════════════
            [DASHBOARD] dashboard.html 전용 스크립트 (업체관리 앱 로직)
@@ -2961,9 +2961,9 @@ function showSyncStatus(msg, isError) {
                 // 17차-5: 모험가 기능은 rpg/ 폴더(window.RheaRPG). 없으면 아이콘 없이 예전처럼
                 const R = window.RheaRPG;
                 if (R) R.ensureDefs();
-                const upIc = R ? `<span class="up-ic">${R.iconSvg(R.currentIcon())}</span>` : '';
-                badge.innerHTML = guest ? `${upIc}${GUEST_DISPLAY_NAME}<span class="up-role"> · ${ROLE_LABELS.guest}</span>`
-                    : `${upIc}${escapeHtml(currentUserDisplayName())}<span class="up-role"> · ${admin ? ROLE_LABELS.admin : (R ? R.roleText() : ROLE_LABELS.user)}</span>`; // 14차-2: 폰에서는 이름만 보이게 역할은 span으로
+                const upIc = R ? R.badgeIcon() : ''; // 17차-6: 메달 + 무기별 롤오버 효과 (rpg/)
+                badge.innerHTML = guest ? `${upIc}<span class="up-nm">${GUEST_DISPLAY_NAME}</span><span class="up-role"> · ${ROLE_LABELS.guest}</span>`
+                    : `${upIc}<span class="up-nm">${escapeHtml(currentUserDisplayName())}</span><span class="up-role"> · ${admin ? ROLE_LABELS.admin : (R ? R.roleText() : ROLE_LABELS.user)}</span>`; // 14차-2: 폰에서는 이름만 보이게 역할은 span으로
                 badge.title = guest ? '방문용 계정(읽기 전용) — 보기만 할 수 있어요' : '클릭하면 무기고 (아이콘 고르기 · 닉네임 바꾸기)';
             }
 
