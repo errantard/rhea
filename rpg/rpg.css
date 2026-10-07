@@ -1,0 +1,58 @@
+/* ═══════════════════════════════════════════════════════════════
+   RheaOps · 모험가(RPG) 모듈 — 스타일 (이름표 아이콘 · 무기고 · 레벨업 알림)
+   17차-5 (2026-10-07): dashboard.html에서 완전히 분리. 업무 기능(dashboard)과 놀이 기능(rpg/)을 나눔.
+   - 로드 순서: rpg-data.js → rpg-core.js → rpg-armory.js → (dashboard 본 스크립트)
+   - dashboard는 window.RheaRPG 하나로만 이 모듈을 부름. 이 폴더가 없어도 업체관리는 정상 동작
+   - 나중에 캐릭터 꾸미기·미니게임은 rpg/ 안에 새 파일로 추가 (예: rpg-avatar.js, rpg-game-xxx.js)
+   ═══════════════════════════════════════════════════════════════ */
+/* ===== 17차-4: 이름표 아이콘 + 무기고 팝업 ===== */
+.user-profile { display: inline-flex; align-items: center; gap: 0; }
+.user-profile .up-ic { display: inline-flex; flex-shrink: 0; width: 24px; height: 24px; margin: 0 7px 0 -8px; border-radius: 50%; background: #0d1c2f; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); }
+.user-profile .up-ic svg { width: 19px; height: 19px; }
+.as-entry .author .as-ic { width: 15px; height: 15px; vertical-align: -3px; margin-right: 2px; }
+.rpg-dim { position: fixed; inset: 0; z-index: 10050; display: none; align-items: center; justify-content: center; background: rgba(4,9,16,.72); padding: 16px; }
+.rpg-dim.open { display: flex; }
+.rpg-modal { width: min(860px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; background: linear-gradient(180deg,#14263e,#0b182a); border: 1px solid rgba(242,201,76,.45); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.6); color: #E8DFC6; overflow: hidden; }
+.rpg-top { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid rgba(242,201,76,.2); background: rgba(242,201,76,.05); }
+.rpg-av { width: 56px; height: 56px; flex-shrink: 0; border-radius: 12px; border: 1px solid #F2C94C; display: flex; align-items: center; justify-content: center; background: #0d1c2f; }
+.rpg-av svg { width: 44px; height: 44px; }
+.user-profile .up-role { margin-left: 4px; }
+.rpg-who { min-width: 0; flex: 1; } .rpg-who b { font-size: 17px; word-break: break-all; } .rpg-role { color: #C9A06A; font-weight: 700; }
+.rpg-sub { font-size: 12px; color: #B8C4D2; margin-top: 3px; }
+.rpg-bar { width: min(220px, 40vw); height: 7px; border-radius: 4px; background: #22344c; margin-top: 6px; overflow: hidden; }
+.rpg-bar i { display: block; height: 100%; background: linear-gradient(90deg,#C99A3C,#F2C94C); }
+.rpg-pt { margin-left: auto; text-align: right; } .rpg-pt b { font-size: 22px; color: #F2C94C; } .rpg-pt div { font-size: 11px; color: #8C9AAA; white-space: nowrap; } .rpg-pt { flex-shrink: 0; }
+.rpg-x { margin-left: 10px; background: none; border: none; color: #8C9AAA; font-size: 20px; cursor: pointer; padding: 4px 6px; }
+        .rpg-x:hover { color: #fff; }
+.rpg-body { padding: 4px 20px 16px; overflow-y: auto; }
+.rpg-sec { margin-top: 12px; }
+.rpg-sh { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,.08); }
+.rpg-gt { font-weight: 800; font-size: 13px; border: 1px solid; border-radius: 6px; padding: 2px 8px; }
+.rpg-gs { font-size: 12px; color: #8C9AAA; } .rpg-lk { color: #E08A6A; }
+.rpg-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; }
+.rpg-cell { display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0; background: none; border: none; cursor: pointer; font-family: inherit; }
+.rpg-cb { position: relative; width: 100%; aspect-ratio: 1 / .93; border-radius: 9px; background: #0d1c2f; border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; transition: transform .12s, box-shadow .12s; }
+.rpg-cb svg { width: 74%; height: 74%; }
+.rpg-cell:hover .rpg-cb { transform: translateY(-2px); }
+.rpg-nm { font-size: 10px; color: #C3D6E6; margin-top: 3px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rpg-lb { font-size: 10px; color: #8C9AAA; height: 12px; line-height: 12px; }
+.rpg-cell.own .rpg-cb { border-color: rgba(242,201,76,.55); } .rpg-cell.own .rpg-lb { color: #F2C94C; }
+.rpg-cell.cur .rpg-cb { box-shadow: 0 0 0 2px #F2C94C; }
+.rpg-cb i { position: absolute; top: -5px; right: -5px; font-style: normal; color: #0A1729; background: #F2C94C; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; line-height: 15px; text-align: center; }
+.rpg-cell.buy svg, .rpg-cell.poor svg { filter: brightness(0); opacity: .9; }
+.rpg-cell.buy .rpg-cb { border-color: #F2C94C; box-shadow: 0 0 8px rgba(242,201,76,.4); animation: rpgGlow 2.2s ease-in-out infinite; }
+.rpg-cell.buy .rpg-lb { color: #F2C94C; font-weight: 700; } .rpg-cell.poor .rpg-lb { color: #E08A6A; }
+.rpg-cell.lock svg { filter: brightness(0); opacity: .4; } .rpg-cell.lock .rpg-nm { color: #56657A; } .rpg-cell.lock { cursor: default; }
+@keyframes rpgGlow { 0%,100% { box-shadow: 0 0 4px rgba(242,201,76,.25); } 50% { box-shadow: 0 0 12px rgba(242,201,76,.6); } }
+.rpg-foot { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 11px; color: #7C8A9A; border-top: 1px solid rgba(255,255,255,.06); }
+.rpg-nick { margin-left: auto; flex-shrink: 0; background: transparent; border: 1px solid rgba(242,201,76,.5); color: #F2C94C; border-radius: 16px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.rpg-toast { position: fixed; left: 50%; top: 18px; transform: translate(-50%, -140%); z-index: 10060; background: linear-gradient(180deg,#1C3150,#0E1D33); border: 1px solid #F2C94C; color: #F3E7C8; border-radius: 12px; padding: 12px 18px; font-size: 13px; line-height: 1.6; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.5); transition: transform .35s ease; pointer-events: none; }
+.rpg-toast.show { transform: translate(-50%, 0); }
+.rpg-toast small { color: #9FB0C2; }
+@media (max-width: 880px) {
+    .rpg-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .rpg-top { padding: 12px 14px; gap: 10px; } .rpg-av { width: 46px; height: 46px; } .rpg-who b { font-size: 15px; } .rpg-role { display: block; font-size: 13px; } .rpg-pt b { font-size: 18px; } .rpg-x { margin-left: 2px; }
+    .rpg-body { padding: 2px 14px 12px; } .rpg-foot { flex-wrap: wrap; padding: 10px 14px; }
+    .user-profile .up-ic { margin-right: 5px; }
+}
+@media (prefers-reduced-motion: reduce) { .rpg-cell.buy .rpg-cb { animation: none; } .rpg-toast { transition: none; } }
