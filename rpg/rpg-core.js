@@ -8,11 +8,11 @@
 /* 17차-4: 모험가 무기고 (출석 · 레벨 · 칭호 · 포인트 · 아이콘) =====================
    - 하루 첫 접속(한국 시간 자정 기준) = 출석 1일. 5출석마다 Lv+1, 레벨업 보상 +5P
    - 레벨 = 무기를 "살 자격"(등급별 needLv), 포인트 = "돈"(등급별 cost). 몽둥이는 기본 지급
-   - 남은 포인트는 저장 안 하고 (Lv × 5 − 산 무기 값 합)으로 계산 → 숫자가 꼬일 일 없음
+   - 남은 포인트는 저장 안 하고 (기본 5P + Lv × 5 + bonus − 산 무기 값 합)으로 계산 → 숫자가 꼬일 일 없음
    - 저장 위치: 각자 계정 user_metadata.rpg = { days, last, owned[], icon } (닉네임과 같은 곳, 새 테이블 없음)
    - 마스터(관리자)는 모든 아이콘 무료 + 왕관, 게스트는 목동 지팡이 고정(무기고 안 열림)
    - 등급 추가(정예·전설): RPG_ICONS에 그림 넣고 RPG_TIERS에 한 줄 추가하면 무기고에 줄이 자동으로 생김 */
-const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club';
+const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club', RPG_START_PTS = 5; // 17차-7: 처음 5P 기본 지급
 let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0 };
 
 function rpgInjectDefs() {
@@ -27,8 +27,11 @@ function rpgIconSvg(key, cls) {
 }
 // 17차-6: 무기별 효과를 줄 수 있게 아이콘을 <span class="w fx-종류">로 감쌈 (마우스 올리면 rpg.css 애니메이션)
 function rpgFxIcon(key, cls) {
-    const fx = (typeof RPG_FX !== 'undefined' && RPG_FX[key]) || 'swing';
-    return `<span class="w fx-${fx}">${rpgIconSvg(key, cls)}</span>`;
+    const [fx, ang] = String((typeof RPG_FX !== 'undefined' && RPG_FX[key]) || 'swing').split(':');
+    const t = rpgTierOf(key);
+    const glow = key === 'crown' ? '#FFD86A' : (t && t.glow) || ''; // 17차-7: 희귀부터 모션 이펙트
+    const style = (ang !== undefined ? `--pa:${ang}deg;` : '') + (glow ? `--gl:${glow};` : '');
+    return `<span class="w fx-${fx}${glow ? ' fx-glow' : ''}"${style ? ` style="${style}"` : ''}>${rpgIconSvg(key, cls)}</span>`;
 }
 // 메달 테두리 색 = 등급 색 (왕관 금, 지팡이 나무색)
 function rpgTierColor(key) {
@@ -47,7 +50,7 @@ function rpgTierOf(key) { return RPG_TIERS.find(t => t.keys.includes(key)); }
 function rpgSpent() {
     return (rpgState.owned || []).reduce((s, k) => { const t = rpgTierOf(k); return s + (t && k !== RPG_DEFAULT_ICON ? t.cost : 0); }, 0);
 }
-function rpgPoints() { return rpgLevel() * RPG_PTS_PER_LV + (rpgState.bonus || 0) - rpgSpent(); } // bonus = 나중에 미니게임 등 보상용
+function rpgPoints() { return RPG_START_PTS + rpgLevel() * RPG_PTS_PER_LV + (rpgState.bonus || 0) - rpgSpent(); } // bonus = 나중에 미니게임 등 보상용
 function rpgOwns(key) { return isAdminUser() || key === RPG_DEFAULT_ICON || (rpgState.owned || []).includes(key); }
 function rpgCurrentIcon() {
     if (isGuestUser()) return 'crook';
