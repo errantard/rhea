@@ -84,7 +84,7 @@
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-twin .fx-l { animation: rpgTwinL .6s cubic-bezier(.3,.1,.3,1) .08s 1 both; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-stab  { animation: rpgStab .5s cubic-bezier(.3,0,.2,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-screw { animation: rpgScrew3d 1s cubic-bezier(.45,.05,.35,1) 1; }
-:is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-screw .rpg-ic { animation: rpgShade 1s cubic-bezier(.45,.05,.35,1) 1; }
+:is(.user-profile:hover, .rpg-cell.own:hover, .rpg-cell.sel:hover, .rpg-av:hover) .fx-screw .rpg-ic { animation: rpgShade /* 17차-12: 그림자 칸은 밝기 효과 X(실루엣 유지) */ 1s cubic-bezier(.45,.05,.35,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-flip  { animation: rpgFlip .8s ease-in-out 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-spin  { animation: rpgSpin .7s cubic-bezier(.4,.1,.3,1) 1; }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .fx-whirl { animation: rpgWhirl .8s ease-in-out 1; }
