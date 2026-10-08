@@ -220,3 +220,102 @@
 @keyframes rbAuraIdle { 0%, 72% { opacity: .12; transform: translateX(0) scale(1, .9); } 82% { opacity: .85; transform: translateX(4px) scale(1.05, 1.15); } 92% { opacity: .35; transform: translateX(12px) scale(1.12, 1.3); } 100% { opacity: .12; transform: translateX(16px) scale(1, .9); } }
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-aura { animation: none; opacity: .12; }
 @media (prefers-reduced-motion: reduce) { .rb-frame * { animation: none !important; } }
+
+/* ═══ 19차: 캐릭터 꾸미기 창 (수첩) — 19차-2 제미나이 시안: 다크판타지 돌 프레임 · 붉은 강조 ═══════════
+   도트 그림 = img/armor_m.webp (64×96칸 16개 가로로). --sp = 칸 번호, --u = 도트 1개 크기(px)
+   배경 그림 = img/nb_bg(던전) · nb_shop(대장간) · nb_fire(불꽃 해골) · nb_skull(위 장식) — 수첩 열 때만 불러옴 */
+.rpg-spr { display: block; background-image: url('img/armor_m.webp?v=186'); background-repeat: no-repeat; background-size: 1600% 100%; background-position: calc(var(--sp, 0) * 100% / 15) 0; image-rendering: pixelated; image-rendering: crisp-edges; }
+.rpg-modal.nb { --nb-bg: #191712; --nb-pn: #211d18; --nb-ln: #4a4037; --nb-red: #C8352A; --nb-gold: #D9B36C; position: relative; overflow: visible;
+    width: min(900px, 100%); background: linear-gradient(180deg, #1d1a15, #13110d); color: #E8DFC6; border: 3px solid #3a332c; border-radius: 14px;
+    box-shadow: 0 0 0 1px #0a0907, inset 0 0 0 1px #57493c, inset 0 0 40px rgba(0,0,0,.6), 0 24px 70px rgba(0,0,0,.75); }
+.nb-skull { position: absolute; left: 50%; top: -22px; width: 230px; height: 59px; transform: translateX(-50%); background: url('img/nb_skull.webp?v=186') center / contain no-repeat; z-index: 6; pointer-events: none; }
+.nb .rpg-top { background: linear-gradient(180deg, #24201a, #1a1712); border-bottom: 2px solid #3a332c; box-shadow: inset 0 -1px 0 #57493c; padding: 18px 20px 14px; border-radius: 11px 11px 0 0; }
+.nb .rpg-av { background: #13110d; border: 2px solid #4a4037 !important; box-shadow: inset 0 0 10px rgba(0,0,0,.7); }
+.nb .rpg-role { color: #E0574A; } .nb .rpg-sub { color: #B4AA98; }
+.nb .rpg-bar { background: #0e0c0a; border: 1px solid #3a332c; height: 8px; } .nb .rpg-bar i { background: linear-gradient(90deg, #8E1F17, #E0574A 70%, #F0A04B); }
+.nb-pt { margin-left: auto; flex-shrink: 0; text-align: right; padding: 6px 14px 6px 46px; border: 1px solid #8E2A1E; border-radius: 6px; background: radial-gradient(circle at 22px 50%, #5A140F 0 14px, transparent 15px), linear-gradient(180deg, #3A100C, #200806); box-shadow: inset 0 0 0 1px rgba(217,179,108,.25); position: relative; }
+.nb-pt::before { content: '◆'; position: absolute; left: 14px; top: 50%; transform: translateY(-52%); color: #E0574A; font-size: 16px; text-shadow: 0 0 8px rgba(224,87,74,.7); }
+.nb-pt b { display: block; font-size: 21px; color: #F4D9A0; line-height: 1.1; } .nb-pt small { font-size: 10.5px; color: #C9A890; }
+.nb-x { width: 34px; height: 34px; margin-left: 10px; border: 1px solid #5a4a3c !important; border-radius: 6px; background: linear-gradient(180deg, #2e2620, #1a1511) !important; color: #D9B36C !important; font-size: 16px !important; }
+.nb .rpg-body { padding: 14px 18px 14px; }
+.nb .rpg-foot { border-top: 2px solid #3a332c; background: #16130f; border-radius: 0 0 11px 11px; }
+.nb .rpg-nick { border-color: #5a4a3c; color: #D9B36C; background: linear-gradient(180deg, #2a241d, #1a1611); border-radius: 6px; }
+.nb .rpg-btn { border-radius: 6px; border-color: #5a4a3c; background: linear-gradient(180deg, #2e2620, #1a1511); color: #E8DFC6; }
+.nb .rpg-btn.ok { background: linear-gradient(180deg, #A3271C, #6B140E); border-color: #D9B36C; color: #FFE9C2; box-shadow: 0 0 10px rgba(200,53,42,.35); }
+.nb-note { flex: 1; min-width: 0; color: #8E8474; } .nb .rpg-btns { margin-left: 0; }
+/* 첫 화면 */
+.nb-main { display: grid; grid-template-columns: 250px 1fr; gap: 14px; }
+.nb-slots { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--nb-pn); border: 2px solid #3a332c; border-radius: 8px; box-shadow: inset 0 0 0 1px #4f4337, inset 0 0 18px rgba(0,0,0,.6); }
+.nb-slot { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 6px; cursor: pointer; font-family: inherit; text-align: left; color: inherit;
+    background: linear-gradient(180deg, #2a251f, #1c1814); border: 1px solid #4a4037; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); transition: border-color .15s, filter .15s; }
+.nb-slot:hover { border-color: #D9B36C; filter: brightness(1.12); } .nb-slot.on { border-color: #E0574A; }
+.nb-slot.chg .nb-sb { box-shadow: 0 0 0 2px #E0A04B, 0 0 10px rgba(224,160,75,.5); }
+.nb-sb { width: 46px; height: 46px; flex-shrink: 0; border-radius: 5px; background: #110f0c; border: 1px solid #3a332c; box-shadow: inset 0 0 8px rgba(0,0,0,.8); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.nb-sb .rpg-ic { width: 36px; height: 36px; display: block; }
+.nb-st { min-width: 0; display: flex; flex-direction: column; } .nb-st small { font-size: 11px; color: #9C907E; } .nb-st b { font-size: 13px; color: #EFE3C8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rpg-arm-mini { width: 46px; height: 69px; margin-top: 21px; }
+.rpg-none { color: #5f554a; font-size: 15px; }
+.nb-stage { --u: 3px; position: relative; min-height: calc(var(--u) * 106); border-radius: 8px; overflow: hidden; border: 2px solid #3a332c; box-shadow: inset 0 0 0 1px #4f4337, inset 0 0 50px rgba(0,0,0,.75);
+    background: radial-gradient(ellipse 34% 30% at 50% 88%, rgba(255,120,40,.10), transparent 70%), url('img/nb_bg.webp?v=186') center 70% / cover no-repeat, #15130f; }
+.nb-stage::after { content: ''; position: absolute; left: 50%; bottom: calc(var(--u) * 3); width: calc(var(--u) * 46); height: calc(var(--u) * 8); transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse at center, rgba(0,0,0,.7), transparent 70%); z-index: 0; }
+.rpg-fig { position: absolute; left: 50%; bottom: calc(var(--u) * 2); width: calc(var(--u) * 96); height: calc(var(--u) * 100); transform: translateX(-50%); z-index: 1; filter: drop-shadow(0 0 calc(var(--u) * 3) rgba(255,140,60,.12)); }
+.rpg-lay { position: absolute; display: block; }
+.rpg-body-sp { left: calc(var(--u) * 16); top: calc(var(--u) * 2); width: calc(var(--u) * 64); height: calc(var(--u) * 96); z-index: 2; }
+.rpg-wpn { width: calc(var(--u) * 40); height: calc(var(--u) * 40); transform: scaleX(-1); z-index: 1; }
+.rpg-off { width: calc(var(--u) * 30); height: calc(var(--u) * 30); z-index: 3; }
+.rpg-wpn .rpg-ic, .rpg-off .rpg-ic { width: 100%; height: 100%; display: block; }
+.nb-row2 { display: grid; grid-template-columns: 250px 1fr; gap: 14px; margin-top: 14px; align-items: center; }
+.nb-shop { position: relative; aspect-ratio: 420 / 410; padding: 0; border: none; cursor: pointer; background: url('img/nb_shop.webp?v=186') center / contain no-repeat; transition: filter .15s, transform .12s; }
+.nb-shop:hover { filter: brightness(1.15) drop-shadow(0 0 12px rgba(255,140,60,.35)); transform: translateY(-2px); }
+.nb-shopt { position: absolute; left: 0; right: 0; top: 6px; font-size: 10.5px; color: #F4D9A0; text-shadow: 0 1px 2px #000, 0 0 6px #000; opacity: 0; transition: opacity .15s; } .nb-shop:hover .nb-shopt { opacity: 1; }
+.nb-mg { position: relative; }
+.nb-fire { display: block; aspect-ratio: 700 / 200; background: url('img/nb_fire.webp?v=186') center bottom / 100% 100% no-repeat; -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%); mask-image: linear-gradient(180deg, transparent, #000 22%); }
+.nb-mgp { margin-top: -1px; padding: 6px 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: linear-gradient(180deg, #690d08, #3a0b07 30%, #1d0907); border: 2px solid #8a5a3e; border-top: none; border-radius: 0 0 6px 6px; box-shadow: inset 0 0 20px rgba(0,0,0,.6); }
+.nb-mgt { font-size: 22px; letter-spacing: .08em; color: #F4D9A0; text-shadow: 0 2px 0 #3a0a06, 0 0 12px rgba(224,87,74,.6); }
+.nb .nb-game { flex-direction: row; align-items: center; gap: 10px; width: 100%; max-width: 380px; padding: 8px 14px; border-radius: 6px; border: 1px solid #D9B36C; background: linear-gradient(180deg, #5A1E14, #2A0C08); }
+.nb-gi { font-size: 22px; color: #FFD98A; } .nb .nb-game > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.nb-mgs { font-size: 10.5px; color: #9C7E6A; }
+/* 상점 화면 */
+.nb-shopv { display: grid; grid-template-columns: 200px 1fr; gap: 14px; align-items: start; }
+.nb-side { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; }
+.nb-back { padding: 8px; border-radius: 6px; border: 1px solid #5a4a3c; background: linear-gradient(180deg, #2e2620, #1a1511); color: #D9B36C; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+.nb-back:hover { border-color: #D9B36C; }
+.nb-stage.sm { --u: 2px; }
+.nb-shoph { font-size: 15px; font-weight: 800; color: #F4D9A0; letter-spacing: .06em; margin-bottom: 4px; }
+.nb .rpg-tabs { position: sticky; top: -14px; z-index: 5; display: flex; gap: 4px; padding: 6px 0 0; background: #1a1712; border-bottom: 2px solid #8E2A1E; }
+.nb .rpg-tab { flex: 1; padding: 8px 4px 9px; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; background: transparent; color: #9C907E; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.nb .rpg-tab:hover { color: #EFE3C8; } .nb .rpg-tab.on { color: #FFE9C2; background: linear-gradient(180deg, #8E2A1E, #5A160F); border-color: #D9B36C; }
+.nb .rpg-list { min-height: 200px; }
+.nb .rpg-sh { border-bottom-color: rgba(217,179,108,.15); } .nb .rpg-gs { color: #9C907E; }
+.nb .rpg-cb { background: #13110d; border-color: #3a332c; box-shadow: inset 0 0 8px rgba(0,0,0,.7); border-radius: 6px; }
+.nb .rpg-nm { color: #CFC3AC; } .nb .rpg-cell.own .rpg-cb { border-color: rgba(217,179,108,.6); } .nb .rpg-cell.own .rpg-lb { color: #D9B36C; }
+.nb .rpg-cell.cur .rpg-cb { box-shadow: 0 0 0 2px #D9B36C, inset 0 0 8px rgba(0,0,0,.7); }
+.nb .rpg-cell.sel .rpg-cb { box-shadow: 0 0 0 2px #E0A04B, 0 0 12px rgba(224,160,75,.5); border-color: #E0A04B; } .nb .rpg-cell.sel .rpg-lb { color: #E0A04B; }
+.nb .rpg-cb i { background: #D9B36C; color: #1a1206; }
+.rpg-grid.g-arm { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.nb-shopl .rpg-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } .nb-shopl .rpg-grid.g-arm { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.rpg-cell.arm .rpg-cb { aspect-ratio: 64 / 80; overflow: hidden; align-items: flex-start; }
+.rpg-arm { width: 92%; aspect-ratio: 64 / 96; margin-top: 4%; }
+.rpg-cell.arm.lock .rpg-arm, .rpg-cell.arm.buy .rpg-arm, .rpg-cell.arm.poor .rpg-arm { filter: brightness(0); opacity: .9; } .rpg-cell.arm.lock .rpg-arm { opacity: .4; }
+.rpg-soon { margin: 22px 0 6px; padding: 22px 12px; text-align: center; border: 1px dashed rgba(217,179,108,.3); border-radius: 8px; color: #C9B48A; font-size: 13px; line-height: 1.7; }
+.rpg-soon small { color: #8E8474; } .rpg-soon.sm { margin-top: 12px; padding: 10px; font-size: 12px; }
+@media (max-width: 880px) {
+    .rpg-modal.nb { border-width: 2px; } .nb-skull { width: 170px; height: 44px; top: -16px; }
+    .nb .rpg-top { padding: 16px 12px 12px; } .nb-pt { padding: 5px 10px 5px 34px; } .nb-pt::before { left: 10px; font-size: 13px; } .nb-pt b { font-size: 17px; } .nb-x { width: 30px; height: 30px; margin-left: 4px; }
+    .nb .rpg-body { padding: 10px 10px 12px; }
+    .nb-main { grid-template-columns: 1fr; gap: 10px; }
+    .nb-stage { --u: 2px; order: -1; }
+    .nb-slots { flex-direction: row; padding: 6px; gap: 5px; }
+    .nb-slot { flex: 1; min-width: 0; flex-direction: column; gap: 3px; padding: 5px 2px; text-align: center; }
+    .nb-st { align-items: center; max-width: 100%; } .nb-st b { font-size: 10px; max-width: 100%; } .nb-st small { font-size: 10px; }
+    .nb-sb { width: 38px; height: 38px; } .nb-sb .rpg-ic { width: 30px; height: 30px; } .rpg-arm-mini { width: 38px; height: 57px; margin-top: 17px; }
+    .nb-row2 { grid-template-columns: 38% 1fr; gap: 8px; margin-top: 10px; }
+    .nb-mgp { padding: 4px 8px 10px; gap: 6px; } .nb-mgt { font-size: 16px; } .nb .nb-game { padding: 6px 8px; gap: 6px; } .nb-gi { font-size: 17px; } .nb .nb-game small { font-size: 9.5px; } .nb-mgs { display: none; }
+    .nb-shopv { grid-template-columns: 1fr; gap: 8px; }
+    .nb-side { position: static; } .nb-side .nb-stage.sm { --u: 1.6px; }
+    .nb .rpg-top .rpg-av { display: none; } .nb .rpg-top { gap: 8px; } .nb-pt { padding: 5px 8px 5px 30px; } .nb-pt::before { left: 9px; }
+    .nb .rpg-tabs { top: -10px; } .nb .rpg-tab { font-size: 12px; padding: 7px 2px 8px; }
+    .nb-shopl .rpg-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } .nb-shopl .rpg-grid.g-arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .nb .rpg-foot { gap: 8px; } .nb-note { display: none; }
+}
+@media (max-width: 360px) { .nb-stage { --u: 1.75px; } }

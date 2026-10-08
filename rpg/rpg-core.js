@@ -13,7 +13,13 @@
    - 마스터(관리자)는 모든 아이콘 무료 + 룬 흑검(마스터 전용 연출), 게스트는 목동 지팡이 고정(무기고 안 열림)
    - 등급 추가(정예·전설): RPG_ICONS에 그림 넣고 RPG_TIERS에 한 줄 추가하면 무기고에 줄이 자동으로 생김 */
 const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club', RPG_START_PTS = 0; // 18차: 처음 기본 5P 없앰 (17차-7에서 5P였음)
-let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0, pang: null };
+/* 19차: 경험치(EXP)와 포인트(P) 분리
+   - EXP = 레벨용, 쌓이기만 함: 출석 +10 · 던전팡팡 클리어 +5 (미니게임 늘면 여기 추가) → 50EXP마다 Lv+1 (레벨업 +5P)
+   - P = 지갑: Lv×5 + bonus − 산 물건 값 합 (계속 계산, 저장 안 함)
+   - 예전 기록은 처음 불러올 때 exp = 출석일×10 + 던전 클리어(bonus)×5 로 바꿔서 이어붙임
+   - 마스터도 매일 EXP·P를 얻음 (테스트용). 시작값 +1000EXP(= Lv20, 100P). 마스터 전용 아이템(룬 흑검)만 공짜 */
+const RPG_EXP = { day: 10, pang: 5, perLv: 50, masterBase: 1000 };
+let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0, pang: null, exp: 0, g: 'm', eq: { armor: 'ar_base', helm: null, off: null, deco: null } };
 
 function rpgInjectDefs() {
     if (document.getElementById('rpgDefs')) return;
@@ -75,20 +81,35 @@ function rpgBadgeIcon() {
     const k = rpgCurrentIcon();
     return `<span class="up-ic" style="--tc:${rpgTierColor(k)}">${rpgFxIcon(k)}</span>`;
 }
-function rpgLevel() { return Math.floor((rpgState.days || 0) / RPG_DAYS_PER_LV); }
+function rpgExp() { return (rpgState.exp || 0) + (isAdminUser() ? RPG_EXP.masterBase : 0); }
+function rpgLevel() { return Math.floor(rpgExp() / RPG_EXP.perLv); }
+/* 19차: 모든 장비(무기·갑옷·왼손…) 한 곳에서 찾기 → { slot, tier, name } */
+let rpgItemMap = null;
+function rpgItem(key) {
+    if (!rpgItemMap) {
+        rpgItemMap = {};
+        RPG_SLOTS.forEach(sl => sl.tiers.forEach(t => t.keys.forEach(k => {
+            const name = sl.id === 'armor' ? (RPG_ARMORS[k] || [k])[0] : (RPG_ICONS[k] || [k])[0];
+            rpgItemMap[k] = { slot: sl, tier: t, name, needLv: Math.max(t.needLv, sl.minLv || 0) };
+        })));
+    }
+    return rpgItemMap[key] || null;
+}
+function rpgIsWeapon(key) { const it = rpgItem(key); return !!(it && it.slot.id === 'weapon'); }
 function rpgTitle(lv) { let t = RPG_TITLES[0].name; RPG_TITLES.forEach(x => { if (lv >= x.lv) t = x.name; }); return t; }
-function rpgTierOf(key) { return RPG_TIERS.find(t => t.keys.includes(key)); }
+function rpgTierOf(key) { const it = rpgItem(key); return it ? it.tier : undefined; }
+function rpgIsFree(key) { return RPG_SLOTS.some(sl => sl.def === key); } // 몽둥이 · 평민옷 = 기본 지급
 function rpgSpent() {
-    return (rpgState.owned || []).reduce((s, k) => { const t = rpgTierOf(k); return s + (t && k !== RPG_DEFAULT_ICON ? t.cost : 0); }, 0);
+    return (rpgState.owned || []).reduce((s, k) => { const t = rpgTierOf(k); return s + (t && !rpgIsFree(k) ? t.cost : 0); }, 0);
 }
 function rpgPoints() { return RPG_START_PTS + rpgLevel() * RPG_PTS_PER_LV + (rpgState.bonus || 0) - rpgSpent(); } // bonus = 미니게임(던전팡팡) 보상
-function rpgOwns(key) { return isAdminUser() || key === RPG_DEFAULT_ICON || (rpgState.owned || []).includes(key); }
+function rpgOwns(key) { return key === 'master_sword' ? isAdminUser() : (rpgIsFree(key) || (rpgState.owned || []).includes(key)); } // 19차: 마스터도 사야 함 (룬 흑검만 공짜)
 function rpgCurrentIcon() {
     if (isGuestUser()) return 'crook';
     const k = rpgState.icon;
     // 17차-10: 마스터 기본 = 마검 (예전 왕관 장착값도 마검으로)
     if (isAdminUser() && (!k || k === 'crown' || !RPG_ICONS[k])) return 'master_sword';
-    if (k && RPG_ICONS[k] && k !== 'master_sword' && k !== 'crown' && rpgOwns(k)) return k;
+    if (k && rpgIsWeapon(k) && rpgOwns(k)) return k;
     if (k === 'master_sword' && isAdminUser()) return k;
     return isAdminUser() ? 'master_sword' : RPG_DEFAULT_ICON;
 }
@@ -96,8 +117,14 @@ function rpgTodayKST() { return new Date(Date.now() + 9 * 3600 * 1000).toISOStri
 function rpgLoad(user) {
     const m = (user && user.user_metadata && user.user_metadata.rpg) || {};
     const pg = m.pang && typeof m.pang === 'object' ? { d: String(m.pang.d || ''), n: Math.max(0, parseInt(m.pang.n, 10) || 0), ok: !!m.pang.ok } : null;
-    rpgState = { days: Math.max(0, parseInt(m.days, 10) || 0), last: m.last || null,
-        owned: Array.isArray(m.owned) ? m.owned.filter(k => RPG_ICONS[k]) : [], icon: m.icon || null, bonus: Math.max(0, parseInt(m.bonus, 10) || 0), pang: pg };
+    const days = Math.max(0, parseInt(m.days, 10) || 0), bonus = Math.max(0, parseInt(m.bonus, 10) || 0);
+    const eq = m.eq && typeof m.eq === 'object' ? m.eq : {};
+    const ok = (k, slot) => { const it = k && rpgItem(k); return it && it.slot.id === slot ? k : null; };
+    rpgState = { days, last: m.last || null,
+        owned: Array.isArray(m.owned) ? m.owned.filter(k => rpgItem(k)) : [], icon: m.icon || null, bonus, pang: pg,
+        exp: m.exp != null ? Math.max(0, parseInt(m.exp, 10) || 0) : days * RPG_EXP.day + bonus * RPG_EXP.pang, // 19차: 예전 기록 → EXP
+        g: m.g === 'f' ? 'f' : 'm',
+        eq: { armor: ok(eq.armor, 'armor') || 'ar_base', helm: ok(eq.helm, 'helm'), off: ok(eq.off, 'off'), deco: ok(eq.deco, 'deco') } };
 }
 async function rpgSave() {
     const { error } = await sb.auth.updateUser({ data: { rpg: rpgState } });
@@ -119,15 +146,16 @@ async function rpgDailyCheckIn() {
     const backup = Object.assign({}, rpgState);
     const before = rpgLevel();
     rpgState.days = (rpgState.days || 0) + 1;
+    rpgState.exp = (rpgState.exp || 0) + RPG_EXP.day;
     rpgState.last = today;
     try { await rpgSave(); } catch (e) { console.error(e); rpgState = backup; return; }
     const after = rpgLevel();
     applyRolePermissions();
-    if (after > before && !isAdminUser()) {
-        const opened = RPG_TIERS.filter(t => t.needLv === after);
+    if (after > before) {
+        const opened = RPG_SLOTS.flatMap(sl => sl.tiers.filter(t => Math.max(t.needLv, sl.minLv || 0) === after).map(t => t.name + ' ' + sl.name));
         const newTitle = RPG_TITLES.find(t => t.lv === after);
         rpgToast(`🎉 <b>Lv.${after} 달성!</b> +${RPG_PTS_PER_LV}P` + (newTitle ? `<br>🏅 칭호: ${newTitle.name}` : '') +
-            (opened.length ? `<br>⚔️ ${opened.map(t => t.name).join('·')} 무기가 열렸어요!` : '') + `<br><small>이름표를 눌러 무기고로</small>`);
+            (opened.length ? `<br>⚔️ ${opened.join(' · ')}이(가) 열렸어요!` : '') + `<br><small>이름표를 눌러 모험가 수첩으로</small>`);
     }
 }
 
@@ -154,16 +182,16 @@ async function rpgPangStart() {
     catch (e) { console.error(e); rpgState.pang = prev; alert('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)'); return false; }
 }
 async function rpgPangClear() {
-    const prevP = rpgState.pang, prevB = rpgState.bonus;
+    const prevP = rpgState.pang, prevB = rpgState.bonus, prevE = rpgState.exp, lv0 = rpgLevel();
     rpgState.pang = Object.assign({}, rpgPangToday(), { ok: true });
     rpgState.bonus = (rpgState.bonus || 0) + RPG_PANG.reward;
-    try { await rpgSave(); return { reward: RPG_PANG.reward }; }
-    catch (e) { console.error(e); rpgState.pang = prevP; rpgState.bonus = prevB; alert('⚠️ 보상 저장 실패 (인터넷 연결을 확인해주세요)'); return { reward: 0 }; }
+    rpgState.exp = (rpgState.exp || 0) + RPG_EXP.pang; // 19차: 던전 클리어 = +1P · +5EXP
+    try { await rpgSave(); if (rpgLevel() > lv0) applyRolePermissions(); return { reward: RPG_PANG.reward }; }
+    catch (e) { console.error(e); rpgState.pang = prevP; rpgState.bonus = prevB; rpgState.exp = prevE; alert('⚠️ 보상 저장 실패 (인터넷 연결을 확인해주세요)'); return { reward: 0 }; }
 }
 // 들고 갈 무기 = 내가 가진 무기 (마스터는 룬 흑검 + 전부)
 function rpgMyWeapons() {
-    const keys = isAdminUser() ? ['master_sword', ...RPG_TIERS.flatMap(t => t.keys)]
-        : [RPG_DEFAULT_ICON, ...RPG_TIERS.flatMap(t => t.keys).filter(k => k !== RPG_DEFAULT_ICON && (rpgState.owned || []).includes(k))];
+    const keys = [...(isAdminUser() ? ['master_sword'] : []), RPG_DEFAULT_ICON, ...RPG_TIERS.flatMap(t => t.keys).filter(k => k !== RPG_DEFAULT_ICON && (rpgState.owned || []).includes(k))];
     return keys.filter(k => RPG_ICONS[k]).map(k => ({ key: k, name: RPG_ICONS[k][0], html: rpgIconSvg(k), color: rpgTierColor(k) }));
 }
 function rpgLoadPang(cb) {
