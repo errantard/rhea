@@ -8,12 +8,12 @@
 /* 17차-4: 모험가 무기고 (출석 · 레벨 · 칭호 · 포인트 · 아이콘) =====================
    - 하루 첫 접속(한국 시간 자정 기준) = 출석 1일. 5출석마다 Lv+1, 레벨업 보상 +5P
    - 레벨 = 무기를 "살 자격"(등급별 needLv), 포인트 = "돈"(등급별 cost). 몽둥이는 기본 지급
-   - 남은 포인트는 저장 안 하고 (기본 5P + Lv × 5 + bonus − 산 무기 값 합)으로 계산 → 숫자가 꼬일 일 없음
-   - 저장 위치: 각자 계정 user_metadata.rpg = { days, last, owned[], icon } (닉네임과 같은 곳, 새 테이블 없음)
+   - 남은 포인트는 저장 안 하고 (기본 0P + Lv × 5 + bonus − 산 무기 값 합)으로 계산 → 숫자가 꼬일 일 없음
+   - 저장 위치: 각자 계정 user_metadata.rpg = { days, last, owned[], icon, bonus, pang } (닉네임과 같은 곳, 새 테이블 없음)
    - 마스터(관리자)는 모든 아이콘 무료 + 룬 흑검(마스터 전용 연출), 게스트는 목동 지팡이 고정(무기고 안 열림)
    - 등급 추가(정예·전설): RPG_ICONS에 그림 넣고 RPG_TIERS에 한 줄 추가하면 무기고에 줄이 자동으로 생김 */
-const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club', RPG_START_PTS = 5; // 17차-7: 처음 5P 기본 지급
-let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0 };
+const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club', RPG_START_PTS = 0; // 18차: 처음 기본 5P 없앰 (17차-7에서 5P였음)
+let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0, pang: null };
 
 function rpgInjectDefs() {
     if (document.getElementById('rpgDefs')) return;
@@ -81,7 +81,7 @@ function rpgTierOf(key) { return RPG_TIERS.find(t => t.keys.includes(key)); }
 function rpgSpent() {
     return (rpgState.owned || []).reduce((s, k) => { const t = rpgTierOf(k); return s + (t && k !== RPG_DEFAULT_ICON ? t.cost : 0); }, 0);
 }
-function rpgPoints() { return RPG_START_PTS + rpgLevel() * RPG_PTS_PER_LV + (rpgState.bonus || 0) - rpgSpent(); } // bonus = 나중에 미니게임 등 보상용
+function rpgPoints() { return RPG_START_PTS + rpgLevel() * RPG_PTS_PER_LV + (rpgState.bonus || 0) - rpgSpent(); } // bonus = 미니게임(던전팡팡) 보상
 function rpgOwns(key) { return isAdminUser() || key === RPG_DEFAULT_ICON || (rpgState.owned || []).includes(key); }
 function rpgCurrentIcon() {
     if (isGuestUser()) return 'crook';
@@ -95,8 +95,9 @@ function rpgCurrentIcon() {
 function rpgTodayKST() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
 function rpgLoad(user) {
     const m = (user && user.user_metadata && user.user_metadata.rpg) || {};
+    const pg = m.pang && typeof m.pang === 'object' ? { d: String(m.pang.d || ''), n: Math.max(0, parseInt(m.pang.n, 10) || 0), ok: !!m.pang.ok } : null;
     rpgState = { days: Math.max(0, parseInt(m.days, 10) || 0), last: m.last || null,
-        owned: Array.isArray(m.owned) ? m.owned.filter(k => RPG_ICONS[k]) : [], icon: m.icon || null, bonus: Math.max(0, parseInt(m.bonus, 10) || 0) };
+        owned: Array.isArray(m.owned) ? m.owned.filter(k => RPG_ICONS[k]) : [], icon: m.icon || null, bonus: Math.max(0, parseInt(m.bonus, 10) || 0), pang: pg };
 }
 async function rpgSave() {
     const { error } = await sb.auth.updateUser({ data: { rpg: rpgState } });
@@ -130,6 +131,62 @@ async function rpgDailyCheckIn() {
     }
 }
 
+/* 18차: 미니게임 "던전팡팡" ===========================================================
+   - 게임 파일(rpg-pangpang.js/css · img/)은 수첩에서 버튼을 누를 때만 불러옴 → 업무 화면 무게 0
+   - 하루 도전 3번(시작할 때 1번 차감), 성공하면 그날은 끝. 성공 보상 = bonus +1P
+   - 저장: rpgState.pang = { d: 날짜(한국), n: 오늘 쓴 횟수, ok: 오늘 성공 } — 날짜가 바뀌면 자동으로 새 하루 */
+const RPG_PANG = { tries: 3, reward: 1 };
+const RPG_SELF = (() => { // 이 파일 위치·버전(?v=) → 게임 파일도 같은 곳·같은 버전으로
+    const s = document.currentScript && document.currentScript.src;
+    return s ? { dir: s.replace(/[?#].*$/, '').replace(/[^/]*$/, ''), q: (s.split('?')[1] || '').split('#')[0] } : { dir: 'rpg/', q: '' };
+})();
+function rpgPangToday() {
+    const t = rpgTodayKST(), p = rpgState.pang;
+    return p && p.d === t ? p : { d: t, n: 0, ok: false };
+}
+function rpgPangDaily() { const p = rpgPangToday(); return { tries: Math.max(0, RPG_PANG.tries - p.n), cleared: !!p.ok }; }
+async function rpgPangStart() {
+    const p = rpgPangToday();
+    if (p.ok || p.n >= RPG_PANG.tries) return false;
+    const prev = rpgState.pang;
+    rpgState.pang = { d: p.d, n: p.n + 1, ok: false };
+    try { await rpgSave(); return true; }
+    catch (e) { console.error(e); rpgState.pang = prev; alert('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)'); return false; }
+}
+async function rpgPangClear() {
+    const prevP = rpgState.pang, prevB = rpgState.bonus;
+    rpgState.pang = Object.assign({}, rpgPangToday(), { ok: true });
+    rpgState.bonus = (rpgState.bonus || 0) + RPG_PANG.reward;
+    try { await rpgSave(); return { reward: RPG_PANG.reward }; }
+    catch (e) { console.error(e); rpgState.pang = prevP; rpgState.bonus = prevB; alert('⚠️ 보상 저장 실패 (인터넷 연결을 확인해주세요)'); return { reward: 0 }; }
+}
+// 들고 갈 무기 = 내가 가진 무기 (마스터는 룬 흑검 + 전부)
+function rpgMyWeapons() {
+    const keys = isAdminUser() ? ['master_sword', ...RPG_TIERS.flatMap(t => t.keys)]
+        : [RPG_DEFAULT_ICON, ...RPG_TIERS.flatMap(t => t.keys).filter(k => k !== RPG_DEFAULT_ICON && (rpgState.owned || []).includes(k))];
+    return keys.filter(k => RPG_ICONS[k]).map(k => ({ key: k, name: RPG_ICONS[k][0], html: rpgIconSvg(k), color: rpgTierColor(k) }));
+}
+function rpgLoadPang(cb) {
+    if (window.RheaPangpang) return cb();
+    const v = RPG_SELF.q ? '?' + RPG_SELF.q : '';
+    if (!document.getElementById('rpgPangCss')) {
+        const l = document.createElement('link'); l.id = 'rpgPangCss'; l.rel = 'stylesheet'; l.href = RPG_SELF.dir + 'rpg-pangpang.css' + v; document.head.appendChild(l);
+    }
+    const s = document.createElement('script');
+    s.src = RPG_SELF.dir + 'rpg-pangpang.js' + v;
+    s.onload = () => (window.RheaPangpang ? cb() : null);
+    s.onerror = () => { s.remove(); alert('⚠️ 던전팡팡을 불러오지 못했어요 (rpg 폴더의 rpg-pangpang.js 확인)'); };
+    document.head.appendChild(s);
+}
+function rpgOpenPang(onClose) {
+    if (isGuestUser() || !currentUserEmail) return;
+    rpgInjectDefs();
+    rpgLoadPang(() => RheaPangpang.open({
+        weapons: rpgMyWeapons(), current: rpgCurrentIcon(),
+        getDaily: rpgPangDaily, onStart: rpgPangStart, onClear: rpgPangClear, onClose
+    }));
+}
+
 
 /* dashboard가 부르는 창구 (이것만 바꾸지 않으면 안쪽은 자유롭게 고쳐도 됨) */
 window.RheaRPG = {
@@ -140,5 +197,6 @@ window.RheaRPG = {
     currentIcon: rpgCurrentIcon,                     // 지금 장착한 아이콘 키 (AS메모에 같이 저장)
     roleText: () => `${rpgTitle(rpgLevel())} Lv.${rpgLevel()}`, // 이름표 "칭호 Lv.N"
     ensureDefs: rpgInjectDefs,
-    openArmory: () => (typeof openArmory === 'function' ? openArmory() : null)
+    openArmory: () => (typeof openArmory === 'function' ? openArmory() : null),
+    openPang: rpgOpenPang                            // 18차: 던전팡팡 (보통은 수첩 버튼에서 열림)
 };
