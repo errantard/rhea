@@ -17,8 +17,8 @@ const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club', RPG_ST
    - EXP = 레벨용, 쌓이기만 함: 출석 +10 · 던전팡팡 클리어 +5 (미니게임 늘면 여기 추가) → 50EXP마다 Lv+1 (레벨업 +5P)
    - P = 지갑: Lv×5 + bonus − 산 물건 값 합 (계속 계산, 저장 안 함)
    - 예전 기록은 처음 불러올 때 exp = 출석일×10 + 던전 클리어(bonus)×5 로 바꿔서 이어붙임
-   - 마스터도 매일 EXP·P를 얻음 (테스트용). 시작값 +1000EXP(= Lv20, 100P). 마스터 전용 아이템(룬 흑검)만 공짜 */
-const RPG_EXP = { day: 10, pang: 5, perLv: 50, masterBase: 1000 };
+   - 마스터도 매일 EXP·P를 얻음 (테스트용). 시작값 +1000EXP(= Lv20) + 900P → 1000P. 마스터 전용 아이템(룬 흑검)만 공짜 */
+const RPG_EXP = { day: 10, pang: 5, perLv: 50, masterBase: 1000, masterPts: 900 }; // 19차-3: 마스터 테스트용 +900P (Lv20 100P + 900 = 1000P)
 let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0, pang: null, exp: 0, g: 'm', eq: { armor: 'ar_base', helm: null, off: null, deco: null } };
 
 function rpgInjectDefs() {
@@ -102,7 +102,7 @@ function rpgIsFree(key) { return RPG_SLOTS.some(sl => sl.def === key); } // 몽�
 function rpgSpent() {
     return (rpgState.owned || []).reduce((s, k) => { const t = rpgTierOf(k); return s + (t && !rpgIsFree(k) ? t.cost : 0); }, 0);
 }
-function rpgPoints() { return RPG_START_PTS + rpgLevel() * RPG_PTS_PER_LV + (rpgState.bonus || 0) - rpgSpent(); } // bonus = 미니게임(던전팡팡) 보상
+function rpgPoints() { return RPG_START_PTS + (isAdminUser() ? RPG_EXP.masterPts : 0) + rpgLevel() * RPG_PTS_PER_LV + (rpgState.bonus || 0) - rpgSpent(); } // bonus = 미니게임(던전팡팡) 보상
 function rpgOwns(key) { return key === 'master_sword' ? isAdminUser() : (rpgIsFree(key) || (rpgState.owned || []).includes(key)); } // 19차: 마스터도 사야 함 (룬 흑검만 공짜)
 function rpgCurrentIcon() {
     if (isGuestUser()) return 'crook';

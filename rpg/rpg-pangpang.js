@@ -269,10 +269,16 @@
     }
     let master = false;
 
+    let starting = false; // 19차-4: 저장 기다리는 동안 버튼을 또 누르면 도전이 두 번 깎이고 게임이 겹치던 문제 막기
     async function start() {
         const d = daily();
-        if (d.cleared || d.tries <= 0) return;
-        if (opts.onStart) { const ok = await opts.onStart(); if (ok === false) return; }
+        if (starting || (G && G.on) || d.cleared || d.tries <= 0) return;
+        starting = true;
+        const btn = els.panel.querySelector('[data-a="go"]');
+        if (btn) { btn.disabled = true; btn.textContent = '입장 준비중…'; }
+        try {
+            if (opts.onStart) { const ok = await opts.onStart(); if (ok === false) { if (btn) { btn.disabled = false; btn.textContent = '⚔ 다시 시도'; } return; } }
+        } finally { starting = false; }
         resetBoard();
         els.panel.classList.add('hide');
         G = { on: false, t0: 0, next: 0, goblins: 0, sinceOrc: 0, orcsKilled: 0, orcOut: false };

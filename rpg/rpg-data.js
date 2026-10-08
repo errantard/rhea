@@ -19,8 +19,8 @@ const RPG_TITLES = [{ lv: 0, name: '견습모험가' }, { lv: 5, name: '일반�
    - 투구·꾸미기(헤어·선글라스…)·왼손 초롱불·지도책은 그림 들어오면 tiers에 줄만 추가
    - 투구 hair 표시(예정): 'show' 머리 다 보임 · 'long' 아래 긴머리만 · 'hide' 다 가림 → 몸 → 머리 → 투구 순서로 겹쳐 그림 */
 const RPG_ARMORS = {
-    ar_base: ['평민옷', 0],
-    ar_assassin1: ['그림자 누더기', 1], ar_mage1: ['수련생 로브', 2], ar_warrior1: ['누빈 천갑옷', 3], ar_brute1: ['털가죽 걸침', 4], ar_rogue1: ['헌 가죽 조끼', 5],
+    ar_base: ['일상복', 0],
+    ar_assassin1: ['경장복', 1], ar_mage1: ['수련생 로브', 2], ar_warrior1: ['누빈 천갑옷', 3], ar_brute1: ['털가죽 걸침', 4], ar_rogue1: ['헌 가죽 조끼', 5],
     ar_assassin2: ['야행복', 6], ar_mage2: ['마도사 로브', 7], ar_warrior2: ['사슬갑옷', 8], ar_brute2: ['징 박은 가죽갑옷', 9], ar_rogue2: ['도적단 망토옷', 10],
     ar_assassin3: ['흑룡 암살복', 11], ar_mage3: ['대마법사 로브', 12], ar_warrior3: ['기사 판금갑옷', 13], ar_brute3: ['광전사 철갑', 14], ar_rogue3: ['그림자 군주 외투', 15]
 };

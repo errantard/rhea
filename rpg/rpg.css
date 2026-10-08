@@ -221,101 +221,115 @@
 :is(.user-profile:hover, .rpg-cell:not(.lock):hover, .rpg-av:hover) .rb-frame .rb-aura { animation: none; opacity: .12; }
 @media (prefers-reduced-motion: reduce) { .rb-frame * { animation: none !important; } }
 
-/* ═══ 19차: 캐릭터 꾸미기 창 (수첩) — 19차-2 제미나이 시안: 다크판타지 돌 프레임 · 붉은 강조 ═══════════
-   도트 그림 = img/armor_m.webp (64×96칸 16개 가로로). --sp = 칸 번호, --u = 도트 1개 크기(px)
-   배경 그림 = img/nb_bg(던전) · nb_shop(대장간) · nb_fire(불꽃 해골) · nb_skull(위 장식) — 수첩 열 때만 불러옴 */
-.rpg-spr { display: block; background-image: url('img/armor_m.webp?v=186'); background-repeat: no-repeat; background-size: 1600% 100%; background-position: calc(var(--sp, 0) * 100% / 15) 0; image-rendering: pixelated; image-rendering: crisp-edges; }
-.rpg-modal.nb { --nb-bg: #191712; --nb-pn: #211d18; --nb-ln: #4a4037; --nb-red: #C8352A; --nb-gold: #D9B36C; position: relative; overflow: visible;
-    width: min(900px, 100%); background: linear-gradient(180deg, #1d1a15, #13110d); color: #E8DFC6; border: 3px solid #3a332c; border-radius: 14px;
-    box-shadow: 0 0 0 1px #0a0907, inset 0 0 0 1px #57493c, inset 0 0 40px rgba(0,0,0,.6), 0 24px 70px rgba(0,0,0,.75); }
-.nb-skull { position: absolute; left: 50%; top: -22px; width: 230px; height: 59px; transform: translateX(-50%); background: url('img/nb_skull.webp?v=186') center / contain no-repeat; z-index: 6; pointer-events: none; }
-.nb .rpg-top { background: linear-gradient(180deg, #24201a, #1a1712); border-bottom: 2px solid #3a332c; box-shadow: inset 0 -1px 0 #57493c; padding: 18px 20px 14px; border-radius: 11px 11px 0 0; }
-.nb .rpg-av { background: #13110d; border: 2px solid #4a4037 !important; box-shadow: inset 0 0 10px rgba(0,0,0,.7); }
-.nb .rpg-role { color: #E0574A; } .nb .rpg-sub { color: #B4AA98; }
-.nb .rpg-bar { background: #0e0c0a; border: 1px solid #3a332c; height: 8px; } .nb .rpg-bar i { background: linear-gradient(90deg, #8E1F17, #E0574A 70%, #F0A04B); }
-.nb-pt { margin-left: auto; flex-shrink: 0; text-align: right; padding: 6px 14px 6px 46px; border: 1px solid #8E2A1E; border-radius: 6px; background: radial-gradient(circle at 22px 50%, #5A140F 0 14px, transparent 15px), linear-gradient(180deg, #3A100C, #200806); box-shadow: inset 0 0 0 1px rgba(217,179,108,.25); position: relative; }
-.nb-pt::before { content: '◆'; position: absolute; left: 14px; top: 50%; transform: translateY(-52%); color: #E0574A; font-size: 16px; text-shadow: 0 0 8px rgba(224,87,74,.7); }
-.nb-pt b { display: block; font-size: 21px; color: #F4D9A0; line-height: 1.1; } .nb-pt small { font-size: 10.5px; color: #C9A890; }
-.nb-x { width: 34px; height: 34px; margin-left: 10px; border: 1px solid #5a4a3c !important; border-radius: 6px; background: linear-gradient(180deg, #2e2620, #1a1511) !important; color: #D9B36C !important; font-size: 16px !important; }
-.nb .rpg-body { padding: 14px 18px 14px; }
-.nb .rpg-foot { border-top: 2px solid #3a332c; background: #16130f; border-radius: 0 0 11px 11px; }
-.nb .rpg-nick { border-color: #5a4a3c; color: #D9B36C; background: linear-gradient(180deg, #2a241d, #1a1611); border-radius: 6px; }
-.nb .rpg-btn { border-radius: 6px; border-color: #5a4a3c; background: linear-gradient(180deg, #2e2620, #1a1511); color: #E8DFC6; }
-.nb .rpg-btn.ok { background: linear-gradient(180deg, #A3271C, #6B140E); border-color: #D9B36C; color: #FFE9C2; box-shadow: 0 0 10px rgba(200,53,42,.35); }
-.nb-note { flex: 1; min-width: 0; color: #8E8474; } .nb .rpg-btns { margin-left: 0; }
-/* 첫 화면 */
-.nb-main { display: grid; grid-template-columns: 250px 1fr; gap: 14px; }
-.nb-slots { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--nb-pn); border: 2px solid #3a332c; border-radius: 8px; box-shadow: inset 0 0 0 1px #4f4337, inset 0 0 18px rgba(0,0,0,.6); }
-.nb-slot { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 6px; cursor: pointer; font-family: inherit; text-align: left; color: inherit;
-    background: linear-gradient(180deg, #2a251f, #1c1814); border: 1px solid #4a4037; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); transition: border-color .15s, filter .15s; }
-.nb-slot:hover { border-color: #D9B36C; filter: brightness(1.12); } .nb-slot.on { border-color: #E0574A; }
-.nb-slot.chg .nb-sb { box-shadow: 0 0 0 2px #E0A04B, 0 0 10px rgba(224,160,75,.5); }
-.nb-sb { width: 46px; height: 46px; flex-shrink: 0; border-radius: 5px; background: #110f0c; border: 1px solid #3a332c; box-shadow: inset 0 0 8px rgba(0,0,0,.8); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.nb-sb .rpg-ic { width: 36px; height: 36px; display: block; }
-.nb-st { min-width: 0; display: flex; flex-direction: column; } .nb-st small { font-size: 11px; color: #9C907E; } .nb-st b { font-size: 13px; color: #EFE3C8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rpg-arm-mini { width: 46px; height: 69px; margin-top: 21px; }
-.rpg-none { color: #5f554a; font-size: 15px; }
-.nb-stage { --u: 3px; position: relative; min-height: calc(var(--u) * 106); border-radius: 8px; overflow: hidden; border: 2px solid #3a332c; box-shadow: inset 0 0 0 1px #4f4337, inset 0 0 50px rgba(0,0,0,.75);
-    background: radial-gradient(ellipse 34% 30% at 50% 88%, rgba(255,120,40,.10), transparent 70%), url('img/nb_bg.webp?v=186') center 70% / cover no-repeat, #15130f; }
-.nb-stage::after { content: ''; position: absolute; left: 50%; bottom: calc(var(--u) * 3); width: calc(var(--u) * 46); height: calc(var(--u) * 8); transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse at center, rgba(0,0,0,.7), transparent 70%); z-index: 0; }
-.rpg-fig { position: absolute; left: 50%; bottom: calc(var(--u) * 2); width: calc(var(--u) * 96); height: calc(var(--u) * 100); transform: translateX(-50%); z-index: 1; filter: drop-shadow(0 0 calc(var(--u) * 3) rgba(255,140,60,.12)); }
+/* ═══ 19차: 모험가 수첩 (캐릭터 꾸미기 창) ═══════════════════════════════════════
+   19차-3 (2026-10-09): 대장님 시안 그대로 — 바탕 그림 img/nb2_note.webp(수첩) · nb2_shop.webp(상점) 위에
+   글씨·버튼을 % 좌표로 얹음 (rpg-armory.js의 nbPos/shPos). 글씨 크기는 창 너비 기준(cqw)
+   도트 갑옷 = img/armor_m.webp (64×96칸 16개 가로로). --sp = 칸 번호, --u = 도트 1개 크기 */
+.rpg-spr { display: block; background-image: url('img/armor_m.webp?v=188'); background-repeat: no-repeat; background-size: 1600% 100%; background-position: calc(var(--sp, 0) * 100% / 15) 0; image-rendering: pixelated; image-rendering: crisp-edges; }
+.rpg-fig { position: absolute; left: 50%; bottom: 17%; width: calc(var(--u) * 96); height: calc(var(--u) * 100); transform: translateX(-50%); z-index: 1; }
 .rpg-lay { position: absolute; display: block; }
 .rpg-body-sp { left: calc(var(--u) * 16); top: calc(var(--u) * 2); width: calc(var(--u) * 64); height: calc(var(--u) * 96); z-index: 2; }
 .rpg-wpn { width: calc(var(--u) * 40); height: calc(var(--u) * 40); transform: scaleX(-1); z-index: 1; }
 .rpg-off { width: calc(var(--u) * 30); height: calc(var(--u) * 30); z-index: 3; }
 .rpg-wpn .rpg-ic, .rpg-off .rpg-ic { width: 100%; height: 100%; display: block; }
-.nb-row2 { display: grid; grid-template-columns: 250px 1fr; gap: 14px; margin-top: 14px; align-items: center; }
-.nb-shop { position: relative; aspect-ratio: 420 / 410; padding: 0; border: none; cursor: pointer; background: url('img/nb_shop.webp?v=186') center / contain no-repeat; transition: filter .15s, transform .12s; }
-.nb-shop:hover { filter: brightness(1.15) drop-shadow(0 0 12px rgba(255,140,60,.35)); transform: translateY(-2px); }
-.nb-shopt { position: absolute; left: 0; right: 0; top: 6px; font-size: 10.5px; color: #F4D9A0; text-shadow: 0 1px 2px #000, 0 0 6px #000; opacity: 0; transition: opacity .15s; } .nb-shop:hover .nb-shopt { opacity: 1; }
-.nb-mg { position: relative; }
-.nb-fire { display: block; aspect-ratio: 700 / 200; background: url('img/nb_fire.webp?v=186') center bottom / 100% 100% no-repeat; -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%); mask-image: linear-gradient(180deg, transparent, #000 22%); }
-.nb-mgp { margin-top: -1px; padding: 6px 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: linear-gradient(180deg, #690d08, #3a0b07 30%, #1d0907); border: 2px solid #8a5a3e; border-top: none; border-radius: 0 0 6px 6px; box-shadow: inset 0 0 20px rgba(0,0,0,.6); }
-.nb-mgt { font-size: 22px; letter-spacing: .08em; color: #F4D9A0; text-shadow: 0 2px 0 #3a0a06, 0 0 12px rgba(224,87,74,.6); }
-.nb .nb-game { flex-direction: row; align-items: center; gap: 10px; width: 100%; max-width: 380px; padding: 8px 14px; border-radius: 6px; border: 1px solid #D9B36C; background: linear-gradient(180deg, #5A1E14, #2A0C08); }
-.nb-gi { font-size: 22px; color: #FFD98A; } .nb .nb-game > span:last-child { display: flex; flex-direction: column; gap: 2px; }
-.nb-mgs { font-size: 10.5px; color: #9C7E6A; }
-/* 상점 화면 */
-.nb-shopv { display: grid; grid-template-columns: 200px 1fr; gap: 14px; align-items: start; }
-.nb-side { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; }
-.nb-back { padding: 8px; border-radius: 6px; border: 1px solid #5a4a3c; background: linear-gradient(180deg, #2e2620, #1a1511); color: #D9B36C; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
-.nb-back:hover { border-color: #D9B36C; }
-.nb-stage.sm { --u: 2px; }
-.nb-shoph { font-size: 15px; font-weight: 800; color: #F4D9A0; letter-spacing: .06em; margin-bottom: 4px; }
-.nb .rpg-tabs { position: sticky; top: -14px; z-index: 5; display: flex; gap: 4px; padding: 6px 0 0; background: #1a1712; border-bottom: 2px solid #8E2A1E; }
-.nb .rpg-tab { flex: 1; padding: 8px 4px 9px; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; background: transparent; color: #9C907E; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
-.nb .rpg-tab:hover { color: #EFE3C8; } .nb .rpg-tab.on { color: #FFE9C2; background: linear-gradient(180deg, #8E2A1E, #5A160F); border-color: #D9B36C; }
-.nb .rpg-list { min-height: 200px; }
-.nb .rpg-sh { border-bottom-color: rgba(217,179,108,.15); } .nb .rpg-gs { color: #9C907E; }
-.nb .rpg-cb { background: #13110d; border-color: #3a332c; box-shadow: inset 0 0 8px rgba(0,0,0,.7); border-radius: 6px; }
-.nb .rpg-nm { color: #CFC3AC; } .nb .rpg-cell.own .rpg-cb { border-color: rgba(217,179,108,.6); } .nb .rpg-cell.own .rpg-lb { color: #D9B36C; }
-.nb .rpg-cell.cur .rpg-cb { box-shadow: 0 0 0 2px #D9B36C, inset 0 0 8px rgba(0,0,0,.7); }
-.nb .rpg-cell.sel .rpg-cb { box-shadow: 0 0 0 2px #E0A04B, 0 0 12px rgba(224,160,75,.5); border-color: #E0A04B; } .nb .rpg-cell.sel .rpg-lb { color: #E0A04B; }
-.nb .rpg-cb i { background: #D9B36C; color: #1a1206; }
-.rpg-grid.g-arm { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-.nb-shopl .rpg-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } .nb-shopl .rpg-grid.g-arm { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-.rpg-cell.arm .rpg-cb { aspect-ratio: 64 / 80; overflow: hidden; align-items: flex-start; }
-.rpg-arm { width: 92%; aspect-ratio: 64 / 96; margin-top: 4%; }
-.rpg-cell.arm.lock .rpg-arm, .rpg-cell.arm.buy .rpg-arm, .rpg-cell.arm.poor .rpg-arm { filter: brightness(0); opacity: .9; } .rpg-cell.arm.lock .rpg-arm { opacity: .4; }
-.rpg-soon { margin: 22px 0 6px; padding: 22px 12px; text-align: center; border: 1px dashed rgba(217,179,108,.3); border-radius: 8px; color: #C9B48A; font-size: 13px; line-height: 1.7; }
-.rpg-soon small { color: #8E8474; } .rpg-soon.sm { margin-top: 12px; padding: 10px; font-size: 12px; }
-@media (max-width: 880px) {
-    .rpg-modal.nb { border-width: 2px; } .nb-skull { width: 170px; height: 44px; top: -16px; }
-    .nb .rpg-top { padding: 16px 12px 12px; } .nb-pt { padding: 5px 10px 5px 34px; } .nb-pt::before { left: 10px; font-size: 13px; } .nb-pt b { font-size: 17px; } .nb-x { width: 30px; height: 30px; margin-left: 4px; }
-    .nb .rpg-body { padding: 10px 10px 12px; }
-    .nb-main { grid-template-columns: 1fr; gap: 10px; }
-    .nb-stage { --u: 2px; order: -1; }
-    .nb-slots { flex-direction: row; padding: 6px; gap: 5px; }
-    .nb-slot { flex: 1; min-width: 0; flex-direction: column; gap: 3px; padding: 5px 2px; text-align: center; }
-    .nb-st { align-items: center; max-width: 100%; } .nb-st b { font-size: 10px; max-width: 100%; } .nb-st small { font-size: 10px; }
-    .nb-sb { width: 38px; height: 38px; } .nb-sb .rpg-ic { width: 30px; height: 30px; } .rpg-arm-mini { width: 38px; height: 57px; margin-top: 17px; }
-    .nb-row2 { grid-template-columns: 38% 1fr; gap: 8px; margin-top: 10px; }
-    .nb-mgp { padding: 4px 8px 10px; gap: 6px; } .nb-mgt { font-size: 16px; } .nb .nb-game { padding: 6px 8px; gap: 6px; } .nb-gi { font-size: 17px; } .nb .nb-game small { font-size: 9.5px; } .nb-mgs { display: none; }
-    .nb-shopv { grid-template-columns: 1fr; gap: 8px; }
-    .nb-side { position: static; } .nb-side .nb-stage.sm { --u: 1.6px; }
-    .nb .rpg-top .rpg-av { display: none; } .nb .rpg-top { gap: 8px; } .nb-pt { padding: 5px 8px 5px 30px; } .nb-pt::before { left: 9px; }
-    .nb .rpg-tabs { top: -10px; } .nb .rpg-tab { font-size: 12px; padding: 7px 2px 8px; }
-    .nb-shopl .rpg-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } .nb-shopl .rpg-grid.g-arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .nb .rpg-foot { gap: 8px; } .nb-note { display: none; }
+.rpg-none { color: #6f655a; }
+/* 창 크기: 수첩 = 정사각형 S, 상점 = S 높이 × (1440/2912) 너비 */
+.nb2-dim { --S: min(860px, calc((100vw - 40px) / 1.52), calc(100vh - 32px)); padding: 16px; }
+.nb2-wrap { position: relative; display: flex; align-items: center; justify-content: center; gap: 0; transition: gap .35s ease; }
+.nb2 { position: relative; flex-shrink: 0; width: var(--S); aspect-ratio: 1 / 1; container-type: inline-size; z-index: 2;
+    background: url('img/nb2_note.webp?v=188') center / 100% 100% no-repeat, #1b1916; color: #F1E4C6; box-shadow: 0 24px 70px rgba(0,0,0,.75); border-radius: 1.4%; font-family: inherit; }
+.nb2 > * { position: absolute; box-sizing: border-box; }
+.nb2-shopbox { position: relative; flex-shrink: 0; width: 0; height: var(--S); transition: width .35s ease; z-index: 1; }
+.nb2-shop { position: absolute; right: 0; top: 0; height: 100%; aspect-ratio: 1440 / 2912; container-type: inline-size; color: #F1E4C6; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: 1.6%; padding: calc(var(--S) * 44 / 2048) calc(var(--S) * 40 / 2048) calc(var(--S) * 40 / 2048);
+    background: linear-gradient(180deg, #24211d, #1c1a17); border: 0 solid transparent;
+    border-image: url('img/nb2_frame.webp?v=188') 70 fill / calc(var(--S) * 70 / 2048) stretch; /* 19차-4: 수첩과 같은 쇠 테두리 */
+    box-shadow: 0 24px 60px rgba(0,0,0,.7); transform: translateX(100%); opacity: 0; transition: transform .35s ease, opacity .25s ease; pointer-events: none; }
+.nb2-wrap.shop-on { gap: 10px; } .nb2-wrap.shop-on .nb2-shopbox { width: calc(var(--S) * 1440 / 2912); }
+.nb2-wrap.shop-on .nb2-shop { transform: translateX(0); opacity: 1; pointer-events: auto; }
+/* 그림 속 버튼 위 투명 버튼 */
+.nb2-hit { padding: 0; margin: 0; border: none; background: transparent; cursor: pointer; border-radius: 6px; transition: background .15s, box-shadow .15s; }
+.nb2-hit.btn:hover { background: rgba(255,214,140,.12); box-shadow: 0 0 0 1px rgba(255,214,140,.55), 0 0 14px rgba(255,170,60,.35); }
+.nb2-hit:not(.btn):hover { background: rgba(255,120,100,.15); }
+.nb2-hit.off { background: rgba(10,8,6,.55); cursor: default; } .nb2-hit.off:hover { box-shadow: none; background: rgba(10,8,6,.55); }
+.nb2-hit.glow { box-shadow: 0 0 0 2px #F0C060, 0 0 16px rgba(240,170,60,.65); animation: nb2Glow 1.6s ease-in-out infinite; }
+@keyframes nb2Glow { 50% { box-shadow: 0 0 0 2px #F0C060, 0 0 26px rgba(240,170,60,.9); } }
+.nb2-hit.done { filter: none; } .nb2-hit.done::after { content: '오늘 완료'; position: absolute; right: -4%; top: -32%; font-size: max(9px, 1.3cqw); padding: .2em .5em; border-radius: 4px; background: #2a2420; color: #C9B48A; border: 1px solid #5a4a3c; }
+/* 머리줄 */
+.nb2-name { display: flex; align-items: center; font-size: max(12px, 2.45cqw); font-weight: 700; color: #F4E6C6; white-space: nowrap; overflow: hidden; text-shadow: 0 2px 0 #000; letter-spacing: .01em; }
+.nb2-name b { margin-right: .3em; } .nb2-name .ms { color: #F2C94C; }
+.nb2-bar { overflow: hidden; }
+.nb2-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(180deg, #D9473C, #A8261E 60%, #7A1712); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+.nb2-bar span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: max(8.5px, 1.05cqw); color: #F4E6C6; text-shadow: 0 1px 1px #000, 0 0 3px #000; }
+.nb2-pt { display: flex; align-items: center; justify-content: flex-end; gap: .35em; font-size: max(12px, 2.35cqw); font-weight: 700; color: #F4E6C6; white-space: nowrap; text-shadow: 0 2px 0 #000; }
+.nb2-pt b { color: #E2574A; } .nb2-pt b.neg { color: #FF6B5A; }
+/* 장비 칸 (그림 속 칸 위) */
+.nb2-slot { padding: 0; border: none; background: transparent; cursor: pointer; border-radius: 8px; transition: background .15s, box-shadow .15s; color: inherit; font-family: inherit; }
+.nb2-slot:hover { background: rgba(255,214,140,.07); box-shadow: 0 0 0 2px rgba(255,214,140,.45); }
+.nb2-slot.on { box-shadow: 0 0 0 2px #E0574A; } .nb2-slot.chg { box-shadow: 0 0 0 2px #F0C060, 0 0 12px rgba(240,170,60,.45); }
+.nb2-sl { position: absolute; top: 0; bottom: 0; right: 4%; display: flex; align-items: center; gap: .45em; padding-left: 3%; font-size: max(12px, 2.4cqw); white-space: nowrap; overflow: hidden; text-shadow: 0 2px 0 #000; }
+.nb2-sl b { color: #F4E6C6; font-weight: 700; } .nb2-sl em { font-style: normal; color: #8D8275; } .nb2-sl span { color: #F4E6C6; overflow: hidden; text-overflow: ellipsis; }
+.nb2-sl i { font-style: normal; color: #8D8275; } .nb2-sl i.lk { color: #C9A06A; font-size: .85em; }
+/* 던전 복도 + 캐릭터 */
+.nb2-stage { overflow: hidden; --u: max(0.7px, 0.2326cqw); }
+.nb2-note { display: flex; align-items: center; justify-content: center; font-size: max(9px, 1.35cqw); color: #B9AC97; text-shadow: 0 1px 0 #000; pointer-events: none; }
+/* ── 상점 · 가방 (19차-4: 수첩 테두리 조각으로 다시 짬) ── */
+.sh-head { position: relative; flex: 0 0 auto; height: 9%; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #4a4642; box-shadow: 0 1px 0 #111; }
+.sh-title { font-size: max(15px, 7.4cqw); color: #F4E6C6; letter-spacing: .1em; text-shadow: 0 2px 0 #000; }
+.sh-pt { position: absolute; right: 15%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; white-space: nowrap; text-shadow: 0 2px 0 #000; }
+.sh-pt b { font-size: max(11px, 4.6cqw); color: #F4E6C6; } .sh-pt b.neg { color: #FF6B5A; } .sh-pt span { font-size: max(9px, 3.2cqw); color: #CFC3AC; font-weight: 700; }
+.sh-x { position: absolute; right: 1%; top: 50%; transform: translateY(-50%); width: 11%; aspect-ratio: 90 / 98; padding: 0; border: none; cursor: pointer; background: url('img/nb2_x.webp?v=188') center / 100% 100% no-repeat; image-rendering: pixelated; }
+.sh-x:hover, .sh-img:hover { filter: brightness(1.18); }
+.sh-tabs { flex: 0 0 auto; height: 5.2%; display: flex; gap: 1.2%; align-items: stretch; margin-bottom: -1.6%; }
+.sh-tab { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 3%; padding: 0 1%; font-family: inherit; font-size: max(10px, 3.7cqw); font-weight: 700; color: #E9DCC0; cursor: pointer; white-space: nowrap;
+    background: linear-gradient(180deg, #3a3430, #2a2522); border: 3px solid #5f5c58; border-bottom: none; border-radius: 6px 6px 0 0; box-shadow: inset 0 0 0 2px #1d1a17, 0 -1px 0 #1d1a17; text-shadow: 0 1px 0 #000; }
+.sh-tab:hover { color: #fff; filter: brightness(1.12); }
+.sh-tab.on { background: linear-gradient(180deg, #6b5136, #4a3826); border-color: #D9B36C; color: #FFF0CC; }
+.sh-tab em { font-style: normal; font-size: .75em; }
+.ti { display: block; width: 1.35em; height: 1.25em; flex-shrink: 0; background: url('img/nb2_icons.webp?v=188') 0 0 / 500% 100% no-repeat; border-radius: 3px; }
+.ti-helm { background-position: 0 0; } .ti-weapon { background-position: 25% 0; } .ti-armor { background-position: 50% 0; } .ti-off { background-position: 75% 0; } .ti-deco { background-position: 100% 0; }
+/* 나무+쇠 장식 칸 (수첩 복도 칸과 같은 테두리) */
+.sh-pnl { position: relative; box-sizing: border-box; border: 0 solid transparent; border-image: url('img/nb2_panel.webp?v=188') 110 / calc(var(--S) * 110 / 2048) stretch; padding: calc(var(--S) * 40 / 2048); }
+.sh-listp { flex: 1 1 auto; min-height: 0; display: flex; background: #24201c; box-shadow: inset 0 0 18px rgba(0,0,0,.6); }
+.sh-list { flex: 1; min-height: 0; overflow-y: auto; padding: 1% 2% 3%; scrollbar-width: thin; scrollbar-color: #6a625a #1d1a17; }
+.sh-list::-webkit-scrollbar { width: 8px; } .sh-list::-webkit-scrollbar-thumb { background: #6a625a; border-radius: 4px; } .sh-list::-webkit-scrollbar-track { background: #1d1a17; }
+.sh-scene { flex: 0 0 auto; aspect-ratio: 1206 / 1094; background: url('img/nb2_smith.webp?v=188') center / cover no-repeat, #1b1916; }
+.sh-say { position: absolute; left: 30%; right: 4%; top: 6%; height: 18%; display: flex; align-items: center; padding: 0 3%; font-size: max(10px, 3.7cqw); line-height: 1.5; color: #F4E6C6; text-shadow: 0 2px 0 #000; }
+.sh-foot { flex: 0 0 auto; height: 6.5%; display: flex; align-items: center; justify-content: center; gap: 4%; }
+.sh-img { height: 100%; padding: 0; border: none; cursor: pointer; background: center / 100% 100% no-repeat; image-rendering: pixelated; }
+.sh-close { aspect-ratio: 288 / 102; background-image: url('img/nb2_btn_close.webp?v=188'); }
+.sh-toshop { aspect-ratio: 322 / 108; background-image: url('img/nb2_btn_shop.webp?v=188'); }
+.nb2-shop.inv .sh-foot { gap: 6%; }
+.sh-tier { display: flex; align-items: baseline; gap: .6em; margin: 3% 0 2%; font-size: max(10px, 3.8cqw); color: #A99C88; border-bottom: 1px dashed rgba(217,179,108,.2); padding-bottom: 1.5%; }
+.sh-tier b { font-size: 1.1em; } .sh-tier em { font-style: normal; color: #E08A6A; }
+.sh-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3.5% 3%; margin-top: 2%; }
+.sh-cell.rpg-cell { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 0; background: none; border: none; cursor: pointer; font-family: inherit; color: #F1E4C6; min-width: 0; }
+.sh-box { position: relative; width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: #1c1916; border: 3px solid #5c5a57; border-radius: 3px; box-shadow: 0 0 0 2px #15130f, inset 0 0 0 2px #1a1714, inset 0 0 12px rgba(0,0,0,.6); transition: transform .12s; }
+.sh-cell:hover .sh-box { transform: translateY(-2px); }
+.sh-box .fxb { width: 76%; height: 76%; } .sh-box .rpg-ic { width: 100%; height: 100%; display: block; }
+.sh-cell.arm .sh-box { aspect-ratio: 64 / 80; align-items: flex-start; } .sh-box .rpg-arm { width: 92%; aspect-ratio: 64 / 96; margin-top: 5%; }
+.sh-cell.sel .sh-box { border-color: #E6C674; box-shadow: 0 0 0 2px #15130f, 0 0 10px rgba(230,198,116,.5), inset 0 0 12px rgba(0,0,0,.6); }
+.sh-nm { margin-top: 5%; max-width: 100%; font-size: max(9.5px, 3.2cqw); color: #F1E4C6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #000; }
+.sh-pr { font-size: max(9.5px, 3.3cqw); color: #E8D8B8; text-shadow: 0 1px 0 #000; }
+.sh-bt { margin-top: 4%; width: 88%; padding: 3% 0; font-size: max(9.5px, 3.2cqw); color: #F4E6C6; text-align: center; border-radius: 3px; text-shadow: 0 1px 0 #000;
+    background: linear-gradient(180deg, #6e5340, #4f3a2b); border: 2px solid #6a6764; box-shadow: 0 0 0 1px #15130f, inset 0 1px 0 rgba(255,255,255,.12); }
+.sh-cell:hover .sh-bt { filter: brightness(1.15); }
+.sh-cell.own .sh-bt { background: linear-gradient(180deg, #3a3632, #26221f); color: #CFC3AC; } .sh-cell.sel .sh-bt { background: linear-gradient(180deg, #8b6a2c, #5e461c); border-color: #D9B36C; color: #FFF0CC; }
+.sh-cell.poor .sh-pr { color: #FF8A78; } .sh-cell.poor .sh-bt { opacity: .6; }
+.sh-cell.lock { cursor: default; } .sh-cell.lock .sh-box > * { filter: brightness(0); opacity: .45; } .sh-cell.lock .sh-nm, .sh-cell.lock .sh-pr { color: #6f655a; } .sh-cell.lock .sh-bt { background: #1e1b18; color: #8a7d6a; border-color: #3d3a37; }
+.sh-cell.buy .rpg-ic, .sh-cell.poor .rpg-ic { filter: none; opacity: 1; } /* 살 수 있는 건 색 그대로 (그림자는 레벨 잠금만) */
+.sh-soon { margin: 8% 2%; padding: 7% 4%; text-align: center; border: 1px dashed rgba(217,179,108,.35); border-radius: 6px; color: #D8C49C; font-size: max(10px, 3.8cqw); line-height: 1.7; }
+.sh-soon small { color: #9C907E; } .sh-soon.sm { margin-top: 4%; padding: 4%; font-size: max(9.5px, 3.4cqw); }
+/* 무기·방패 도트 (19차-4) — 주먹 조각을 무기 위에 다시 그려 손잡이를 쥔 것처럼 */
+.rpg-lay.pix { background: center / 100% 100% no-repeat; image-rendering: pixelated; image-rendering: crisp-edges; transform: none; }
+.rpg-fig .rpg-body-sp { z-index: 2; } .rpg-fig .rpg-wpn { z-index: 3; } .rpg-fig .rpg-fist { z-index: 4; clip-path: inset(53.1% 71.9% 36.5% 14.06%); } .rpg-fig .rpg-off { z-index: 5; }
+/* 폰: 상점은 수첩 위로 덮어서 미끄러져 나옴 */
+@media (max-width: 760px) {
+    .nb2-dim { --S: min(calc(100vw - 20px), calc(100vh - 24px)); padding: 10px; }
+    .nb2-wrap.shop-on { gap: 0; } .nb2-shopbox, .nb2-wrap.shop-on .nb2-shopbox { position: absolute; left: 0; top: 50%; width: 0; height: 0; z-index: 3; }
+    .nb2-shop { --SH: min(calc(100vh - 24px), calc((100vw - 20px) * 2912 / 1440)); position: fixed; top: calc(50vh - var(--SH) / 2); right: auto; height: var(--SH); width: calc(var(--SH) * 1440 / 2912); aspect-ratio: auto;
+        left: calc(50vw - var(--SH) * 720 / 2912); transform: translateX(-110vw); }
+    .nb2-wrap.shop-on .nb2-shop { transform: translateX(0); }
 }
-@media (max-width: 360px) { .nb-stage { --u: 1.75px; } }
+@media (prefers-reduced-motion: reduce) { .nb2-shop, .nb2-shopbox, .nb2-wrap { transition: none; } .nb2-hit.glow { animation: none; } }
