@@ -13,7 +13,7 @@
    ═══════════════════════════════════════════════════════════════ */
 // 17차-7: 고르면 "선택"만 됨 → [적용]을 눌러야 장착. [닫기]/✕/바깥/Esc는 적용 안 하고 닫기
 // 19차: 선택을 칸별로 (rpgPend = { weapon, helm, armor, off, deco }) · 상점 탭 기억 (rpgTab)
-let rpgPend = null, rpgTab = 'weapon', rpgPanel = null, rpgShopMsg = ''; // 19차-4: rpgPanel = null | 'shop'(상점) | 'inv'(가방=가진 것만)
+let rpgPend = null, rpgTab = 'weapon', rpgPanel = null, rpgShopMsg = '', rpgAsk = null; // rpgAsk = 살까 물어보는 중인 물건 키 // 19차-4: rpgPanel = null | 'shop'(상점) | 'inv'(보유 아이템=가진 것만)
 function rpgEquipped(slot) { // 지금 실제로 장착한 것
     if (slot === 'weapon') return rpgCurrentIcon();
     const k = (rpgState.eq || {})[slot];
@@ -24,7 +24,7 @@ function rpgEqAll() { const o = {}; RPG_SLOTS.forEach(sl => { o[sl.id] = rpgEqui
 function rpgSlotLocked(sl) { return rpgLevel() < (sl.minLv || 0); }
 function openArmory() {
     if (isGuestUser() || !currentUserEmail) return;
-    rpgPend = rpgEqAll(); rpgPanel = null; rpgShopMsg = '';
+    rpgPend = rpgEqAll(); rpgPanel = null; rpgShopMsg = ''; rpgAsk = null;
     rpgInjectDefs();
     let el = document.getElementById('rpgArmory');
     if (!el) {
@@ -44,11 +44,13 @@ function openArmory() {
                 else if (a === 'toshop') rpgSetPanel('shop');
                 else if (a === 'shopclose') rpgSetPanel(null);
                 else if (a === 'dungeon') { closeArmory(); rpgOpenPang(() => openArmory()); }
+                else if (a === 'buyyes') rpgBuy(rpgAsk);
+                else if (a === 'buyno') { rpgAsk = null; rpgShopMsg = '그래, 천천히 생각해 보게.'; renderArmory(); }
                 return;
             }
             const tb = t.closest('[data-tab]');
-            if (tb) { // 수첩 장비 칸 → 가방(가진 것만) · 상점/가방 안의 탭 → 탭만 바꿈
-                rpgTab = tb.dataset.tab; rpgShopMsg = '';
+            if (tb) { // 수첩 장비 칸 → 보유 아이템(가진 것만) · 상점/가방 안의 탭 → 탭만 바꿈
+                rpgTab = tb.dataset.tab; rpgShopMsg = ''; rpgAsk = null;
                 if (tb.classList.contains('nb2-slot')) { if (rpgPanel !== 'inv') { rpgSetPanel('inv'); return; } }
                 renderArmory(); return;
             }
@@ -66,7 +68,7 @@ function openArmory() {
     el.classList.add('open');
 }
 function rpgSetPanel(p) {
-    rpgPanel = p; rpgShopMsg = '';
+    rpgPanel = p; rpgShopMsg = ''; rpgAsk = null;
     const w = document.querySelector('#rpgArmory .nb2-wrap');
     renderArmory();
     if (w) w.classList.toggle('shop-on', !!p);
@@ -157,7 +159,10 @@ function renderArmory() {
     const slot = (id, i) => {
         const sl = RPG_SLOTS.find(x => x.id === id), k = pend[id], lock = rpgSlotLocked(sl), y0 = NB2_ROWS[i];
         const val = lock ? `<i class="lk">🔒 Lv.${sl.minLv}부터</i>` : k ? escapeHtml(rpgItemName(k)) : `<i>${sl.tiers.length ? sl.none : '준비중'}</i>`;
-        return `<button type="button" class="nb2-slot${pend[id] !== cur[id] ? ' chg' : ''}${rpgPanel && rpgTab === id ? ' on' : ''}" data-tab="${id}" style="${nbPos(132, y0 - 8, 970, y0 + 132)}" title="${sl.name} — 눌러서 상점에서 고르기">
+        // 19차-5: 칸 아이콘 = 지금 고른 물건 그림 (없으면 빈 칸)
+        const ic = lock ? '<span class="rpg-none">🔒</span>' : !k ? '' : id === 'armor' ? `<span class="rpg-spr rpg-arm-mini" style="--sp:${RPG_ARMORS[k][1]}"></span>` : (RPG_ICONS[k] ? rpgIconSvg(k) : '');
+        return `<button type="button" class="nb2-slot${pend[id] !== cur[id] ? ' chg' : ''}${rpgPanel && rpgTab === id ? ' on' : ''}" data-tab="${id}" style="${nbPos(132, y0 - 8, 970, y0 + 132)}" title="${sl.name} — 눌러서 보유 아이템 보기">
+            <span class="nb2-si" style="left:${(12 / 838 * 100).toFixed(2)}%;top:${(9 / 140 * 100).toFixed(2)}%;width:${(124 / 838 * 100).toFixed(2)}%;height:${(124 / 140 * 100).toFixed(2)}%">${ic}</span>
             <span class="nb2-sl" style="left:${((299 - 132) / (970 - 132) * 100).toFixed(2)}%"><b>${sl.name}</b><em>|</em><span>${val}</span></span></button>`;
     };
     const pdone = (() => { const d = rpgPangDaily(); return d.cleared || d.tries <= 0; })();
@@ -218,17 +223,18 @@ function renderArmory() {
     const sc = shop.querySelector('.sh-list'), keep = sc && sc.dataset.lt === rpgPanel + rpgTab ? sc.scrollTop : 0;
     shop.className = 'nb2-shop' + (inv ? ' inv' : '');
     shop.innerHTML = `
-        <div class="sh-head"><b class="sh-title">${inv ? '가방' : '상점'}</b><div class="sh-pt"><b class="${pts < 0 ? 'neg' : ''}">${pts}P</b><span>보유 포인트</span></div>
+        <div class="sh-head"><b class="sh-title">${inv ? '보유 아이템' : '상점'}</b><div class="sh-pt"><b class="${pts < 0 ? 'neg' : ''}">${pts}P</b><span>보유 포인트</span></div>
             <button type="button" class="sh-x" data-act="shopclose" aria-label="닫기"></button></div>
         <div class="sh-tabs" role="tablist">${NB2_SLOT_ORDER.map(id => RPG_SLOTS.find(s => s.id === id)).map(x => `<button type="button" role="tab" class="sh-tab${x.id === rpgTab ? ' on' : ''}" data-tab="${x.id}" aria-selected="${x.id === rpgTab}"><i class="ti ti-${x.id}"></i>${x.name}${rpgSlotLocked(x) ? '<em>🔒</em>' : ''}</button>`).join('')}</div>
         <div class="sh-pnl sh-listp"><div class="sh-list" data-lt="${rpgPanel + rpgTab}">${list}</div></div>
-        ${inv ? '' : `<div class="sh-pnl sh-scene"><div class="sh-say">${msg}</div></div>`}
+        ${inv ? '' : `<div class="sh-pnl sh-scene"><div class="sh-say${rpgAsk ? ' ask' : ''}"><span>${msg}</span>${rpgAsk ? '<span class="sh-ask"><button type="button" data-act="buyyes">산다</button><button type="button" data-act="buyno" class="no">그만두지</button></span>' : ''}</div></div>`}
         <div class="sh-foot">${inv ? '<button type="button" class="sh-img sh-toshop" data-act="toshop" aria-label="상점 가기"></button>' : ''}<button type="button" class="sh-img sh-close" data-act="shopclose" aria-label="닫기"></button></div>`;
     const sc2 = shop.querySelector('.sh-list'); if (sc2) sc2.scrollTop = keep;
 }
 
 async function rpgOnPick(key) {
     if (isGuestUser() || !rpgPend) return;
+    rpgAsk = null;
     const say = (m) => { rpgShopMsg = m; renderArmory(); };
     if (key.startsWith('none:')) { rpgPend[key.slice(5)] = null; say('맨몸이 편할 때도 있지.<br>[적용]을 눌러야 바뀐다네.'); return; }
     if (key === 'master_sword') { if (isAdminUser()) { rpgPend.weapon = key; say('오오… 그 검은…!<br>마스터의 룬 흑검이로군.'); } return; }
@@ -239,9 +245,16 @@ async function rpgOnPick(key) {
     if (lv < it.needLv) { say(`그건 아직 이르다네.<br>Lv.${it.needLv} ${rpgTitle(it.needLv)}가 되면 오게.`); return; }
     const pts = rpgPoints(), cost = it.tier.cost;
     if (pts < cost) { say(`${cost}P가 필요하다네.<br>지금은 ${pts}P뿐이로군…`); return; }
-    if (!confirm(`${cost}P로 '${it.name}'을(를) 살까요? (남는 포인트 ${pts - cost}P)\n사고 나서 수첩의 [적용]을 누르면 장착돼요.`)) return;
+    rpgAsk = key; say(`${it.name}, ${cost}P라네.<br>사겠나? (남는 건 ${pts - cost}P)`); // 19차-5: 확인창 대신 대장장이가 물어봄
+}
+async function rpgBuy(key) {
+    const it = key && rpgItem(key);
+    rpgAsk = null;
+    if (!it || rpgOwns(key)) { renderArmory(); return; }
+    const pts = rpgPoints(), cost = it.tier.cost, slot = it.slot.id;
+    if (rpgLevel() < it.needLv || pts < cost) { rpgShopMsg = '음… 지금은 안 되겠군.'; renderArmory(); return; }
     const prevO = rpgState.owned.slice();
-    rpgState.owned.push(key); // 구매는 확인창에서 바로 저장 (포인트를 쓴 거라 창을 닫아도 유지)
-    try { await rpgSave(); rpgPend[slot] = key; say(`좋은 거래였네! ${it.name}!<br>수첩의 [적용]을 누르면 장착이라네.`); showSyncStatus(`✨ ${it.name} 획득!`); }
-    catch (e) { console.error(e); rpgState.owned = prevO; showSyncStatus('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)', true); }
+    rpgState.owned.push(key); // 사는 건 바로 저장 (포인트를 쓴 거라 창을 닫아도 유지)
+    try { await rpgSave(); rpgPend[slot] = key; rpgShopMsg = `좋은 거래였네! ${it.name}!<br>수첩의 [적용]을 누르면 장착이라네.`; renderArmory(); showSyncStatus(`✨ ${it.name} 획득!`); }
+    catch (e) { console.error(e); rpgState.owned = prevO; rpgShopMsg = '어라, 장부에 안 적혔네…<br>인터넷을 확인해 보게.'; renderArmory(); showSyncStatus('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)', true); }
 }

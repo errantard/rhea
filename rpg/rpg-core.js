@@ -211,7 +211,11 @@ function rpgOpenPang(onClose) {
     rpgInjectDefs();
     rpgLoadPang(() => RheaPangpang.open({
         weapons: rpgMyWeapons(), current: rpgCurrentIcon(),
-        getDaily: rpgPangDaily, onStart: rpgPangStart, onClear: rpgPangClear, onClose
+        getDaily: rpgPangDaily, onStart: rpgPangStart, onClear: rpgPangClear, onClose,
+        onReset: isAdminUser() ? async () => { // 19차-5: 마스터 테스트용 — 오늘 던전팡팡 기록 지우기 (보상 포인트·EXP는 그대로)
+            const prev = rpgState.pang; rpgState.pang = null;
+            try { await rpgSave(); } catch (e) { console.error(e); rpgState.pang = prev; alert('⚠️ 저장 실패'); }
+        } : null
     }));
 }
 

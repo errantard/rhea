@@ -68,7 +68,7 @@
             <div class="pp-alert">⚠ 오크 출현!</div>
             <div class="pp-wpn"></div>
             <div class="pp-panel"></div>
-            <button class="pp-x" type="button" aria-label="닫기">✕</button>
+            <button class="pp-x" type="button" aria-label="닫기"></button><button class="pp-reset" type="button" title="마스터 테스트용: 오늘 도전 기록 지우기">↺ 게임 초기화</button>
         </div>`;
         document.body.appendChild(root);
         stage = root.querySelector('.pp-stage');
@@ -85,6 +85,11 @@
             return { el, nm: el.querySelector('.pp-nm'), type: null, until: 0, hit: false };
         });
         root.querySelector('.pp-x').addEventListener('click', close);
+        root.querySelector('.pp-reset').addEventListener('click', async () => { // 19차-5: 마스터 테스트용 — 오늘 기록 지우고 처음 화면
+            if (!opts.onReset || (G && G.on)) return;
+            if (!confirm('오늘 던전팡팡 기록(남은 도전·정복)을 지울까요? (마스터 테스트용)')) return;
+            await opts.onReset(); clearAll(); G = null; resetBoard(); stage.classList.remove('playing'); showIntro();
+        });
         root.addEventListener('pointerdown', (e) => { if (e.target === root) close(); });
         stage.addEventListener('pointermove', (e) => moveWpn(e.clientX, e.clientY));
         stage.addEventListener('pointerdown', onPointer);
@@ -253,6 +258,7 @@
     }
     // 18차-2: 내가 가진 무기를 아이콘+이름으로 한 번에 보고 골라서 들고 들어감 (이 게임 안에서만, 장착은 안 바뀜)
     function weaponsHtml() {
+        return ''; // 19차-5: 무기 고르는 칸 없앰 → 수첩에서 장착한 무기를 그대로 들고 감
         const list = opts.weapons || [];
         if (list.length < 2) return '';
         return `<div class="pp-wpick"><div class="pp-wlbl">들고 갈 무기</div><div class="pp-wrow">${list.map(w =>
@@ -331,9 +337,9 @@
         clearAll(); G = null;
         resetBoard();
         stage.classList.remove('playing');
-        const has = (opts.weapons || []).some(x => x.key === cur);
-        pick(has ? cur : opts.current);
+        pick(opts.current); // 19차-5: 늘 수첩에서 장착한 무기
         showIntro();
+        root.classList.toggle('pp-master', !!opts.onReset);
         root.classList.add('open');
     }
     function close() {
