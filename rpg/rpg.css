@@ -228,8 +228,9 @@
 .rpg-spr { display: block; background-image: url('img/armor_m2.webp?v=193'); background-repeat: no-repeat; background-size: 1800% 100%; background-position: calc(var(--sp, 0) * 100% / 17) 0; } /* 20차: 새 옷 18벌, 칸 128×192 (도트 2배) */
 .nb2-stage .rpg-spr, .nb2-stage .rpg-wpn2 { image-rendering: pixelated; }
 .rpg-wpn2 { position: absolute; display: block; background: center / 100% 100% no-repeat; pointer-events: none; }
-.rpg-fig .rpg-wpn2.g { z-index: 1; } .rpg-fig .rpg-wpn2.h { z-index: 3; }
-.rpg-fig .rpg-fist { z-index: 4; clip-path: circle(calc(var(--u) * 5.6) at calc(var(--u) * 14.8) calc(var(--u) * 55.2)); } /* 20차: 주먹만 무기 위로 (손가락이 손잡이를 감쌈) */
+.rpg-fig .rpg-wpn2.bk { z-index: 1; } .rpg-fig .rpg-wpn2.fr { z-index: 3; }
+.rpg-str { position: absolute; display: block; height: calc(var(--u) * .7); background: #3a2a1c; box-shadow: 0 0 0 calc(var(--u) * .25) rgba(10,6,4,.55); transform-origin: 0 50%; transform: rotate(135deg); z-index: 3; pointer-events: none; } /* 활 시위 = 가슴 앞을 가로지르는 줄 */
+.rpg-fig .rpg-fist { z-index: 4; clip-path: circle(calc(var(--u) * 4.6) at calc(var(--u) * 14.8) calc(var(--u) * 55.2)); } /* 20차: 주먹만 무기 위로 (손가락이 손잡이를 감쌈) */
 .rpg-fig { position: absolute; left: 50%; bottom: 17%; width: calc(var(--u) * 96); height: calc(var(--u) * 100); transform: translateX(-50%); z-index: 1; }
 .rpg-lay { position: absolute; display: block; }
 .rpg-body-sp { left: calc(var(--u) * 16); top: calc(var(--u) * 2); width: calc(var(--u) * 64); height: calc(var(--u) * 96); z-index: 2; }

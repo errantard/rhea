@@ -128,36 +128,51 @@ function rpgPixUrl(key, dots, rot) {
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     return { id, url: '' };
 }
-/* 20차 (2026-10-11): 무기 = 손에 쥐기 / 바닥에 세우기 (등에 메기·허리춤은 안 씀)
-   - 옷 그림마다 오른손(보는 사람 왼쪽)에 초록 막대를 쥔 채로 그려서 손 위치·각도가 18벌 모두 같음 → 손 = 인물 틀 RPG_GRIP, 각도 45°(날이 왼쪽 아래)
-   - 손에 쥐기('h'): 무기를 몸 앞에 그리고, 주먹 부분만 몸 그림을 한 번 더 얹음(손가락이 손잡이를 감싼 모양). 주먹 오른쪽(몸통 위)으로 나온 부분은 잘라서 몸 뒤로 간 것처럼
-   - 바닥에 세우기('g'): 양손 무기(대검·창·지팡이)는 인물 왼쪽 바닥에 세워 둠 (몸 뒤)
-   - 무기 그림 = img/wpn/키_h.webp · 키_v.webp (도트 2배 = 1칸에 2픽셀) */
-const RPG_GRIP = [30.8, 57.2], RPG_GROUND = [11, 97.4], RPG_CLIP_R = 3;
+/* 20차 (2026-10-11): 무기 = 손에 쥐기 / 어깨에 메기 (등 대각·허리춤·바닥 세우기는 안 씀)
+   - 옷 그림마다 오른손(보는 사람 왼쪽)에 초록 막대를 쥔 채로 그려서 18벌 모두 손 위치·각도가 같음 → 손 = 인물 틀 RPG_GRIP, 각도 45°(아래 끝이 왼쪽 아래)
+   - 손에 쥐기('h'): ① 무기 전체를 몸 뒤에 (어깨 위로 나오는 자루·머리가 보임) ② 주먹 아래쪽(왼쪽 아래)으로 나온 부분만 몸 앞에 한 번 더 ③ 주먹 부분 몸 그림을 맨 위에 (손가락이 감쌈)
+   - 어깨에 걸치기('s', 활·석궁): 손 쪽 어깨에 걸쳐 팔 바깥으로 늘어뜨림 (몸 뒤)
+   - 무기 그림 = img/wpn/키_h.webp · 키_u.webp (도트 2배 = 1칸에 2픽셀) */
+const RPG_GRIP = [30.8, 57.2];
 function rpgWpnSrc(k, v) { return `${RPG_SELF.dir}img/wpn/${k}_${v}.webp${RPG_SELF.q ? '?' + RPG_SELF.q : ''}`; }
+function rpgClipFront(g, s) { // 그림 사각형 중 주먹 기준 왼쪽 아래 반쪽만 남기는 clip-path (화면 방향 (-1,1)) → %
+    const n = [-1, 1], k = n[0] * g[0] + n[1] * g[1] - 0.6, inn = (p) => n[0] * p[0] + n[1] * p[1] >= k;
+    const box = [[0, 0], [s[0], 0], [s[0], s[1]], [0, s[1]]], out = [];
+    for (let i = 0; i < 4; i++) {
+        const a = box[i], b = box[(i + 1) % 4], ia = inn(a), ib = inn(b);
+        if (ia) out.push(a);
+        if (ia !== ib) { const da = n[0] * a[0] + n[1] * a[1] - k, db = n[0] * b[0] + n[1] * b[1] - k, t = da / (da - db); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+    }
+    return 'polygon(' + out.map(p => `${(p[0] / s[0] * 100).toFixed(1)}% ${(p[1] / s[1] * 100).toFixed(1)}%`).join(',') + ')';
+}
 function rpgFigHtml(eq, modeOver) {
     const sp = (RPG_ARMORS[eq.armor] || RPG_ARMORS.ar_base)[1];
-    let wpn = '', fist = '', off = '';
-    const wk = eq.weapon, w = wk && typeof RPG_WPN !== 'undefined' ? RPG_WPN[wk] : null;
+    let back = '', front = '', fist = '', off = '';
+    const wk = eq.weapon, w = wk && typeof RPG_WPN !== 'undefined' ? Object.assign({}, RPG_WPN[wk] || {}, (modeOver || {})[wk] || {}) : null;
     const box = (x, y, sw, sh) => `left:calc(var(--u)*${x.toFixed(2)});top:calc(var(--u)*${y.toFixed(2)});width:calc(var(--u)*${sw});height:calc(var(--u)*${sh})`;
-    if (w) {
-        const m = (modeOver && modeOver[wk]) || w.m, g = m === 'g' && w.v, hd = w.h;
-        if (g) wpn = `<span class="rpg-lay rpg-wpn2 g" style="${box(RPG_GROUND[0] - g.a[0], RPG_GROUND[1] - g.a[1], g.s[0], g.s[1])};background-image:url('${rpgWpnSrc(wk, 'v')}')"></span>`;
-        else {
-            const keep = Math.min(100, (hd.a[0] + RPG_CLIP_R) / hd.s[0] * 100).toFixed(1);
-            wpn = `<span class="rpg-lay rpg-wpn2 h" style="${box(RPG_GRIP[0] - hd.a[0], RPG_GRIP[1] - hd.a[1], hd.s[0], hd.s[1])};background-image:url('${rpgWpnSrc(wk, 'h')}');clip-path:inset(0 ${(100 - keep).toFixed(1)}% 0 0)"></span>`;
+    const g = w && w.m && RPG_WSPR[wk + '_' + (w.v || 'h')];
+    if (g) {
+        const src = rpgWpnSrc(wk, w.v || 'h'), L = Math.hypot(g.f[0] - g.b[0], g.f[1] - g.b[1]);
+        if (w.m === 's') { // 어깨에 걸침 = 몸 뒤, 그림 가운데를 c에 놓고 각도만 돌림 (그림 기본 = 위 끝→아래 끝 135°)
+            const c = w.c || [13, 46], o = [c[0] - (g.b[0] + g.f[0]) / 2, c[1] - (g.b[1] + g.f[1]) / 2], cx = ((g.b[0] + g.f[0]) / 2 / g.s[0] * 100).toFixed(1), cy = ((g.b[1] + g.f[1]) / 2 / g.s[1] * 100).toFixed(1);
+            back = `<span class="rpg-lay rpg-wpn2 bk" style="${box(o[0], o[1], g.s[0], g.s[1])};background-image:url('${src}');transform-origin:${cx}% ${cy}%;transform:rotate(${(w.a || 135) - 135}deg)"></span>`;
+        } else {
+            const t = Math.min(1, (w.bl || 3) / L), gs = [g.b[0] + (g.f[0] - g.b[0]) * t, g.b[1] + (g.f[1] - g.b[1]) * t];
+            const o = [RPG_GRIP[0] - gs[0], RPG_GRIP[1] - gs[1]], st = box(o[0], o[1], g.s[0], g.s[1]) + `;background-image:url('${src}')`;
+            back = `<span class="rpg-lay rpg-wpn2 bk" style="${st}"></span>`;
+            front = `<span class="rpg-lay rpg-wpn2 fr" style="${st};clip-path:${rpgClipFront(gs, g.s)}"></span>`;
             fist = `<span class="rpg-lay rpg-body-sp rpg-spr rpg-fist" style="--sp:${sp}"></span>`;
         }
-    } else if (wk && RPG_ICONS[wk]) { // 그림 없는 무기(룬 흑검 등) = 예전처럼 아이콘을 도트로 바꿔서 손에
+    } else if (wk && RPG_ICONS[wk]) { // 그림 없는 무기(룬 흑검 등) = 아이콘을 도트로 바꿔서 손에
         const D = 46, px = rpgPixUrl(wk, D, 180);
-        wpn = `<span class="rpg-lay rpg-wpn2 h pix" data-pix="${px.id}" style="${box(RPG_GRIP[0] - D * 0.73 - 1, RPG_GRIP[1] - D * 0.27 - 1, D + 2, D + 2)};${px.url ? `background-image:url('${px.url}')` : ''}"></span>`;
+        front = `<span class="rpg-lay rpg-wpn2 fr pix" data-pix="${px.id}" style="${box(RPG_GRIP[0] - D * 0.73 - 1, RPG_GRIP[1] - D * 0.27 - 1, D + 2, D + 2)};${px.url ? `background-image:url('${px.url}')` : ''}"></span>`;
         fist = `<span class="rpg-lay rpg-body-sp rpg-spr rpg-fist" style="--sp:${sp}"></span>`;
     }
     if (eq.off && RPG_ICONS[eq.off]) {
         const D = RPG_OFF_U, px = rpgPixUrl(eq.off, D, 0);
         off = `<span class="rpg-lay rpg-off pix" data-pix="${px.id}" style="left:calc(var(--u)*${RPG_HAND_O[0] - D / 2 - 1});top:calc(var(--u)*${RPG_HAND_O[1] - D / 2 - 1});width:calc(var(--u)*${D + 2});height:calc(var(--u)*${D + 2});${px.url ? `background-image:url('${px.url}')` : ''}"></span>`;
     }
-    return `<div class="rpg-fig">${wpn}<span class="rpg-lay rpg-body-sp rpg-spr" style="--sp:${sp}"></span>${fist}${off}</div>`;
+    return `<div class="rpg-fig">${back}<span class="rpg-lay rpg-body-sp rpg-spr" style="--sp:${sp}"></span>${front}${fist}${off}</div>`;
 }
 
 /* 수첩 그림 위 자리 (원본 2048×2048 픽셀 좌표 → %) */
