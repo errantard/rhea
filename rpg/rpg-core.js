@@ -118,10 +118,11 @@ function rpgLoad(user) {
     const m = (user && user.user_metadata && user.user_metadata.rpg) || {};
     const pg = m.pang && typeof m.pang === 'object' ? { d: String(m.pang.d || ''), n: Math.max(0, parseInt(m.pang.n, 10) || 0), ok: !!m.pang.ok } : null;
     const days = Math.max(0, parseInt(m.days, 10) || 0), bonus = Math.max(0, parseInt(m.bonus, 10) || 0);
+    const ren = (k) => (typeof RPG_RENAME !== 'undefined' && RPG_RENAME[k]) || k; // 19차-7: 쌍검류 → 새 무기
     const eq = m.eq && typeof m.eq === 'object' ? m.eq : {};
     const ok = (k, slot) => { const it = k && rpgItem(k); return it && it.slot.id === slot ? k : null; };
     rpgState = { days, last: m.last || null,
-        owned: Array.isArray(m.owned) ? m.owned.filter(k => rpgItem(k)) : [], icon: m.icon || null, bonus, pang: pg,
+        owned: Array.isArray(m.owned) ? [...new Set(m.owned.map(ren))].filter(k => rpgItem(k)) : [], icon: m.icon ? ren(m.icon) : null, bonus, pang: pg,
         exp: m.exp != null ? Math.max(0, parseInt(m.exp, 10) || 0) : days * RPG_EXP.day + bonus * RPG_EXP.pang, // 19차: 예전 기록 → EXP
         g: m.g === 'f' ? 'f' : 'm',
         eq: { armor: ok(eq.armor, 'armor') || 'ar_base', helm: ok(eq.helm, 'helm'), off: ok(eq.off, 'off'), deco: ok(eq.deco, 'deco') } };

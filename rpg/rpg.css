@@ -225,7 +225,7 @@
    19차-3 (2026-10-09): 대장님 시안 그대로 — 바탕 그림 img/nb2_note.webp(수첩) · nb2_shop.webp(상점) 위에
    글씨·버튼을 % 좌표로 얹음 (rpg-armory.js의 nbPos/shPos). 글씨 크기는 창 너비 기준(cqw)
    도트 갑옷 = img/armor_m.webp (64×96칸 16개 가로로). --sp = 칸 번호, --u = 도트 1개 크기 */
-.rpg-spr { display: block; background-image: url('img/armor_m.webp?v=189'); background-repeat: no-repeat; background-size: 1600% 100%; background-position: calc(var(--sp, 0) * 100% / 15) 0; image-rendering: pixelated; image-rendering: crisp-edges; }
+.rpg-spr { display: block; background-image: url('img/armor_m.webp?v=191'); background-repeat: no-repeat; background-size: 1600% 100%; background-position: calc(var(--sp, 0) * 100% / 15) 0; image-rendering: pixelated; image-rendering: crisp-edges; }
 .rpg-fig { position: absolute; left: 50%; bottom: 17%; width: calc(var(--u) * 96); height: calc(var(--u) * 100); transform: translateX(-50%); z-index: 1; }
 .rpg-lay { position: absolute; display: block; }
 .rpg-body-sp { left: calc(var(--u) * 16); top: calc(var(--u) * 2); width: calc(var(--u) * 64); height: calc(var(--u) * 96); z-index: 2; }
@@ -237,13 +237,13 @@
 .nb2-dim { --S: min(860px, calc((100vw - 40px) / 1.64), calc(100vh - 32px)); --SW: .62; padding: 16px; } /* 19차-5: 상점 폭 = 수첩 × 0.62 */
 .nb2-wrap { position: relative; display: flex; align-items: center; justify-content: center; gap: 0; transition: gap .35s ease; }
 .nb2 { position: relative; flex-shrink: 0; width: var(--S); aspect-ratio: 1 / 1; container-type: inline-size; z-index: 2;
-    background: url('img/nb2_note.webp?v=189') center / 100% 100% no-repeat, #1b1916; color: #F1E4C6; box-shadow: 0 24px 70px rgba(0,0,0,.75); border-radius: 1.4%; font-family: inherit; }
+    background: url('img/nb2_note.webp?v=191') center / 100% 100% no-repeat, #1b1916; color: #F1E4C6; box-shadow: 0 24px 70px rgba(0,0,0,.75); border-radius: 1.4%; font-family: inherit; }
 .nb2 > * { position: absolute; box-sizing: border-box; }
 .nb2-shopbox { position: relative; flex-shrink: 0; width: 0; height: var(--S); transition: width .35s ease; z-index: 1; }
 .nb2-shop { position: absolute; right: 0; top: 0; height: 100%; width: calc(var(--S) * var(--SW)); container-type: inline-size; color: #F1E4C6; box-sizing: border-box; color-scheme: dark;
     display: flex; flex-direction: column; gap: 1.6%; padding: calc(var(--S) * 44 / 2048) calc(var(--S) * 40 / 2048) calc(var(--S) * 40 / 2048);
     background: linear-gradient(180deg, #24211d, #1c1a17); border: 0 solid transparent;
-    border-image: url('img/nb2_frame.webp?v=189') 70 fill / calc(var(--S) * 70 / 2048) stretch; /* 19차-4: 수첩과 같은 쇠 테두리 */
+    border-image: url('img/nb2_frame.webp?v=191') 70 fill / calc(var(--S) * 70 / 2048) stretch; /* 19차-4: 수첩과 같은 쇠 테두리 */
     box-shadow: 0 24px 60px rgba(0,0,0,.7); transform: translateX(100%); opacity: 0; transition: transform .35s ease, opacity .25s ease; pointer-events: none; }
 .nb2-wrap.shop-on { gap: 10px; } .nb2-wrap.shop-on .nb2-shopbox { width: calc(var(--S) * var(--SW)); }
 .nb2-wrap.shop-on .nb2-shop { transform: translateX(0); opacity: 1; pointer-events: auto; }
@@ -281,7 +281,7 @@
 .sh-title { font-size: max(15px, 6.4cqw); color: #F4E6C6; letter-spacing: .06em; white-space: nowrap; text-shadow: 0 2px 0 #000; }
 .sh-pt { position: absolute; right: 14%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; white-space: nowrap; text-shadow: 0 2px 0 #000; }
 .sh-pt b { font-size: max(11px, 4.6cqw); color: #F4E6C6; } .sh-pt b.neg { color: #FF6B5A; } .sh-pt span { font-size: max(9px, 3.2cqw); color: #CFC3AC; font-weight: 700; }
-.sh-x { position: absolute; right: 2.5%; top: 50%; transform: translateY(-50%); width: 9%; aspect-ratio: 90 / 98; padding: 0; border: none; cursor: pointer; background: url('img/nb2_x.webp?v=189') center / 100% 100% no-repeat; image-rendering: pixelated; }
+.sh-x { position: absolute; right: 2.5%; top: 50%; transform: translateY(-50%); width: 9%; aspect-ratio: 90 / 98; padding: 0; border: none; cursor: pointer; background: url('img/nb2_x.webp?v=191') center / 100% 100% no-repeat; image-rendering: pixelated; }
 .sh-x:hover, .sh-img:hover { filter: brightness(1.18); }
 .sh-tabs { flex: 0 0 auto; height: 5.2%; display: flex; gap: 1.2%; align-items: stretch; margin-bottom: -1.6%; }
 .sh-tab { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 3%; padding: 0 1%; font-family: inherit; font-size: max(10px, 3.7cqw); font-weight: 700; color: #E9DCC0; cursor: pointer; white-space: nowrap;
@@ -289,25 +289,28 @@
 .sh-tab:hover { color: #fff; filter: brightness(1.12); }
 .sh-tab.on { background: linear-gradient(180deg, #6b5136, #4a3826); border-color: #D9B36C; color: #FFF0CC; }
 .sh-tab em { font-style: normal; font-size: .75em; }
-.ti { display: block; width: 1.35em; height: 1.25em; flex-shrink: 0; background: url('img/nb2_icons.webp?v=189') 0 0 / 500% 100% no-repeat; border-radius: 3px; }
+.ti { display: block; width: 1.35em; height: 1.25em; flex-shrink: 0; background: url('img/nb2_icons.webp?v=191') 0 0 / 500% 100% no-repeat; border-radius: 3px; }
 .ti-helm { background-position: 0 0; } .ti-weapon { background-position: 25% 0; } .ti-armor { background-position: 50% 0; } .ti-off { background-position: 75% 0; } .ti-deco { background-position: 100% 0; }
 /* 나무+쇠 장식 칸 (수첩 복도 칸과 같은 테두리) */
-.sh-pnl { position: relative; box-sizing: border-box; border: 0 solid transparent; border-image: url('img/nb2_panel.webp?v=189') 110 / calc(var(--S) * 110 / 2048) stretch; padding: calc(var(--S) * 40 / 2048); }
+.sh-pnl { position: relative; box-sizing: border-box; border: 0 solid transparent; border-image: url('img/nb2_panel.webp?v=191') 110 / calc(var(--S) * 110 / 2048) stretch; padding: calc(var(--S) * 40 / 2048); }
 .sh-listp { flex: 1 1 auto; min-height: 0; display: flex; background: #24201c; box-shadow: inset 0 0 18px rgba(0,0,0,.6); }
 .sh-list { flex: 1; min-height: 0; overflow-y: auto; padding: 1% 2% 3%; scrollbar-width: thin; scrollbar-color: #6a625a #1d1a17; }
 .sh-list::-webkit-scrollbar { width: 8px; } .sh-list::-webkit-scrollbar-thumb { background: #6a625a; border-radius: 4px; } .sh-list::-webkit-scrollbar-track { background: #1d1a17; }
-.sh-scene { flex: 0 0 33%; background: url('img/nb2_smith.webp?v=189') center top / 100% auto no-repeat, #1b1916; } /* 19차-5: 대장간은 위쪽(말풍선+주인)만 보이게 줄임 */
-.sh-say { position: absolute; left: 29%; right: 3%; top: 2.6cqw; height: 20.6cqw; display: flex; align-items: center; gap: 2%; padding: 0 3%; font-size: max(10px, 3.2cqw); line-height: 1.5; color: #F4E6C6; text-shadow: 0 2px 0 #000; }
-.sh-say > span:first-child { flex: 1; min-width: 0; }
-.sh-ask { flex-shrink: 0; display: flex; flex-direction: column; gap: .6em; }
+.sh-scene { flex: 0 0 auto; aspect-ratio: 1.81 / 1; background: url('img/nb2_smith.webp?v=191') center / cover no-repeat, #1b1916; } /* 19차-6: 대장님이 받은 가로 대장간 그림(1.81:1) — 오른쪽 빈 벽에 코드 말풍선 */
+.sh-say { position: absolute; left: 50%; right: 4%; top: 12%; display: flex; flex-direction: column; align-items: flex-start; gap: .7em; padding: .8em 1em; font-size: max(10px, 3cqw); line-height: 1.5; color: #F4E6C6; text-shadow: 0 2px 0 #000;
+    background: rgba(30,27,24,.94); border: 3px solid #5c5a57; border-radius: 4px; box-shadow: 0 0 0 2px #15130f, inset 0 0 0 2px #1a1714, 0 6px 14px rgba(0,0,0,.5); }
+.sh-say::before, .sh-say::after { content: ''; position: absolute; top: 1.4em; border-style: solid; border-color: transparent; } /* 말꼬리 → 대장장이 쪽 */
+.sh-say::before { left: -15px; border-width: 9px 12px 9px 0; border-right-color: #5c5a57; }
+.sh-say::after { left: -9px; border-width: 6px 8px 6px 0; border-right-color: #1e1b18; top: calc(1.4em + 3px); }
+.sh-ask { display: flex; gap: .6em; align-self: flex-end; }
 .sh-ask button { font: 700 max(10px, 3cqw)/1 inherit; font-family: inherit; color: #F4E6C6; padding: .45em 1em; cursor: pointer; border-radius: 3px; text-shadow: 0 1px 0 #000;
     background: linear-gradient(180deg, #7a5c45, #4f3a2b); border: 2px solid #D9B36C; box-shadow: 0 0 0 1px #15130f, 0 0 10px rgba(240,170,60,.35); }
 .sh-ask button.no { background: linear-gradient(180deg, #3a3632, #26221f); border-color: #6a6764; box-shadow: 0 0 0 1px #15130f; color: #CFC3AC; }
 .sh-ask button:hover { filter: brightness(1.15); }
 .sh-foot { flex: 0 0 auto; height: 6.5%; display: flex; align-items: center; justify-content: center; gap: 4%; }
 .sh-img { height: 100%; padding: 0; border: none; cursor: pointer; background: center / 100% 100% no-repeat; image-rendering: pixelated; }
-.sh-close { aspect-ratio: 288 / 102; background-image: url('img/nb2_btn_close.webp?v=189'); }
-.sh-toshop { aspect-ratio: 322 / 108; background-image: url('img/nb2_btn_shop.webp?v=189'); }
+.sh-close { aspect-ratio: 288 / 102; background-image: url('img/nb2_btn_close.webp?v=191'); }
+.sh-toshop { aspect-ratio: 322 / 108; background-image: url('img/nb2_btn_shop.webp?v=191'); }
 .nb2-shop.inv .sh-foot { gap: 6%; }
 .sh-tier { display: flex; align-items: baseline; gap: .6em; margin: 4cqw 0 0; font-size: max(10px, 3.8cqw); color: #A99C88; border-bottom: 1px dashed rgba(217,179,108,.2); padding-bottom: 1.5%; }
 .sh-tier b { font-size: 1.1em; } .sh-tier em { font-style: normal; color: #E08A6A; }
@@ -330,16 +333,16 @@
 .sh-cell.buy .rpg-ic, .sh-cell.poor .rpg-ic { filter: none; opacity: 1; } /* 살 수 있는 건 색 그대로 (그림자는 레벨 잠금만) */
 .sh-soon { margin: 8% 2%; padding: 7% 4%; text-align: center; border: 1px dashed rgba(217,179,108,.35); border-radius: 6px; color: #D8C49C; font-size: max(10px, 3.8cqw); line-height: 1.7; }
 .sh-soon small { color: #9C907E; } .sh-soon.sm { margin-top: 4%; padding: 4%; font-size: max(9.5px, 3.4cqw); }
-/* 무기·방패 도트 (19차-4) — 주먹 조각을 무기 위에 다시 그려 손잡이를 쥔 것처럼 */
+/* 무기·방패 도트 (19차-4) · 19차-7: 무기는 등에 멤(몸 뒤), 방패는 몸 앞 */
+.rpg-fig .rpg-wpn { z-index: 1; } .rpg-fig .rpg-body-sp { z-index: 2; } .rpg-fig .rpg-off { z-index: 5; } .rpg-fig .rpg-hip { z-index: 3; } /* 19차-8: 허리춤 무기 = 몸 앞, 좌우반전 없음 */
 .rpg-lay.pix { background: center / 100% 100% no-repeat; image-rendering: pixelated; image-rendering: crisp-edges; transform: none; }
-.rpg-fig .rpg-body-sp { z-index: 2; } .rpg-fig .rpg-wpn { z-index: 3; } .rpg-fig .rpg-fist { z-index: 4; clip-path: inset(53.1% 71.9% 36.5% 14.06%); } .rpg-fig .rpg-off { z-index: 5; }
+
 /* 폰: 상점은 수첩 위로 덮어서 미끄러져 나옴 */
 @media (max-width: 760px) {
     .nb2-dim { --S: min(calc(100vw - 20px), calc(100vh - 24px)); padding: 10px; }
     .nb2-wrap.shop-on { gap: 0; } .nb2-shopbox, .nb2-wrap.shop-on .nb2-shopbox { position: absolute; left: 0; top: 50%; width: 0; height: 0; z-index: 3; }
     .nb2-shop { --SH: min(calc(100vh - 24px), 860px); position: fixed; top: calc(50vh - var(--SH) / 2); right: auto; height: var(--SH); width: calc(100vw - 20px);
         left: 10px; transform: translateX(-110vw); }
-    .sh-scene { flex-basis: 26%; }
     .nb2-wrap.shop-on .nb2-shop { transform: translateX(0); }
 }
 @media (prefers-reduced-motion: reduce) { .nb2-shop, .nb2-shopbox, .nb2-wrap { transition: none; } .nb2-hit.glow { animation: none; } }

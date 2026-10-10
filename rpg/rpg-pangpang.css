@@ -203,7 +203,7 @@
 /* 19차-4: 모험가 수첩과 같은 쇠 테두리 (img/nb2_frame.webp 9조각) */
 .pp-stage { border-radius: 0; box-shadow: 0 24px 70px rgba(0,0,0,.7); }
 .pp-stage::after { content: ''; position: absolute; inset: 0; z-index: 9; pointer-events: none; border: 0 solid transparent;
-    border-image: url('img/nb2_frame.webp?v=189') 70 / clamp(16px, 2.5vw, 30px) stretch; image-rendering: pixelated; }
+    border-image: url('img/nb2_frame.webp?v=191') 70 / clamp(16px, 2.5vw, 30px) stretch; image-rendering: pixelated; }
 /* 19차-5: 수첩 스타일로 통일 — 글꼴(기본 굵은 글씨 + 검은 그림자) · 돌/쇠 칸 · 나무 버튼 · 쇠 X 버튼 */
 .pp-stage, .pp-stage :is(.pp-title, .pp-btn, .pp-res-t, .pp-stat b, .pp-reward, .pp-count, .pp-pop, .pp-alert, .pp-hud *) { font-family: inherit; }
 .pp-title { font-size: 6.2cqw; font-weight: 900; letter-spacing: .12em; background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #F4E6C6; -webkit-text-fill-color: #F4E6C6;
@@ -219,7 +219,7 @@
 .pp-res-t { font-weight: 900; letter-spacing: .08em; } .pp-res-t.win { background: none; color: #F4E6C6; -webkit-text-fill-color: #F4E6C6; text-shadow: 0 .35cqw 0 #000, 0 0 2cqw rgba(255,170,60,.5); filter: none; }
 .pp-stat b { font-weight: 900; } .pp-reward { font-weight: 800; border-radius: .35cqw; }
 .pp-count, .pp-pop, .pp-alert { font-weight: 900; }
-.pp-x { right: 3cqw; top: 3cqw; width: 4.2cqw; height: 4.6cqw; padding: 0; border: none; border-radius: 0; font-size: 0; background: url('img/nb2_x.webp?v=189') center / 100% 100% no-repeat; image-rendering: pixelated; }
+.pp-x { right: 3cqw; top: 3cqw; width: 4.2cqw; height: 4.6cqw; padding: 0; border: none; border-radius: 0; font-size: 0; background: url('img/nb2_x.webp?v=191') center / 100% 100% no-repeat; image-rendering: pixelated; }
 .pp-x:hover { filter: brightness(1.18); }
 .pp-reset { display: none; position: absolute; right: 8.2cqw; top: 3.6cqw; z-index: 8; font: 700 1.1cqw/1 inherit; font-family: inherit; color: #E9DCC0; padding: .8cqw 1.2cqw; cursor: pointer; border-radius: .3cqw;
     background: linear-gradient(180deg, #3a3632, #26221f); border: .2cqw solid #5c5a57; box-shadow: 0 0 0 .15cqw #15130f; }

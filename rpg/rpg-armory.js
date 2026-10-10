@@ -86,20 +86,25 @@ async function rpgApply() {
 function rpgItemName(key) { if (!key) return ''; if (key === 'master_sword') return RPG_ICONS[key][0]; const it = rpgItem(key); return it ? it.name : key; }
 
 /* 캐릭터 착용 모습 — 1칸(u) = 도트 1개. 인물 틀 96×100칸, 몸(64×96)은 (16,2)에
-   19차-4: 무기·방패를 "도트로 바꿔서" 손에 쥐여줌 (매끈한 그림이 둥 떠 보이던 문제)
-   ① 무기 SVG를 도트 크기(무기 40칸 · 방패 30칸)로 그려서 반투명 없애고 1칸 검은 외곽선 → 캐릭터와 같은 도트 느낌
-   ② 칼날은 아래·바깥으로(쉬는 자세), 손잡이 축(RPG_GEO.pivot)을 주먹(29,58)에 맞춤
-   ③ 주먹만 잘라낸 몸 그림을 무기 위에 한 번 더 → 손잡이가 주먹 "속으로" 들어간 것처럼 보임
-   무기마다 자세가 어색하면 RPG_HOLD[키] = 회전각(도)만 따로 적으면 됨 (기본 180 = 칼끝이 왼쪽 아래) */
-const RPG_HAND_W = [29, 58], RPG_HAND_O = [66, 58], RPG_WPN_U = 40, RPG_OFF_U = 30;
-const RPG_HOLD = { war_scythe: 90, wood_bow: 135, recurve_bow: 135, crossbow: 150, chakram: 0, sling: 160 };
+   19차-7: 무기는 "등에 멤" — 몸 뒤에 비스듬히, 64×96 도트에선 손에 쥔 모양이 안 나와서 (대장님 결정 2026-10-09)
+   - 19차-8: 모든 무기 = 날이 아래, 손잡이가 반대쪽 어깨 위로 (현실처럼, 대장님 2026-10-10). 예외만 RPG_BACK_UP
+   - 19차-8: 짧은 무기(낫·뼈단검·쿠크리) = 허리춤(보는 사람 왼쪽 골반, 손잡이 벨트에 꽂고 날 늘어뜨림, 몸 앞) — 오른쪽은 왼손(방패) 자리
+   - 무기는 SVG를 도트 크기로 그려 반투명 없애고 1칸 외곽선 (캐릭터와 같은 도트 느낌)
+   - 왼손(방패 등)은 오른쪽 주먹 가운데, 몸 앞
+   - 미니게임(액션)에서 손에 쥐는 건 게임용 옆모습 캐릭터를 따로 만들 예정 */
+const RPG_BACK_C = [43, 29], RPG_HAND_O = [66, 58], RPG_OFF_U = 30;
+const RPG_BACK_TIP = [12, 70], RPG_BACK_ADD = 16; // 19차-8: 등 무기 날 끝 위치 (보는 사람 왼쪽 골반 옆)
+const RPG_BACK_UP = []; // 머리(날)가 위로 가야 어울리는 예외 무기 (없으면 전부 날 아래)
+const RPG_HIP = { sickle: 30, bone_knife: 28, kukri: 30 }, RPG_HIP_C = [27, 62], RPG_HIP_ROT = 155; // 허리춤 무기: 키 → 도트 크기
+const RPG_BACK_SIZE = { bone_knife: 40, kukri: 42, sickle: 44, wood_sword: 48, rapier: 54, greatsword: 58, master_sword: 58, halberd: 60, war_scythe: 60, guandao: 60, glaive: 58, iron_spear: 58, stone_spear: 56, trident: 58, pitchfork: 56, chakram: 36, sling: 40 }; // 기본 52칸
 const rpgPix = {}; // 도트로 바꾼 그림 (키|칸|각도 → dataURL). 1 = 만드는 중
 function rpgPixUrl(key, dots, rot) {
     const id = `${key}|${dots}|${rot}`;
     if (rpgPix[id]) return { id, url: rpgPix[id] === 1 ? '' : rpgPix[id] };
     rpgPix[id] = 1;
     const ic = RPG_ICONS[key];
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="256" height="256"><defs>${typeof RPG_DEFS !== 'undefined' ? RPG_DEFS : ''}</defs>${ic ? ic[1] : ''}</svg>`;
+    const body = (ic ? ic[1] : '').replace(/<g class="rb-aura"[\s\S]*?<\/g>/g, ''); // 19차-7: 룬 흑검 빛무리는 수첩 도트에서 뺌
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="256" height="256"><defs>${typeof RPG_DEFS !== 'undefined' ? RPG_DEFS : ''}</defs>${body}</svg>`;
     const img = new Image();
     img.onload = () => {
         const P = 1, W = dots + 2 * P, c = document.createElement('canvas'); c.width = c.height = W;
@@ -124,22 +129,20 @@ function rpgPixUrl(key, dots, rot) {
 }
 function rpgFigHtml(eq) {
     const sp = (RPG_ARMORS[eq.armor] || RPG_ARMORS.ar_base)[1];
-    let wpn = '', fist = '', off = '';
+    let wpn = '', off = '';
     const wk = eq.weapon;
     if (wk && RPG_ICONS[wk]) {
-        const D = RPG_WPN_U, rot = RPG_HOLD[wk] != null ? RPG_HOLD[wk] : 180;
-        const geo = (typeof RPG_GEO !== 'undefined' && RPG_GEO[wk]) || { pivot: [15.4, 49.9] };
-        const r = rot * Math.PI / 180, dx = geo.pivot[0] - 32, dy = geo.pivot[1] - 32; // 손잡이 축이 회전 후 어디로 가는지
-        const gx = (dx * Math.cos(r) - dy * Math.sin(r) + 32) * D / 64 + 1, gy = (dx * Math.sin(r) + dy * Math.cos(r) + 32) * D / 64 + 1;
+        const hip = RPG_HIP[wk], D = hip || (RPG_BACK_SIZE[wk] || 52) + RPG_BACK_ADD, up = RPG_BACK_UP.includes(wk);
+        const C = hip ? RPG_HIP_C : up ? RPG_BACK_C : [RPG_BACK_TIP[0] + D / 2, RPG_BACK_TIP[1] - D / 2]; // 날 끝을 왼쪽 골반 옆에 맞춤 → 무기가 길수록 손잡이가 오른쪽 어깨 위로 더 올라옴
+        const rot = hip ? RPG_HIP_ROT : up ? -90 : 180; // 아이콘 기본 = 손잡이 왼쪽 아래 → 날 오른쪽 위. 180 = 손잡이 오른쪽 위, 날 왼쪽 아래
         const px = rpgPixUrl(wk, D, rot);
-        wpn = `<span class="rpg-lay rpg-wpn pix" data-pix="${px.id}" style="left:calc(var(--u)*${(RPG_HAND_W[0] - gx).toFixed(1)});top:calc(var(--u)*${(RPG_HAND_W[1] - gy).toFixed(1)});width:calc(var(--u)*${D + 2});height:calc(var(--u)*${D + 2});${px.url ? `background-image:url('${px.url}')` : ''}"></span>`;
-        fist = `<span class="rpg-lay rpg-body-sp rpg-spr rpg-fist" style="--sp:${sp}"></span>`;
+        wpn = `<span class="rpg-lay ${hip ? 'rpg-hip' : 'rpg-wpn'} pix" data-pix="${px.id}" style="left:calc(var(--u)*${(C[0] - D / 2 - 1).toFixed(1)});top:calc(var(--u)*${(C[1] - D / 2 - 1).toFixed(1)});width:calc(var(--u)*${D + 2});height:calc(var(--u)*${D + 2});${px.url ? `background-image:url('${px.url}')` : ''}"></span>`;
     }
     if (eq.off && RPG_ICONS[eq.off]) {
         const D = RPG_OFF_U, px = rpgPixUrl(eq.off, D, 0);
         off = `<span class="rpg-lay rpg-off pix" data-pix="${px.id}" style="left:calc(var(--u)*${RPG_HAND_O[0] - D / 2 - 1});top:calc(var(--u)*${RPG_HAND_O[1] - D / 2 - 1});width:calc(var(--u)*${D + 2});height:calc(var(--u)*${D + 2});${px.url ? `background-image:url('${px.url}')` : ''}"></span>`;
     }
-    return `<div class="rpg-fig"><span class="rpg-lay rpg-body-sp rpg-spr" style="--sp:${sp}"></span>${wpn}${fist}${off}</div>`;
+    return `<div class="rpg-fig">${wpn}<span class="rpg-lay rpg-body-sp rpg-spr" style="--sp:${sp}"></span>${off}</div>`;
 }
 
 /* 수첩 그림 위 자리 (원본 2048×2048 픽셀 좌표 → %) */
