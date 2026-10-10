@@ -189,7 +189,7 @@
             const d = document.createElement('div');
             const sz = 1 + Math.random() * 2.2;
             d.className = 'pp-fall';
-            d.style.cssText = `left:${32 + Math.random() * 36}%;top:${(top * 100 - 6 + Math.random() * 10).toFixed(1)}%;width:${sz}cqw;height:${(sz * (.7 + Math.random() * .5)).toFixed(2)}cqw;--t:${(.7 + Math.random() * .7).toFixed(2)}s;--dy:${(30 + Math.random() * 25).toFixed(0)}cqw;--r:${(Math.random() * 500 - 250).toFixed(0)}deg;animation-delay:${(Math.random() * .35).toFixed(2)}s`;
+            d.style.cssText = `left:${32 + Math.random() * 36}%;top:${(top * 100 - 6 + Math.random() * 10).toFixed(1)}%;width:calc(var(--k) * ${sz}cqw);height:calc(var(--k) * ${(sz * (.7 + Math.random() * .5)).toFixed(2)}cqw);--t:${(.7 + Math.random() * .7).toFixed(2)}s;--dy:calc(var(--k) * ${(30 + Math.random() * 25).toFixed(0)}cqw);--r:${(Math.random() * 500 - 250).toFixed(0)}deg;animation-delay:${(Math.random() * .35).toFixed(2)}s`;
             els.fx.appendChild(d);
             setTimeout(() => d.remove(), 2200);
         }
@@ -291,7 +291,7 @@
         renderHud();
         stage.classList.add('playing');
         ['3', '2', '1', '돌격!'].forEach((t, i) => later(() => {
-            const c = document.createElement('div'); c.className = 'pp-count'; c.textContent = t; if (i === 3) c.style.fontSize = '8cqw';
+            const c = document.createElement('div'); c.className = 'pp-count'; c.textContent = t; if (i === 3) c.style.fontSize = 'calc(var(--k) * 8cqw)';
             stage.appendChild(c); setTimeout(() => c.remove(), 820);
         }, i * 650));
         later(() => { G.on = true; G.t0 = performance.now(); G.next = G.t0 + 250; tickId = setInterval(tick, 40); }, 3 * 650 + 200);
@@ -341,6 +341,8 @@
         showIntro();
         root.classList.toggle('pp-master', !!opts.onReset);
         root.classList.add('open');
+        // 20차: 폰 세로 화면 = 배경을 가운데 잘라 꽉 채우니 균열 그림도 같은 비율로 (가로 화면은 예전처럼 늘림)
+        const ck = root.querySelector('.pp-crack'); if (ck) ck.setAttribute('preserveAspectRatio', matchMedia('(orientation: portrait) and (max-width: 820px)').matches ? 'xMidYMid slice' : 'none');
     }
     function close() {
         if (!root) return;
