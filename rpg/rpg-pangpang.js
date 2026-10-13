@@ -222,6 +222,7 @@
 
     // 18차-3: 카드가 앞으로 뒤집히며 몬스터 등장 / 시간 지나면 다시 뒤집힘
     function appear(h, t) {
+        h.gen = (h.gen || 0) + 1; // v213: 카드가 새로 쓰일 때마다 번호 +1 → 예전에 맞은 카드의 '늦게 치우기'가 새 몬스터(오크)를 지우지 못하게
         h.type = t; h.hit = false;
         h.el.className = 'pp-card m-' + t;
         h.nm.textContent = t === 'o' ? '오크 전사' : '고블린';
@@ -249,8 +250,9 @@
         h.big = orc;
         dl = dl || 0;
         if (!dl) hitFx(h);
-        later(() => h.el.classList.remove('flip'), 230 + dl);
-        later(() => { h.type = null; h.hit = false; h.el.className = 'pp-card'; }, 560 + dl);
+        const gen = h.gen;
+        later(() => { if (h.gen === gen) h.el.classList.remove('flip'); }, 230 + dl);
+        later(() => { if (h.gen !== gen) return; h.type = null; h.hit = false; h.el.className = 'pp-card'; }, 560 + dl);
         if (!orc) {
             G.goblins++; G.sinceOrc = Math.min(PP_CFG.goblinPerOrc, G.sinceOrc + 1);
             renderHud();
@@ -279,6 +281,7 @@
         const i = free.length ? free[Math.floor(Math.random() * free.length)] : Math.floor(Math.random() * 9);
         const h = holes[i];
         if (h.type) vanish(h);
+        h.gen = (h.gen || 0) + 1; h.hit = false; h.el.className = 'pp-card';
         h.type = 'w'; // 경고 중엔 다른 고블린이 못 들어옴
         h.el.classList.add('warn');
         els.alert.classList.remove('show'); void els.alert.offsetWidth; els.alert.classList.add('show');
@@ -314,6 +317,9 @@
         });
         if (!G.on) return;
         if (left <= 0) return lose('시간 초과…');
+        // v213 안전장치: 오크가 나왔다고 돼 있는데 판에 오크(경고 포함)가 없으면 다시 부름 (대장님: 폰에서 10마리 잡았는데 오크가 안 나옴)
+        if (G.orcOut && !holes.some(h => h.type === 'w' || h.type === 'o')) G.orcOut = false;
+        if (!G.orcOut && G.sinceOrc >= PP_CFG.goblinPerOrc) callOrc();
         if (now >= G.next) {
             const up = holes.filter(h => h.type === 'g').length;
             if (up < (p < .4 ? PP_CFG.maxUp[0] : PP_CFG.maxUp[1])) {

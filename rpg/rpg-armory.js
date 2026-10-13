@@ -81,12 +81,12 @@ function rpgPendReal() { if (!rpgPend) return null; const cur = rpgEqAll(), o = 
 function rpgDropPreview() { if (!rpgPend) return; const r = rpgPendReal(); RPG_SLOTS.forEach(sl => { rpgPend[sl.id] = r[sl.id]; }); }
 function rpgPendChanged() { if (!rpgPend) return false; const cur = rpgEqAll(), r = rpgPendReal(); return RPG_SLOTS.some(sl => r[sl.id] !== cur[sl.id]); }
 async function rpgApply() {
-    if (!rpgPendChanged()) { closeArmory(); return; }
+    if (!rpgPendChanged()) return; // v213: 바뀐 게 없으면 그냥 둠 (창 안 닫음)
     rpgDropPreview(); // 안 산 미리보기는 빼고 적용
     const prevI = rpgState.icon, prevE = Object.assign({}, rpgState.eq);
     rpgState.icon = rpgPend.weapon;
     rpgState.eq = { armor: rpgPend.armor || 'ar_base', helm: rpgPend.helm || null, off: rpgPend.off || null, deco: rpgPend.deco || null };
-    try { await rpgSave(); applyRolePermissions(); closeArmory(); showSyncStatus('⚔️ 장비 적용 완료'); }
+    try { await rpgSave(); applyRolePermissions(); rpgPend = rpgEqAll(); renderArmory(); showSyncStatus('⚔️ 장비 적용 완료'); } // v213 (대장님): [적용]은 장착만, 수첩은 열어둠
     catch (e) { console.error(e); rpgState.icon = prevI; rpgState.eq = prevE; showSyncStatus('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)', true); }
 }
 function rpgItemName(key) { if (!key) return ''; if (key === 'master_sword') return RPG_ICONS[key][0]; const it = rpgItem(key); return it ? it.name : key; }
