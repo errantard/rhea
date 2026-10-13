@@ -39,6 +39,32 @@
     const BURST_BIG = '<svg viewBox="-50 -50 100 100"><g fill="#FF6A3A"><path d="M0-48L9-10 48 0 9 10 0 48-9 10-48 0-9-10z"/></g><g fill="#FFD98A"><path d="M-34-34L-5-5-34 34-1 7 34 34 5 5 34-34 1-7z" transform="scale(.75)"/></g><circle r="13" fill="#fff"/></svg>';
     const FALLBACK_ICON = '<svg viewBox="0 0 64 64"><g transform="rotate(40 32 32)"><rect x="29" y="16" width="6" height="46" rx="3" fill="#9A6A42" stroke="#3A200A" stroke-width="1.5"/><rect x="16" y="5" width="32" height="15" rx="3" fill="#A39E93" stroke="#3B3833" stroke-width="1.6"/></g></svg>';
 
+    /* 22차 (v209): 원거리 무기 = 화면 아래(PC 오른쪽 아래 · 폰 가운데)에 세워두고 누른 곳으로 쏨 (판정은 누르는 순간, 날아가는 건 연출만)
+       k: magic 마법 구슬 · stone 돌멩이 · bolt 석궁 볼트(빠르고 일직선) · arrow 화살(살짝 휨)
+       c: 색 · ms: 날아가는 시간 · arc: 휘는 정도(화면 폭 비율) · spark: 터질 때 반짝이
+       v210: 그림마다 쏘는 방향이 달라서 → dir: 그림에서 쏘는 쪽 각도(기본 -45 = 오른쪽 위) · g: 쥔 곳(그림 비율, 기본 .3,.7) · len: 쥔 곳→발사 지점 길이(기본 .62)
+       장궁 그림 = 활대가 대각선(왼쪽 아래→오른쪽 위), 시위가 오른쪽 아래 → 화살은 왼쪽 위(-135°)로, 쥔 곳 = 활 가운데 */
+    const PP_RANGED = {
+        wood_staff: { k: 'magic', c: '#7CE05A', c2: '#E8FFD0', ms: 170, arc: 0, lv: 'sm', sz: .9 }, // v212: 초보 = 작은 구슬·꼬리 없음 · 무기 조금 작게
+        magic_wand: { k: 'magic', c: '#4FB2FF', c2: '#E2F4FF', ms: 150, arc: 0, lv: 'md' }, // 일반 = 구슬 + 짧은 꼬리
+        gem_staff: { k: 'magic', c: '#B266FF', c2: '#F6E6FF', ms: 160, arc: 0, spark: 3 }, // 희귀 = 구슬 + 반짝이 조금 (정예부터 더 화려하게)
+        slingshot: { k: 'stone', c: '#9A8E84', ms: 170, arc: .05 },
+        crossbow: { k: 'bolt', c: '#C9D3DC', ms: 95, arc: 0 },
+        longbow: { k: 'arrow', c: '#E8D6B0', ms: 150, arc: .035, dir: -135, g: [.5, .5], len: .12 }
+    };
+    /* 22차 v211: 근접 무기 연출 — blade 칼 = 초승달 베기 궤적 · spear 창 = 찌르기 + 관통 섬광 · blunt 몽둥이 = 쿵 충격파 + 돌 부스러기
+       등급 색 (rpg-data.js RPG_TIERS 기준): 초보 = 나무/흰 · 일반 = 은빛 · 희귀 = 푸른 잔상. 혈식의 룬마검은 예전 연출(충격파) 그대로 */
+    const PP_MELEE = { wood_sword: 'blade', wood_blade: 'blade', longsword: 'blade', katana: 'blade', hwando: 'blade', greatsword: 'blade',
+        bamboo_spear: 'spear', glaive: 'spear', guandao: 'blade', club: 'blunt' }; // v212: 언월도 = 베는 무기
+    // v212 (대장님: 희귀가 정예 느낌) → 한 칸씩 내림: 초보 = 얇고 짧게(lv0) · 일반 = 흰 궤적 · 희귀 = 은빛 + 반짝이 · 정예(나중) = 푸른 잔상
+    const PP_TIER_FX = { novice: { c: '#EFE2C6', c2: '#A88A62', lv0: true }, common: { c: '#FFF2D6', c2: '#C9A06A' }, rare: { c: '#FFFFFF', c2: '#B8D2F2', glint: true }, elite: { c: '#EAF7FF', c2: '#4FB2FF', glint: true, trail: true } };
+    const ARC_SVG = '<svg viewBox="-50 -50 100 100"><path d="M-46 14 Q0 -52 46 14 Q0 -30 -46 14Z" fill="var(--c2)" opacity=".55"/><path d="M-42 12 Q0 -44 42 12 Q0 -32 -42 12Z" fill="var(--c)"/></svg>';
+    const SHOT_SVG = {
+        stone: '<svg viewBox="-10 -10 20 20"><ellipse cx="0" cy="0" rx="8" ry="6.5" fill="#8A7E74" stroke="#2A2420" stroke-width="1.6"/><ellipse cx="-2.5" cy="-2.2" rx="3" ry="2" fill="#C8BCB0" opacity=".7"/></svg>',
+        bolt: '<svg viewBox="-30 -6 60 12"><path d="M-28 0H18" stroke="#5A3A20" stroke-width="2.6"/><path d="M-28 -4L-20 0-28 4" fill="#8A9AA8" stroke="#2A3440" stroke-width="1"/><path d="M16 -4.5L28 0 16 4.5Z" fill="#DDE6EE" stroke="#2A3440" stroke-width="1.2"/></svg>',
+        arrow: '<svg viewBox="-40 -7 80 14"><path d="M-38 0H26" stroke="#A8783E" stroke-width="2.2"/><path d="M-38 -5L-28 0-38 5M-32 -5L-22 0-32 5" fill="none" stroke="#E8E2D2" stroke-width="2"/><path d="M24 -5L38 0 24 5 27 0Z" fill="#CFD8E0" stroke="#2A3440" stroke-width="1.2"/></svg>'
+    };
+
     let opts = {}, root, stage, world, wpn, holes = [], els = {}, G = null, tickId = 0, timeouts = [];
 
     function lerp(a, b, t) { return a + (b - a) * Math.max(0, Math.min(1, t)); }
@@ -66,6 +92,7 @@
                 <div class="pp-orcs"><div class="pp-lbl">오크 토벌</div><div class="pp-sk">${'<i></i>'.repeat(PP_CFG.orcs)}</div></div>
             </div>
             <div class="pp-alert">⚠ 오크 출현!</div>
+            <div class="pp-shots"></div><div class="pp-aim"></div>
             <div class="pp-wpn"></div>
             <div class="pp-panel"></div>
             <button class="pp-x" type="button" aria-label="닫기"></button><button class="pp-reset" type="button" title="마스터 테스트용: 오늘 도전 기록 지우기">↺ 게임 초기화</button>
@@ -76,6 +103,7 @@
         wpn = root.querySelector('.pp-wpn');
         els = { holes: root.querySelector('.pp-holes'), fx: root.querySelector('.pp-fx'), panel: root.querySelector('.pp-panel'), tt: root.querySelector('.pp-tt'),
             tbar: root.querySelector('.pp-tbar'), tbi: root.querySelector('.pp-tbar i'), pips: [...root.querySelectorAll('.pp-pips i')],
+            shots: root.querySelector('.pp-shots'), aim: root.querySelector('.pp-aim'),
             sk: [...root.querySelectorAll('.pp-sk i')], alert: root.querySelector('.pp-alert'), cracks: [...root.querySelectorAll('.pp-crack g')] };
         holes = PP_KEYS.map((key, i) => {
             const el = document.createElement('div');
@@ -97,17 +125,88 @@
     }
 
     function moveWpn(cx, cy) {
-        const r = stage.getBoundingClientRect(), s = wpn.offsetWidth || r.width * .076;
+        const r = stage.getBoundingClientRect();
+        if (ranged) { // 원거리: 무기는 아래에 세워둔 채, 누른 곳을 향해 돌림 + 조준점
+            const x = cx - r.left, y = cy - r.top;
+            els.aim.style.left = x + 'px'; els.aim.style.top = y + 'px';
+            const g = grip(r), a = Math.atan2(y - g.y, x - g.x) * 180 / Math.PI;
+            wpn.style.setProperty('--aim', Math.max(-170, Math.min(-10, a)) - (ranged.dir || -45) + 'deg');
+            return;
+        }
+        const s = wpn.offsetWidth || r.width * .076;
         wpn.style.left = (cx - r.left - s * .78) + 'px'; wpn.style.top = (cy - r.top - s * .26) + 'px';
     }
-    function smash() { wpn.classList.remove('smash'); void wpn.offsetWidth; wpn.classList.add('smash'); }
+    function smash() { const c = ranged ? 'fire' : 'smash'; wpn.classList.remove(c); void wpn.offsetWidth; wpn.classList.add(c); }
+    // 원거리 무기 쥔 곳(회전축) = 무기 칸의 30%·70% 지점 (CSS .pp-rng .pp-wpn 과 같은 값)
+    function grip(r) { const s = wpn.offsetWidth, x = wpn.offsetLeft, y = wpn.offsetTop, gg = (ranged && ranged.g) || [.3, .7]; return { x: x + s * gg[0], y: y + s * gg[1], s }; }
+    // 22차: 원거리 발사 — 무기 끝에서 (tx,ty)까지 날아감. 다 날아가면 hit() (도착 연출)
+    function shoot(tx, ty, hit) {
+        const r = stage.getBoundingClientRect(), g = grip(r), cfg = ranged;
+        const ang = Math.atan2(ty - g.y, tx - g.x), L = g.s * (cfg.len || .62);
+        const sx = g.x + Math.cos(ang) * L, sy = g.y + Math.sin(ang) * L;
+        const dx = tx - sx, dy = ty - sy, lift = cfg.arc * r.width;
+        const d = document.createElement('div');
+        d.className = 'pp-shot k-' + cfg.k + (cfg.lv ? ' ' + cfg.lv : '');
+        d.style.cssText = `left:${sx}px;top:${sy}px;--c:${cfg.c};--c2:${cfg.c2 || '#fff'}`;
+        d.innerHTML = SHOT_SVG[cfg.k] || '';
+        els.shots.appendChild(d);
+        if (cfg.k === 'magic') { // 지팡이 끝 번쩍
+            const m = document.createElement('div'); m.className = 'pp-muzzle'; m.style.cssText = `left:${sx}px;top:${sy}px;--c:${cfg.c}`;
+            els.shots.appendChild(m); setTimeout(() => m.remove(), 400);
+        }
+        const deg = ang * 180 / Math.PI, N = 6, kf = [];
+        for (let i = 0; i <= N; i++) {
+            const t = i / N, ox = dx * t, oy = dy * t - lift * 4 * t * (1 - t);
+            const vy = dy - lift * 4 * (1 - 2 * t); // 휘는 방향 따라 화살 끝도 돌아감
+            const rot = cfg.k === 'stone' ? deg + t * 540 : Math.atan2(vy, dx) * 180 / Math.PI;
+            kf.push({ transform: `translate(${ox}px,${oy}px) rotate(${rot}deg)` });
+        }
+        const an = d.animate ? d.animate(kf, { duration: cfg.ms, easing: 'linear', fill: 'forwards' }) : null;
+        const done = () => { d.remove(); impact(tx, ty); if (hit) hit(); };
+        if (an) an.onfinish = done; else later(done, cfg.ms);
+    }
+    function impact(x, y) { // 도착: 마법 = 색 폭발 · 돌 = 흙먼지 · 화살/볼트 = 불꽃
+        const cfg = ranged, add = (cls, css, ms) => { const e = document.createElement('div'); e.className = cls; e.style.cssText = `left:${x}px;top:${y}px;` + (css || ''); els.shots.appendChild(e); setTimeout(() => e.remove(), ms || 600); return e; };
+        add('pp-imp k-' + cfg.k + (cfg.lv ? ' ' + cfg.lv : ''), `--c:${cfg.c};--c2:${cfg.c2 || '#fff'}`, 650);
+        if (cfg.spark) for (let i = 0, n = cfg.spark; i < n; i++) { const a = i / n * Math.PI * 2 + Math.random() * .5, R = 4 + Math.random() * 3;
+            add('pp-spk', `--c:${cfg.c2};--dx:calc(var(--k) * ${(Math.cos(a) * R).toFixed(2)}cqw);--dy:calc(var(--k) * ${(Math.sin(a) * R).toFixed(2)}cqw)`, 700); }
+    }
 
     function onPointer(e) {
         if (!G || !G.on) return;
         moveWpn(e.clientX, e.clientY);
-        smash();
         const h = e.target.closest && e.target.closest('.pp-card');
-        if (h) whack(holes.findIndex(x => x.el === h));
+        fire(h ? holes.findIndex(x => x.el === h) : -1, e.clientX, e.clientY);
+    }
+    // 22차: 공격 한 번 — 근접은 그 자리에서 쾅, 원거리는 쏴서 날아간 뒤 맞는 연출 (점수 판정은 둘 다 누르는 순간)
+    function fire(i, cx, cy) {
+        smash();
+        if (!ranged) {
+            const ok = i >= 0 && whack(i);
+            if (melee) { const r = stage.getBoundingClientRect(), b = ok ? holes[i].el.getBoundingClientRect() : null;
+                meleeFx(b ? b.left + b.width / 2 - r.left : cx - r.left, b ? b.top + b.height * .42 - r.top : cy - r.top, ok); }
+            return;
+        }
+        const r = stage.getBoundingClientRect();
+        const ok = i >= 0 && whack(i, ranged.ms);
+        shoot(cx - r.left, cy - r.top, ok ? () => hitFx(holes[i]) : null);
+    }
+    // 22차 v211: 근접 연출 (x,y = 무대 좌표 px, hit = 몬스터를 맞혔는지). 헛손질이면 궤적만 흐리게
+    function meleeFx(x, y, hit) {
+        const t = meleeTier, add = (cls, css, html, ms) => { const e = document.createElement('div'); e.className = cls + (t.lv0 ? ' lv0' : ''); e.style.cssText = `left:${x}px;top:${y}px;--c:${t.c};--c2:${t.c2};` + (css || ''); if (html) e.innerHTML = html; els.shots.appendChild(e); setTimeout(() => e.remove(), ms || 600); return e; };
+        const chips = (n, base, spread, R, cls) => { for (let k = 0; k < n; k++) { const a = (base + (Math.random() - .5) * spread) * Math.PI / 180, d = R * (.6 + Math.random() * .6);
+            add(cls || 'pp-chip', `--dx:calc(var(--k) * ${(Math.cos(a) * d).toFixed(2)}cqw);--dy:calc(var(--k) * ${(Math.sin(a) * d).toFixed(2)}cqw);--r:${(Math.random() * 600 - 300) | 0}deg;animation-delay:${(Math.random() * .05).toFixed(2)}s`, '', 650); } };
+        if (melee === 'blade') {
+            const rot = 34 + Math.random() * 22; // v212: 궤적 방향 고침 — 손(왼쪽 아래)을 축으로 도니까 볼록한 쪽이 오른쪽 위
+            add('pp-arc' + (hit ? '' : ' miss'), `--rot:${rot}deg`, ARC_SVG, 400);
+            if (t.trail) add('pp-arc trail', `--rot:${rot + 8}deg`, ARC_SVG, 450);
+            if (hit) { add('pp-cut', `--rot:${rot - 8}deg`, '', 420); if (t.glint) chips(4, -60, 120, 4, 'pp-glint'); }
+        } else if (melee === 'spear') {
+            if (hit) { add('pp-pierce', '', '', 360); if (t.trail) add('pp-pierce trail', '', '', 420); if (!t.lv0) add('pp-pflash', '', '', 300); chips(t.lv0 ? 3 : 5, -59, 50, 6); if (t.glint) chips(3, -59, 70, 5, 'pp-glint'); }
+        } else if (melee === 'blunt') {
+            if (hit) { add('pp-thud', '', '', 520); chips(t.lv0 ? 4 : 7, -90, 150, 5); shake('thud', 200); }
+            else add('pp-thud miss', '', '', 400);
+        }
     }
     function onKey(e) {
         if (!root || !root.classList.contains('open')) return;
@@ -118,8 +217,7 @@
         e.preventDefault();
         const b = holes[i].el.getBoundingClientRect();
         moveWpn(b.left + b.width / 2, b.top + b.height * .45);
-        smash();
-        whack(i);
+        fire(i, b.left + b.width / 2, b.top + b.height * .45);
     }
 
     // 18차-3: 카드가 앞으로 뒤집히며 몬스터 등장 / 시간 지나면 다시 뒤집힘
@@ -142,30 +240,37 @@
     }
     function shake(cls, ms) { stage.classList.remove(cls); void stage.offsetWidth; stage.classList.add(cls); later(() => stage.classList.remove(cls), ms); }
 
-    function whack(i) {
+    // dl = 원거리 화살이 날아가는 시간(ms): 판정·점수는 지금 바로, 카드가 맞는 그림은 도착할 때 (hitFx)
+    function whack(i, dl) {
         const h = holes[i];
-        if (!h || !h.type || h.hit) return;
+        if (!h || !h.type || h.hit || h.type === 'w') return false;
         h.hit = true;
-        h.el.classList.add('hit');
         const orc = h.type === 'o';
-        fxAt(h, orc ? BURST_BIG : BURST, 'pp-burst' + (orc ? ' big' : ''));
-        if (master) fxAt(h, '', 'pp-shock');
-        later(() => h.el.classList.remove('flip'), 230);
-        later(() => { h.type = null; h.hit = false; h.el.className = 'pp-card'; }, 560);
+        h.big = orc;
+        dl = dl || 0;
+        if (!dl) hitFx(h);
+        later(() => h.el.classList.remove('flip'), 230 + dl);
+        later(() => { h.type = null; h.hit = false; h.el.className = 'pp-card'; }, 560 + dl);
         if (!orc) {
             G.goblins++; G.sinceOrc = Math.min(PP_CFG.goblinPerOrc, G.sinceOrc + 1);
-            fxAt(h, '+1', 'pp-pop');
             renderHud();
             if (G.sinceOrc >= PP_CFG.goblinPerOrc && !G.orcOut) callOrc();
         } else {
             G.orcOut = false; G.orcsKilled++; G.sinceOrc = 0;
-            fxAt(h, '오크 처치!', 'pp-pop big');
             els.cracks[G.orcsKilled - 1] && els.cracks[G.orcsKilled - 1].classList.add('on');
             shake('shake', 460);
             dropRocks(G.orcsKilled * 4, .2);
             renderHud();
             if (G.orcsKilled >= PP_CFG.orcs) win();
         }
+        return true;
+    }
+    function hitFx(h) {
+        if (!h) return;
+        h.el.classList.add('hit'); if (ranged) h.el.classList.add('rk'); if (melee) h.el.classList.add('mk'); // v212: 근접은 무기별 자국을 따로 그림 → 카드 기본 사선(반대 방향)은 숨김
+        fxAt(h, h.big ? BURST_BIG : BURST, 'pp-burst' + (h.big ? ' big' : '')); // v210: 원거리도 맞는 순간 터짐 + 점수 글자 (예전엔 쏘자마자 +1이 떠서 안 맞은 것처럼 보였음)
+        fxAt(h, h.big ? '오크 처치!' : '+1', 'pp-pop' + (h.big ? ' big' : ''));
+        if (master) fxAt(h, '', 'pp-shock');
     }
 
     function callOrc() {
@@ -229,7 +334,7 @@
     function resetBoard() {
         holes.forEach(h => { h.type = null; h.hit = false; h.el.className = 'pp-card'; });
         els.cracks.forEach(c => c.classList.remove('on'));
-        els.fx.innerHTML = '';
+        els.fx.innerHTML = ''; els.shots.innerHTML = '';
         stage.classList.remove('collapse', 'lost', 'shake', 'ended');
         els.tbi.style.transform = 'scaleX(1)'; els.tt.textContent = PP_CFG.time;
     }
@@ -272,8 +377,16 @@
         wpn.innerHTML = (w && w.html) || opts.iconHtml || FALLBACK_ICON;
         const svg = wpn.querySelector('svg'); if (svg) svg.removeAttribute('class');
         master = cur === 'master_sword' || (!w && !!opts.master);
+        ranged = PP_RANGED[cur] || null;
+        melee = ranged ? null : (PP_MELEE[cur] || null);
+        let tid = 'novice'; try { const tt = (typeof RPG_TIERS !== 'undefined') && RPG_TIERS.find(x => x.keys.includes(cur)); if (tt) tid = tt.id; } catch (e) { }
+        meleeTier = PP_TIER_FX[tid] || PP_TIER_FX.novice;
+        wpn.dataset.m = melee || '';
+        stage.classList.toggle('pp-rng', !!ranged);
+        const gg = (ranged && ranged.g) || [.3, .7]; wpn.style.setProperty('--gx', gg[0]); wpn.style.setProperty('--gy', gg[1]); wpn.style.setProperty('--wsz', (ranged && ranged.sz) || 1);
+        wpn.style.left = wpn.style.top = ''; wpn.style.removeProperty('--aim');
     }
-    let master = false;
+    let master = false, ranged = null, melee = null, meleeTier = PP_TIER_FX.novice;
 
     let starting = false; // 19차-4: 저장 기다리는 동안 버튼을 또 누르면 도전이 두 번 깎이고 게임이 겹치던 문제 막기
     async function start() {
