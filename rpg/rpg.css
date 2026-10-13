@@ -288,7 +288,7 @@
 .sh-title { font-size: max(15px, 6.4cqw); color: #F4E6C6; letter-spacing: .06em; white-space: nowrap; text-shadow: 0 2px 0 #000; }
 .sh-pt { position: absolute; right: 14%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; white-space: nowrap; text-shadow: 0 2px 0 #000; }
 .sh-pt b { font-size: max(11px, 4.6cqw); color: #F4E6C6; } .sh-pt b.neg { color: #FF6B5A; } .sh-pt span { font-size: max(9px, 3.2cqw); color: #CFC3AC; font-weight: 700; }
-.sh-x { position: absolute; right: 2.5%; top: 50%; transform: translateY(-50%); width: 9%; aspect-ratio: 90 / 98; padding: 0; border: none; cursor: pointer; background: url('img/nb2_x.webp?v=191') center / 100% 100% no-repeat; image-rendering: pixelated; }
+.sh-x { position: absolute; right: 2.5%; top: 50%; transform: translateY(-50%); width: 8.6%; aspect-ratio: 1; padding: 0; border: none; cursor: pointer; background: url('img/nb2_x.webp?v=206') center / 100% 100% no-repeat; image-rendering: pixelated; }
 .sh-x:hover, .sh-img:hover { filter: brightness(1.18); }
 .sh-tabs { flex: 0 0 auto; height: 5.2%; display: flex; gap: 1.2%; align-items: stretch; margin-bottom: -1.6%; }
 .sh-tab { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 3%; padding: 0 1%; font-family: inherit; font-size: max(10px, 3.7cqw); font-weight: 700; color: #E9DCC0; cursor: pointer; white-space: nowrap;
@@ -369,10 +369,10 @@
     .nb2-mob .nb2-pt { display: flex; align-items: center; justify-content: flex-start; gap: .35em; font-size: 4.3cqw; font-weight: 700; color: #F4E6C6; white-space: nowrap; text-shadow: 0 2px 0 #000; }
     .nb2-mob .nb2-bar { overflow: hidden; border-radius: 2px; } .nb2-mob .nb2-bar span { font-size: 2.7cqw; }
     .nb2-mob .nb2-nick { padding: 0; font-size: 4.4cqw; line-height: 1; cursor: pointer; border-radius: 5px; background: linear-gradient(180deg, #3a3430, #26221f); border: 2px solid #5f5c58; box-shadow: inset 0 0 0 1px #15130f; }
-    .nb2-mob .nb2-mx { padding: 0; border: none; cursor: pointer; background: url('img/nb2_x.webp?v=191') center / 100% 100% no-repeat; image-rendering: pixelated; }
+    .nb2-mob .nb2-mx { padding: 0; border: none; cursor: pointer; background: url('img/nb2_x.webp?v=206') center / 100% 100% no-repeat; image-rendering: pixelated; }
     .m-slot { padding: 0; border: none; background: transparent; border-radius: 6px; }
     .m-slot > span { position: absolute; display: flex; overflow: hidden; pointer-events: none; }
-    .m-si { align-items: center; justify-content: center; background: rgba(8,6,5,.35); border: 2px solid #57524d; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+    .m-si { align-items: center; justify-content: center; } /* v207: 네모 상자 없앰 — 장비 그림이 칸 배경 위에 바로 (대장님) */
     .m-si .rpg-ic { width: 86%; height: 86%; display: block; } .m-si .rpg-arm-mini { width: 112%; height: auto; flex-shrink: 0; aspect-ratio: 64 / 96; margin-top: 100%; } .m-si .rpg-none { font-size: 4cqw; }
     .m-nm { flex-direction: column; justify-content: center; align-items: flex-start; gap: .5cqw; }
     .m-nm b { font-size: 2.7cqw; font-weight: 700; color: #A89B86; text-shadow: 0 1px 0 #000; line-height: 1; }
