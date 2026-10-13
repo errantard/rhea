@@ -356,41 +356,24 @@
 
 .nb2-slot .pv { font-style: normal; font-size: .72em; color: #8CC4F0; border: 1px solid #8CC4F0; border-radius: 3px; padding: 0 .3em; margin-left: .3em; vertical-align: middle; } /* v197: 안 산 미리보기 표시 */
 
-/* v198 → v201: 폰 = 수첩 조립식 — 한 화면에: 머리줄(이름·✏️·✕) → [장비 5칸 | 복도+캐릭터(좌우 잘라 씀)] → [대장간 상점 | 던전 탐험] → [닫기][적용] (대장님 시안) */
-.nb2-nick, .nb2-m { display: none; }
+/* v203: 폰 = 전용 세로 수첩 그림(nb2_note_m.webp 1370×2697, 대장님 시안) 한 장 + 글씨·칸·캐릭터·버튼 얹기. PC 조각(.nb2-sec)은 폰에서 숨김 */
+.nb2-mob { display: none; }
 @media (max-width: 760px) {
-    .nb2-dim .nb2 { width: 100%; max-width: 560px; aspect-ratio: auto; max-height: calc(100dvh - 20px); overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start;
-        background: #1b1916; border: 0 solid transparent; border-image: url('img/nb2_frame.webp?v=191') 70 fill / 12px stretch; border-radius: 0; padding: 6px; box-sizing: border-box; scrollbar-width: none; }
-    .nb2-dim .nb2::-webkit-scrollbar { display: none; }
-    .nb2-dim .nb2-wrap { width: 100%; max-width: 560px; }
-    .nb2 > .nb2-sec { position: relative; left: auto !important; top: auto !important; width: 100% !important; height: auto !important; flex-shrink: 0; aspect-ratio: var(--ar);
-        background: url('img/nb2_note.webp?v=191') var(--bp) / var(--bs) auto no-repeat; }
-    .nb2 > .s-l, .nb2 > .s-r, .nb2 > .s-f1 { display: none; }
-    .nb2 > .s-v1, .nb2 > .s-v2 { width: 50% !important; }
-    .nb2 > .s-f2 { width: 76% !important; margin: 4px auto 0; }
-    /* 머리줄 */
-    .nb2 > .s-h { aspect-ratio: auto; display: grid; grid-template-columns: 1fr auto auto; grid-template-areas: "nm ed x" "pt ed x" "bar bar bar"; align-items: center; gap: 3px 8px; padding: 8px 6px 10px 10px; background: none; }
-    .s-h > * { position: relative !important; left: auto !important; top: auto !important; width: auto !important; height: auto !important; }
-    .s-h .nb2-name { grid-area: nm; flex-wrap: wrap; white-space: normal; font-size: 16px; line-height: 1.3; } .s-h .nb2-name .tl { font-size: 12.5px; color: #D8C49C; }
-    .s-h .nb2-pt { grid-area: pt; justify-content: flex-start; font-size: 13px; }
-    .s-h .nb2-bar { grid-area: bar; height: 14px !important; background: #0d0b09; border: 1px solid #4a4642; border-radius: 3px; } .s-h .nb2-bar span { font-size: 10px; }
-    .s-h .nb2-nick { grid-area: ed; display: block; align-self: start; width: 34px !important; height: 34px !important; padding: 0; font-size: 16px; line-height: 1; cursor: pointer; border-radius: 4px;
-        background: linear-gradient(180deg, #3a3430, #26221f); border: 2px solid #5f5c58; box-shadow: inset 0 0 0 1px #15130f; }
-    .s-h .nb2-x { grid-area: x; align-self: start; width: 32px !important; height: 35px !important; background: url('img/nb2_x.webp?v=191') center / 100% 100% no-repeat; image-rendering: pixelated; }
-    /* 장비 5칸 | 캐릭터 */
-    .nb2 > .nb2-m { position: relative; display: grid; grid-template-columns: 42% 58%; width: 100%; }
-    .m-slots { display: flex; flex-direction: column; justify-content: space-between; gap: 5px; padding: 8px 6px; box-sizing: border-box; background: #24201c;
-        border: 0 solid transparent; border-image: url('img/nb2_panel.webp?v=191') 110 / 12px stretch; }
-    .m-slot { position: relative; display: flex; align-items: center; gap: 6px; flex: 1; min-height: 0; padding: 3px; text-align: left; border-radius: 3px;
-        background: linear-gradient(180deg, #2c2724, #1d1a17); border: 2px solid #55524e; box-shadow: inset 0 0 0 1px #0f0d0b; }
-    .m-si { flex: 0 0 auto; height: 100%; aspect-ratio: 1; max-height: 52px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #15120f; border: 1px solid #3f3c39; border-radius: 2px; }
+    .nb2-dim .nb2-wrap { width: 100%; justify-content: center; }
+    .nb2-dim .nb2 { width: min(100%, calc((100dvh - 24px) * 1370 / 2697)); aspect-ratio: 1370 / 2697; background: none; box-shadow: none; border-radius: 0; }
+    .nb2 > .nb2-sec { display: none; }
+    .nb2 > .nb2-mob { display: block; position: absolute; inset: 0; container-type: inline-size; background: url('img/nb2_note_m.webp?v=203') center / 100% 100% no-repeat; filter: drop-shadow(0 18px 40px rgba(0,0,0,.7)); }
+    .nb2-mob > * { position: absolute; box-sizing: border-box; }
+    .nb2-mob .nb2-name { display: flex; align-items: center; gap: .3em; white-space: nowrap; overflow: hidden; font-size: 5.2cqw; font-weight: 700; color: #F4E6C6; text-shadow: 0 2px 0 #000; }
+    .nb2-mob .nb2-name .tl { font-size: .72em; color: #D8C49C; overflow: hidden; text-overflow: ellipsis; }
+    .nb2-mob .nb2-pt { display: flex; align-items: center; justify-content: flex-start; gap: .35em; font-size: 4.3cqw; font-weight: 700; color: #F4E6C6; white-space: nowrap; text-shadow: 0 2px 0 #000; }
+    .nb2-mob .nb2-bar { overflow: hidden; border-radius: 2px; } .nb2-mob .nb2-bar span { font-size: 2.6cqw; }
+    .nb2-mob .nb2-nick { padding: 0; font-size: 4.6cqw; line-height: 1; cursor: pointer; border-radius: 5px; background: linear-gradient(180deg, #3a3430, #26221f); border: 2px solid #5f5c58; box-shadow: inset 0 0 0 1px #15130f; }
+    .m-slot { padding: 0; border: none; background: transparent; border-radius: 4px; }
+    .m-slot > span { position: absolute; display: flex; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; }
     .m-si .rpg-ic { width: 88%; height: 88%; display: block; } .m-si .rpg-arm-mini { width: 112%; height: auto; flex-shrink: 0; aspect-ratio: 64 / 96; margin-top: 100%; }
-    .m-nm { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 700; line-height: 1.2; color: #F4E6C6; text-shadow: 0 1px 0 #000; word-break: keep-all; overflow-wrap: anywhere;
-        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .m-slot.empty .m-nm { color: #9C907E; } .m-nm .pv { display: block; width: max-content; margin: 2px 0 0; font-style: normal; font-size: 10px; color: #8CC4F0; border: 1px solid #8CC4F0; border-radius: 3px; padding: 0 .3em; }
-    /* 복도 그림은 높이에 맞추고 좌우를 잘라 씀 (원본 칸 920×985 → 690×985 보이게) */
-    .m-stage { position: relative; aspect-ratio: 690 / 985; overflow: hidden; container-type: inline-size;
-        background: url('img/nb2_note.webp?v=191') 69.59% 18.34% / 296.81% auto no-repeat; }
-    .m-stage .nb2-stage { position: absolute; left: -11.304%; top: 3.655%; width: 122.609%; height: 93.299%; --u: 0.6904cqw; }
-    .nb2-slot.on, .nb2-slot.chg { z-index: 1; }
+    .m-nm > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: center; font-size: 3.5cqw; font-weight: 700; line-height: 1.2; color: #F4E6C6; text-shadow: 0 2px 0 #000; word-break: keep-all; overflow-wrap: anywhere; }
+    .m-slot.empty .m-nm > span { color: #9C907E; } .m-nm .pv { display: block; margin: 2px auto 0; width: max-content; font-style: normal; font-size: 2.4cqw; color: #8CC4F0; border: 1px solid #8CC4F0; border-radius: 3px; padding: 0 .3em; }
+    .nb2-mob .nb2-stage { overflow: hidden; --u: 0.392cqw; }
+    .nb2-mob .nb2-note { font-size: 2.6cqw; line-height: 1.35; text-align: center; white-space: nowrap; }
 }
