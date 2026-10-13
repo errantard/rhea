@@ -141,8 +141,8 @@ function rpgPixUrl(key, dots, rot) {
    - 무기 그림 = img/wpn/키_h.webp · 키_u.webp (도트 2배 = 1칸에 2픽셀) */
 const RPG_GRIP = [30.8, 57.2];
 function rpgWpnSrc(k, v) { return `${RPG_SELF.dir}img/wpn/${k}_${v}.webp${RPG_SELF.q ? '?' + RPG_SELF.q : ''}`; }
-function rpgClipFront(g, s) { // 그림 사각형 중 주먹 기준 왼쪽 아래 반쪽만 남기는 clip-path (화면 방향 (-1,1)) → %
-    const n = [-1, 1], k = n[0] * g[0] + n[1] * g[1] - 0.6, inn = (p) => n[0] * p[0] + n[1] * p[1] >= k;
+function rpgClipFront(g, s, n) { // 그림 사각형 중 주먹 기준 무기 끝 쪽(왼쪽 아래) 반쪽만 남기는 clip-path → % · v199: n = 무기 방향(뒤→끝)
+    const k = n[0] * g[0] + n[1] * g[1] - 0.6, inn = (p) => n[0] * p[0] + n[1] * p[1] >= k;
     const box = [[0, 0], [s[0], 0], [s[0], s[1]], [0, s[1]]], out = [];
     for (let i = 0; i < 4; i++) {
         const a = box[i], b = box[(i + 1) % 4], ia = inn(a), ib = inn(b);
@@ -161,12 +161,12 @@ function rpgFigHtml(eq, modeOver) {
         const src = rpgWpnSrc(wk, w.v || 'h'), L = Math.hypot(g.f[0] - g.b[0], g.f[1] - g.b[1]);
         if (w.m === 's') { // 어깨에 걸침 = 몸 뒤, 그림 가운데를 c에 놓고 각도만 돌림 (그림 기본 = 위 끝→아래 끝 135°)
             const c = w.c || [13, 46], o = [c[0] - (g.b[0] + g.f[0]) / 2, c[1] - (g.b[1] + g.f[1]) / 2], cx = ((g.b[0] + g.f[0]) / 2 / g.s[0] * 100).toFixed(1), cy = ((g.b[1] + g.f[1]) / 2 / g.s[1] * 100).toFixed(1);
-            back = `<span class="rpg-lay rpg-wpn2 bk" style="${box(o[0], o[1], g.s[0], g.s[1])};background-image:url('${src}');transform-origin:${cx}% ${cy}%;transform:rotate(${(w.a || 135) - 135}deg)"></span>`;
+            back = `<span class="rpg-lay rpg-wpn2 bk" style="${box(o[0], o[1], g.s[0], g.s[1])};background-image:url('${src}');transform-origin:${cx}% ${cy}%;transform:rotate(${(w.a || 135) - Math.atan2(g.f[1] - g.b[1], g.f[0] - g.b[0]) * 180 / Math.PI}deg)"></span>`;
         } else {
             const t = Math.min(1, (w.bl || 3) / L), gs = [g.b[0] + (g.f[0] - g.b[0]) * t, g.b[1] + (g.f[1] - g.b[1]) * t];
             const o = [RPG_GRIP[0] - gs[0], RPG_GRIP[1] - gs[1]], st = box(o[0], o[1], g.s[0], g.s[1]) + `;background-image:url('${src}')`;
             back = `<span class="rpg-lay rpg-wpn2 bk" style="${st}"></span>`;
-            front = `<span class="rpg-lay rpg-wpn2 fr" style="${st};clip-path:${rpgClipFront(gs, g.s)}"></span>`;
+            front = `<span class="rpg-lay rpg-wpn2 fr" style="${st};clip-path:${rpgClipFront(gs, g.s, [(g.f[0] - g.b[0]) / L, (g.f[1] - g.b[1]) / L])}"></span>`;
             fist = `<span class="rpg-lay rpg-body-sp rpg-spr rpg-fist" style="--sp:${sp}"></span>`;
         }
     } else if (wk && RPG_ICONS[wk]) { // 그림 없는 무기(옛 키 등) = 아이콘을 도트로 바꿔서 손에
@@ -184,7 +184,7 @@ function rpgFigHtml(eq, modeOver) {
 /* 수첩 그림 위 자리 (원본 2048×2048 픽셀 좌표 → %) */
 const NB2 = 2048, NB2_SLOT_ORDER = ['helm', 'weapon', 'armor', 'off', 'deco']; // 그림 속 아이콘 순서 (투구·무기·갑옷·방패·반지)
 const NB2_ROWS = [255, 439, 623, 807, 991];
-const NB2_SEC = { h: [0, 0, 2048, 180], l: [0, 180, 1050, 1190], r: [1050, 180, 2048, 1190], v1: [0, 1330, 1024, 1880], v2: [1024, 1330, 2048, 1880], f1: [0, 1880, 1360, 2048], f2: [1360, 1880, 2048, 2048] }; // v198: 수첩 조각 (원본 픽셀)
+const NB2_SEC = { h: [0, 0, 2048, 180], l: [0, 180, 1050, 1190], r: [1050, 180, 2048, 1190], v1: [150, 1420, 900, 1870], v2: [1150, 1420, 1900, 1870], f1: [0, 1880, 1360, 2048], f2: [1360, 1892, 1996, 2014] }; // v198: 수첩 조각 (원본 픽셀)
 const nbPos = (x0, y0, x1, y1, W = NB2, H = NB2) => `left:${(x0 / W * 100).toFixed(2)}%;top:${(y0 / H * 100).toFixed(2)}%;width:${((x1 - x0) / W * 100).toFixed(2)}%;height:${((y1 - y0) / H * 100).toFixed(2)}%`;
 
 const RPG_SHOP_HELLO = ['어서 오시게!<br>쓸만한 장비가 많다네.', '천천히 둘러보게나.<br>입어보는 건 공짜라네.', '오늘은 뭘 찾으러 왔나?<br>좋은 물건 들어왔다네.'];
@@ -196,6 +196,12 @@ function renderArmory() {
     const cur = rpgEqAll(), pend = rpgPend || cur, changed = rpgPendChanged();
     const inLv = exp % RPG_EXP.perLv;
     // ── 수첩 ──
+    const slotMini = (id) => { // v201: 폰 전용 장비 칸 (아이콘 + 이름 하나: 장비 이름, 없으면 칸 이름)
+        const sl = RPG_SLOTS.find(x => x.id === id), k = pend[id], lock = rpgSlotLocked(sl);
+        const ic = lock ? '<span class="rpg-none">🔒</span>' : !k ? '' : id === 'armor' ? `<span class="rpg-spr rpg-arm-mini" style="--sp:${RPG_ARMORS[k][1]}"></span>` : (RPG_ICONS[k] ? rpgIconSvg(k) : '');
+        const nm = lock ? `${sl.name} 🔒` : k ? escapeHtml(rpgItemName(k)) : sl.name;
+        return `<button type="button" class="nb2-slot m-slot${pend[id] !== cur[id] ? ' chg' : ''}${!k || lock ? ' empty' : ''}${rpgPanel && rpgTab === id ? ' on' : ''}" data-tab="${id}" title="${sl.name}"><span class="m-si">${ic}</span><span class="m-nm">${nm}${k && !lock && !rpgOwns(k) ? '<i class="pv">미리보기</i>' : ''}</span></button>`;
+    };
     const slot = (id, i, P) => {
         const sl = RPG_SLOTS.find(x => x.id === id), k = pend[id], lock = rpgSlotLocked(sl), y0 = NB2_ROWS[i];
         const val = lock ? `<i class="lk">🔒 Lv.${sl.minLv}부터</i>` : k ? escapeHtml(rpgItemName(k)) + (rpgOwns(k) ? '' : ' <i class="pv">미리보기</i>') : `<i>${sl.tiers.length ? sl.none : '준비중'}</i>`;
@@ -218,7 +224,9 @@ function renderArmory() {
         <div class="nb2-name" style="${P(130, 34, 1040, 108)}"><b>${escapeHtml(currentUserDisplayName())}</b><span class="tl">· ${admin ? '<span class="ms">마스터</span> · ' : ''}${rpgTitle(lv)} Lv.${lv}</span></div>
         <div class="nb2-bar" style="${P(148, 118, 1023, 143)}" title="${exp} EXP · 다음 레벨까지 ${RPG_EXP.perLv - inLv} EXP · 출석 ${days}일"><i style="width:${inLv / RPG_EXP.perLv * 100}%"></i><span>경험치 ${inLv}/${RPG_EXP.perLv}</span></div>
         <div class="nb2-pt" style="${P(1300, 36, 1890, 112)}"><b class="${pts < 0 ? 'neg' : ''}">${pts}P</b> 보유 포인트</div>
+        <button type="button" class="nb2-nick" data-act="nick" aria-label="닉네임 바꾸기" title="닉네임 바꾸기">✏️</button>
         <button type="button" class="nb2-hit nb2-x" data-act="close" aria-label="닫기" style="${P(1902, 40, 1992, 138)}"></button>`) +
+        `<div class="nb2-m"><div class="m-slots">${NB2_SLOT_ORDER.map(slotMini).join('')}</div><div class="m-stage"><div class="nb2-stage">${rpgFigHtml(pend)}</div></div></div>` +
         sec('l', NB2_SEC.l, P => NB2_SLOT_ORDER.map((id, i) => slot(id, i, P)).join('')) +
         sec('r', NB2_SEC.r, P => `<div class="nb2-stage" style="${P(1097, 231, 1943, 1150)}">${rpgFigHtml(pend)}</div>`) +
         sec('v1', NB2_SEC.v1, P => `<button type="button" class="nb2-hit btn" data-act="shop" aria-label="상점" style="${P(366, 1742, 688, 1850)}"></button>`) +
