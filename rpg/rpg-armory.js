@@ -184,7 +184,7 @@ function rpgFigHtml(eq, modeOver) {
 /* 수첩 그림 위 자리 (원본 2048×2048 픽셀 좌표 → %) */
 const NB2 = 2048, NB2_SLOT_ORDER = ['helm', 'weapon', 'armor', 'off', 'deco']; // 그림 속 아이콘 순서 (투구·무기·갑옷·방패·반지)
 const NB2_ROWS = [255, 439, 623, 807, 991];
-const NBM_W = 1370, NBM_H = 2697, NBM_ROW0 = 447, NBM_ROWH = 216; // v203: 폰 그림 nb2_note_m.webp · 장비 칸 첫 줄 위 · 줄 간격
+const NBM_W = 1408, NBM_H = 3008, NBM_ROW0 = 502, NBM_ROWH = 242, NBM_ROWHT = 204, NBM_SX0 = 104, NBM_SX1 = 632; // v205: 폰 그림 nb2_note_m.webp(제미나이 3차 + 색감 정리) · 장비 칸 첫 줄 위·줄 간격·칸 높이·좌우
 const NB2_SEC = { h: [0, 0, 2048, 180], l: [0, 180, 1050, 1190], r: [1050, 180, 2048, 1190], v1: [150, 1420, 900, 1870], v2: [1150, 1420, 1900, 1870], f1: [0, 1880, 1360, 2048], f2: [1360, 1892, 1996, 2014] }; // v198: 수첩 조각 (원본 픽셀)
 const nbPos = (x0, y0, x1, y1, W = NB2, H = NB2) => `left:${(x0 / W * 100).toFixed(2)}%;top:${(y0 / H * 100).toFixed(2)}%;width:${((x1 - x0) / W * 100).toFixed(2)}%;height:${((y1 - y0) / H * 100).toFixed(2)}%`;
 
@@ -199,25 +199,26 @@ function renderArmory() {
     // ── 수첩 ──
     // v203: 폰 전용 수첩 = 세로 그림 한 장(img/nb2_note_m.webp, 1370×2697) 위에 글씨·칸·캐릭터·버튼을 얹음 (대장님 시안). PC 그림·조각은 폰에서 숨김
     const M = (x0, y0, x1, y1) => nbPos(x0, y0, x1, y1, NBM_W, NBM_H);
-    const slotMini = (id, i) => {
-        const sl = RPG_SLOTS.find(x => x.id === id), k = pend[id], lock = rpgSlotLocked(sl), y = NBM_ROW0 + i * NBM_ROWH;
+    const slotMini = (id, i) => { // 장비 칸 = 긴 칸 하나 (왼쪽 아이콘 + 오른쪽 이름: 장비 이름, 없으면 칸 이름)
+        const sl = RPG_SLOTS.find(x => x.id === id), k = pend[id], lock = rpgSlotLocked(sl), y = NBM_ROW0 + i * NBM_ROWH, w = NBM_SX1 - NBM_SX0, h = NBM_ROWHT;
         const ic = lock ? '<span class="rpg-none">🔒</span>' : !k ? '' : id === 'armor' ? `<span class="rpg-spr rpg-arm-mini" style="--sp:${RPG_ARMORS[k][1]}"></span>` : (RPG_ICONS[k] ? rpgIconSvg(k) : '');
-        const nm = lock ? `${sl.name} 🔒` : k ? escapeHtml(rpgItemName(k)) : sl.name;
-        return `<button type="button" class="nb2-slot m-slot${pend[id] !== cur[id] ? ' chg' : ''}${!k || lock ? ' empty' : ''}${rpgPanel && rpgTab === id ? ' on' : ''}" data-tab="${id}" title="${sl.name}" style="${M(97, y, 555, y + 190)}"><span class="m-si" style="left:${(23 / 458 * 100).toFixed(2)}%;top:${(24 / 190 * 100).toFixed(2)}%;width:${(146 / 458 * 100).toFixed(2)}%;height:${(142 / 190 * 100).toFixed(2)}%">${ic}</span><span class="m-nm" style="left:${(216 / 458 * 100).toFixed(2)}%;top:${(26 / 190 * 100).toFixed(2)}%;width:${(210 / 458 * 100).toFixed(2)}%;height:${(136 / 190 * 100).toFixed(2)}%"><span>${nm}${k && !lock && !rpgOwns(k) ? '<i class="pv">미리보기</i>' : ''}</span></span></button>`;
+        const raw = lock ? `Lv.${sl.minLv}부터` : k ? rpgItemName(k) : (sl.tiers.length ? sl.none : '준비중'), pc = (v, t) => (v / t * 100).toFixed(2) + '%';
+        const fs = raw.length <= 4 ? 4.3 : raw.length <= 6 ? 3.7 : raw.length <= 8 ? 3.1 : 2.6; // v205: 이름이 길면 글씨를 줄여서 칸 안에 한 줄로
+        return `<button type="button" class="nb2-slot m-slot${pend[id] !== cur[id] ? ' chg' : ''}${!k || lock ? ' empty' : ''}${rpgPanel && rpgTab === id ? ' on' : ''}" data-tab="${id}" title="${sl.name}" style="${M(NBM_SX0, y, NBM_SX1, y + h)}"><span class="m-si" style="left:${pc(30, w)};top:${pc(30, h)};width:${pc(144, w)};height:${pc(h - 60, h)}">${ic}</span><span class="m-nm" style="left:${pc(196, w)};top:${pc(22, h)};width:${pc(w - 222, w)};height:${pc(h - 44, h)}"><b>${sl.name}</b><span style="font-size:${fs}cqw">${escapeHtml(raw)}</span>${k && !lock && !rpgOwns(k) ? '<i class="pv">미리보기</i>' : ''}</span></button>`;
     };
     const nbMob = () => `<div class="nb2-mob">
-        <div class="nb2-name" style="${M(90, 42, 1030, 122)}"><b>${escapeHtml(currentUserDisplayName())}</b><span class="tl">· ${admin ? '<span class="ms">마스터</span> · ' : ''}${rpgTitle(lv)} Lv.${lv}</span></div>
-        <div class="nb2-pt" style="${M(90, 140, 1030, 210)}"><b class="${pts < 0 ? 'neg' : ''}">${pts}P</b> 보유 포인트</div>
-        <div class="nb2-bar" style="${M(89, 226, 1321, 278)}"><i style="width:${inLv / RPG_EXP.perLv * 100}%"></i><span>경험치 ${inLv}/${RPG_EXP.perLv}</span></div>
-        <button type="button" class="nb2-nick" data-act="nick" aria-label="닉네임 바꾸기" title="닉네임 바꾸기" style="${M(1050, 80, 1160, 190)}">✏️</button>
-        <button type="button" class="nb2-hit" data-act="close" aria-label="닫기" style="${M(1185, 59, 1319, 211)}"></button>
+        <div class="nb2-name" style="${M(76, 58, 1110, 142)}"><b>${escapeHtml(currentUserDisplayName())}</b><span class="tl">· ${admin ? '<span class="ms">마스터</span> · ' : ''}${rpgTitle(lv)} Lv.${lv}</span></div>
+        <div class="nb2-pt" style="${M(76, 150, 1110, 226)}"><b class="${pts < 0 ? 'neg' : ''}">${pts}P</b> 보유 포인트</div>
+        <div class="nb2-bar" style="${M(92, 256, 1342, 304)}"><i style="width:${inLv / RPG_EXP.perLv * 100}%"></i><span>경험치 ${inLv}/${RPG_EXP.perLv}</span></div>
+        <button type="button" class="nb2-nick" data-act="nick" aria-label="닉네임 바꾸기" title="닉네임 바꾸기" style="${M(1122, 66, 1222, 166)}">✏️</button>
+        <button type="button" class="nb2-mx" data-act="close" aria-label="닫기" style="${M(1240, 60, 1340, 169)}"></button>
         ${NB2_SLOT_ORDER.map(slotMini).join('')}
-        <div class="nb2-stage" style="${M(587, 445, 1283, 1481)}">${rpgFigHtml(pend)}</div>
-        <button type="button" class="nb2-hit btn" data-act="shop" aria-label="상점" style="${M(165, 2177, 565, 2307)}"></button>
-        <button type="button" class="nb2-hit btn${pdone ? ' done' : ''}" data-act="dungeon" aria-label="던전탐험" style="${M(899, 2157, 1315, 2287)}"></button>
-        <div class="nb2-note" style="${M(440, 2445, 810, 2515)}">${changed ? '바뀐 장비가 있어요<br>→ [적용]' : `출석 +${RPG_EXP.day} EXP<br>던전 +${RPG_EXP.pang} EXP`}</div>
-        <button type="button" class="nb2-hit btn" data-act="close" aria-label="닫기" style="${M(70, 2400, 430, 2560)}"></button>
-        <button type="button" class="nb2-hit btn${changed ? ' glow' : ' off'}" data-act="apply" aria-label="적용" ${changed ? '' : 'disabled'} style="${M(820, 2400, 1250, 2560)}"></button></div>`;
+        <div class="nb2-stage" style="${M(650, 480, 1362, 1640)}">${rpgFigHtml(pend)}</div>
+        <button type="button" class="nb2-hit btn" data-act="shop" aria-label="상점" style="${M(140, 2430, 520, 2546)}"></button>
+        <button type="button" class="nb2-hit btn${pdone ? ' done' : ''}" data-act="dungeon" aria-label="던전탐험" style="${M(830, 2430, 1215, 2550)}"></button>
+        <div class="nb2-note" style="${M(90, 2690, 820, 2870)}">${changed ? '바뀐 장비가 있어요 → [적용]' : `출석 +${RPG_EXP.day} EXP · 던전 +${RPG_EXP.pang} EXP`}</div>
+        <button type="button" class="nb2-hit btn m-bt" data-act="close" aria-label="닫기" style="${M(852, 2680, 1058, 2880)}">닫기</button>
+        <button type="button" class="nb2-hit btn m-bt${changed ? ' glow' : ' off'}" data-act="apply" aria-label="적용" ${changed ? '' : 'disabled'} style="${M(1104, 2680, 1310, 2880)}">적용</button></div>`;
     const slot = (id, i, P) => {
         const sl = RPG_SLOTS.find(x => x.id === id), k = pend[id], lock = rpgSlotLocked(sl), y0 = NB2_ROWS[i];
         const val = lock ? `<i class="lk">🔒 Lv.${sl.minLv}부터</i>` : k ? escapeHtml(rpgItemName(k)) + (rpgOwns(k) ? '' : ' <i class="pv">미리보기</i>') : `<i>${sl.tiers.length ? sl.none : '준비중'}</i>`;
