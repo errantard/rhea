@@ -2103,7 +2103,7 @@
         }
     </style>
     <!-- 17차-5: 모험가(RPG) 모듈 — 업무 기능과 분리. 없어도 업체관리는 정상 -->
-    <link rel="stylesheet" href="rpg/rpg.css?v=213">
+    <link rel="stylesheet" href="rpg/rpg.css?v=218">
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════
@@ -2394,8 +2394,8 @@
                     <div class="section-tab section-rental">임대</div>
                     <div class="section-fields">
                         <div class="form-group">
-                            <label>기기도입일</label>
-                            <input type="date" id="installDate" onchange="handleRentalDateInputsChange()">
+                            <label title="설치날짜(첫 기기)를 넣으면 자동으로 채워짐 · 직접 고치기 가능">임대시작일</label>
+                            <input type="date" id="installDate" onchange="markRentalStartManual(this); handleRentalDateInputsChange()">
                         </div>
                         <div class="form-group">
                             <label>임대 기간</label>
@@ -2458,7 +2458,7 @@
                     <div class="section-fields">
                         <div class="form-group"><label><span data-field-label="deviceModel">모델명</span></label><input type="text" id="deviceModel"></div>
                         <div class="form-group"><label><span data-field-label="deviceType">옵션</span></label><input type="text" id="deviceType"></div>
-                        <div class="form-group"><label><span data-field-label="deviceOption">설치날짜</span></label><input type="date" id="deviceOption"></div>
+                        <div class="form-group"><label><span data-field-label="deviceOption">설치날짜</span></label><input type="date" id="deviceOption" onchange="syncRentalStartFromDevice('reg')"></div>
                     </div>
                 </div>
 
@@ -2601,7 +2601,7 @@
                             <span>임대</span>
                         </div>
                         <div class="dfields">
-                            <div class="dfield"><label>기기도입일</label><input type="date" id="detailInstallDate" onchange="handleDetailRentalDateChange()"></div>
+                            <div class="dfield"><label title="설치날짜(첫 기기)를 넣으면 자동으로 채워짐 · 직접 고치기 가능">임대시작일</label><input type="date" id="detailInstallDate" onchange="markRentalStartManual(this); handleDetailRentalDateChange()"></div>
                             <div class="dfield">
                                 <label>임대 기간</label>
                                 <div class="rental-period-row">
@@ -2672,7 +2672,7 @@
                                 <span class="dev-num dev-num1" title="1번째 기기">①</span>
                                 <div class="dfield dev-model"><label>모델명</label><input type="text" id="detailDeviceModel"></div><span class="dev-br"></span>
                                 <div class="dfield dev-opt"><label>옵션</label><input type="text" id="detailDeviceType"></div>
-                                <div class="dfield dev-date"><label>설치날짜</label><input type="date" id="detailDeviceOption"></div>
+                                <div class="dfield dev-date"><label>설치날짜</label><input type="date" id="detailDeviceOption" onchange="syncRentalStartFromDevice('detail')"></div>
                                 <button type="button" class="dev-add" onclick="addExtraDevice()" title="기기 추가 (설치날짜가 다른 기기를 한 줄씩)" aria-label="기기 추가"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
                             </div>
                             <div id="detailExtraDevices"></div>
@@ -2748,9 +2748,9 @@
         </div>
     </div>
 
-    <script src="rpg/rpg-data.js?v=213"></script>
-    <script src="rpg/rpg-core.js?v=213"></script>
-    <script src="rpg/rpg-armory.js?v=213"></script>
+    <script src="rpg/rpg-data.js?v=218"></script>
+    <script src="rpg/rpg-core.js?v=218"></script>
+    <script src="rpg/rpg-armory.js?v=218"></script>
     <script>
         /* ═══════════════════════════════════════════════════════════════
            [DASHBOARD] dashboard.html 전용 스크립트 (업체관리 앱 로직)
@@ -5594,6 +5594,7 @@ function generateUniqueId() {
             document.getElementById('secRentalBlock').style.display = (division === '임대') ? 'flex' : 'none';
             const gs = document.getElementById('regGroupSelect');
             if (gs) gs.style.display = (division === '임대') ? 'none' : '';
+            if (division === '임대') syncRentalStartFromDevice('reg');
         }
 
         // 12차-2: 임대 업체는 그룹이 없지만 DB상 group_id가 필요해서 "개별"(없으면 첫 그룹)에 넣어둠 — 화면엔 "임대"로만 보임
@@ -5612,7 +5613,7 @@ function generateUniqueId() {
             setSelectedRegionSi('');
             document.getElementById('editTargetId').value = "";
             document.querySelector('input[name="division"][value="' + (currentDivision === 'lease' ? '임대' : '판매') + '"]').checked = true;
-            document.getElementById('installDate').value = '';
+            document.getElementById('installDate').value = ''; document.getElementById('installDate').dataset.auto = '';
             applyRentalPeriodValue('rentalPeriod', 'rentalPeriodCustom', 'rentalPeriodCustomValue', 'rentalPeriodCustomUnit', '1개월');
             document.getElementById('rentalEndDate').value = '';
             handleDivisionChange();
@@ -5629,7 +5630,7 @@ function generateUniqueId() {
             document.getElementById('detailPickRent').classList.toggle('active', val === '임대');
             const rentalRow = document.getElementById('detailRentalRow');
             rentalRow.classList.toggle('show', val === '임대');
-            if (val === '임대') handleDetailRentalDateChange();
+            if (val === '임대') { syncRentalStartFromDevice('detail'); handleDetailRentalDateChange(); }
         }
 
         function setDetailStatus(val) {
@@ -5637,6 +5638,23 @@ function generateUniqueId() {
             document.getElementById('detailPickOk').classList.toggle('active', val === '정상');
             document.getElementById('detailPickReq').classList.toggle('active', val === '요청');
             document.getElementById('detailPickEnd').classList.toggle('active', val === '종료');
+        }
+
+        /* v218 (대장님): 임대면 첫 번째 기기 설치날짜를 넣을 때 임대시작일 자동 채움 (그다음 종료일도 자동 계산)
+           - 임대시작일이 비어 있거나, 이번에 자동으로 넣은 값 그대로일 때만 따라감 (data-auto = 자동으로 넣은 값)
+           - 임대시작일을 직접 고치면 그 뒤로는 안 따라감 (설치 후 일주일 뒤 임대 시작 같은 경우)
+           - 2대째부터(②③… 설치날짜)는 절대 안 건드림 → 몇 달 뒤 기기 추가해도 임대시작일이 몰래 바뀌지 않음 */
+        function markRentalStartManual(el) { el.dataset.auto = ''; }
+        function syncRentalStartFromDevice(scope) {
+            const reg = scope !== 'detail';
+            const isRent = reg ? (document.querySelector('input[name="division"]:checked') || {}).value === '임대'
+                               : document.getElementById('detailDivisionValue').value === '임대';
+            if (!isRent) return;
+            const dev = document.getElementById(reg ? 'deviceOption' : 'detailDeviceOption').value;
+            const st = document.getElementById(reg ? 'installDate' : 'detailInstallDate');
+            if (!dev || (st.value && st.value !== st.dataset.auto)) return;
+            st.value = dev; st.dataset.auto = dev;
+            if (reg) handleRentalDateInputsChange(); else handleDetailRentalDateChange();
         }
 
         function handleDetailRentalDateChange() {
@@ -5718,7 +5736,7 @@ function generateUniqueId() {
             document.getElementById('detailReaCode').value = item.reaCode || '';
             document.getElementById('detailKioAdminId').value = item.kioAdminId || '';
 
-            document.getElementById('detailInstallDate').value = item.installDate || '';
+            document.getElementById('detailInstallDate').value = item.installDate || ''; document.getElementById('detailInstallDate').dataset.auto = '';
             applyRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustom', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit', item.rentalPeriod);
             document.getElementById('detailRentalEndDate').value = item.rentalEndDate || '';
 
@@ -6147,7 +6165,7 @@ function generateUniqueId() {
             { key: 'kioAdminId',      label: '키오드민번호', group: 'sys-group',    width: 14, pdfWeight: 8,  compact: true },
             { key: 'reaCode',         label: '레아코드',   group: 'sys-group',     width: 10, pdfWeight: 8,  compact: true },
             { key: 'division',        label: '구분',       group: 'rental-group',  width: 8,  pdfWeight: 6,  align: 'center' },
-            { key: 'installDate',     label: '기기도입일', group: 'rental-group',  width: 13, pdfWeight: 11 }, // 16차: 임대 시작일
+            { key: 'installDate',     label: '임대시작일', group: 'rental-group',  width: 13, pdfWeight: 11 }, // 16차: 임대 시작일
             { key: 'rentalExpiry',    label: '임대만료일', group: 'rental-group',  width: 14, pdfWeight: 11 },
             { key: 'memo',            label: '메모',       group: null,           width: 24, pdfWeight: 13 },
             { key: 'status',          label: '상태',       group: null,           width: 10, align: 'center', pdfWeight: 8 }
@@ -6658,8 +6676,8 @@ function generateUniqueId() {
             const status = txt('status');
             const memoText = txt('memo');
             const period = clean(row['임대기간'] || row['rentalPeriod']);
-            // 16차-9: 기기도입일·임대종료일은 구분과 상관없이 한 번만 읽어둠 (대량 수정에서 기존 임대 업체에 쓰려고)
-            const instD = nd(row['기기도입일'] || row['installDate'] || '', 'installDate');
+            // 16차-9: 임대시작일·임대종료일은 구분과 상관없이 한 번만 읽어둠 (대량 수정에서 기존 임대 업체에 쓰려고)
+            const instD = nd(row['임대시작일'] || row['installDate'] || '', 'installDate');
             const endD = nd(row['임대종료일'] || row['임대만료일'] || row['rentalEndDate'] || '', 'rentalEndDate');
             return {
                 groupCell, isCont, instD, endD, rawStatus: status, rawPeriod: period,
@@ -6717,10 +6735,10 @@ function generateUniqueId() {
             });
             const DATE_HEADERS = {
                 deviceOption: [getLabel('deviceOption'), DEFAULT_FIELD_LABELS.deviceOption, 'deviceOption', ...(LEGACY_HEADER_ALIASES.deviceOption || [])],
-                installDate: ['기기도입일', 'installDate'],
+                installDate: ['임대시작일', 'installDate'],
                 rentalEndDate: ['임대종료일', '임대만료일', 'rentalEndDate']
             };
-            const FIELD_NAME = { deviceOption: getLabel('deviceOption'), installDate: '기기도입일', rentalEndDate: '임대종료일' };
+            const FIELD_NAME = { deviceOption: getLabel('deviceOption'), installDate: '임대시작일', rentalEndDate: '임대종료일' };
             const res = { totalRows: jsonData.length, companies: [], badDates: [], dataSheets: new Set(), mergedRows: 0, orphanRows: 0 };
             let lastCo = null;
             const sameRegion = (a, b) => (!a.regionSi || !b.regionSi || xlNorm(a.regionSi) === xlNorm(b.regionSi)) && (!a.regionGu || !b.regionGu || xlNorm(a.regionGu) === xlNorm(b.regionGu));
@@ -6883,7 +6901,7 @@ function generateUniqueId() {
                 const all = getAllGroupsFlatData();
                 const TEXT_KEYS = ['regionSi', 'regionGu', 'installAddress', 'installLocation', 'orgDept', 'orgName', 'orgTitle', 'orgContact', 'orgEmail',
                     'managerContact', 'managerEmail', 'managerNote', 'kioId', 'kioAdminId', 'reaCode'];
-                const labelOf = (k) => ({ regionSi: '지역 시', installDate: '기기도입일', rentalEndDate: '임대종료일', rentalPeriod: '임대기간' }[k] || getLabel(k));
+                const labelOf = (k) => ({ regionSi: '지역 시', installDate: '임대시작일', rentalEndDate: '임대종료일', rentalPeriod: '임대기간' }[k] || getLabel(k));
                 const short = (v) => { const t = String(v || '').replace(/\s+/g, ' ').trim(); return t ? `"${t.length > 22 ? t.slice(0, 22) + '…' : t}"` : '(없음)'; };
                 const today = formatDateYMD(new Date());
                 const plans = [], notFound = [], ambiguous = [], noChange = [];
@@ -6986,7 +7004,7 @@ function generateUniqueId() {
                 { header: '키오드민번호', key: 'kioAdminId',      group: 'sys-group',     width: 16, example: 'e5f6g7h8' },
                 { header: '레아코드',    key: 'reaCode',         group: 'sys-group',     width: 14, example: 'qr99, qr100' },
                 { header: '구분',        key: 'division',        group: 'rental-group',  width: 8,  example: '판매 또는 임대' },
-                { header: '기기도입일',  key: 'installDate',     group: 'rental-group',  width: 14, example: '2026-08-01 (임대일 때만 입력, YYYY-MM-DD)' },
+                { header: '임대시작일',  key: 'installDate',     group: 'rental-group',  width: 14, example: '2026-08-01 (임대일 때만 입력, YYYY-MM-DD)' },
                 { header: '임대기간',    key: 'rentalPeriod',    group: 'rental-group',  width: 10, example: '1개월/15일/1주일/1일 또는 2개월,3주일처럼 숫자+단위 직접입력 가능' },
                 { header: '임대종료일',  key: 'rentalEndDate',   group: 'rental-group',  width: 14, example: '비워두면 도입일+임대기간으로 자동계산' },
                 { header: '메모',        key: 'memo',            group: null,            width: 26, example: '초기 점검 완료' },
@@ -7048,7 +7066,7 @@ function generateUniqueId() {
                 ['키오에듀ID·레아코드', '기기마다 다르면 쉼표(,)로 이어 적기 — 예: qr99, qr100 (기기 순서대로)'],
                 ['날짜', '2026-01-15 처럼 연-월-일. 5월15일, 5/15처럼 연도 없이 쓰면 올해로 들어가요. 엑셀 날짜 서식도 괜찮아요.'],
                 ['', '날짜로 못 읽는 글(15일 오후, 다음주 등)은 등록 전 확인창에 몇 번 칸·장소명을 알려주고 빈칸으로 들어가요.'],
-                ['임대', '기기도입일 = 임대 시작일. 임대종료일을 비우면 도입일+임대기간으로 자동 계산.'],
+                ['임대', '임대시작일 = 임대 시작일. 임대종료일을 비우면 시작일+임대기간으로 자동 계산.'],
                 ['상태', '정상 / 요청 / 종료 중 하나. 비우면 정상.'],
                 ['대량 수정', '데이터 → 엑셀 대량 수정: 장소명이 완전히 같은 기존 업체를 찾아 엑셀에 적힌 칸만 고쳐요. 빈칸은 안 건드림.'],
                 ['', '고칠 칸만 남겨도 돼요 (예: 장소명 + 담당자 연락처). 1번 줄 칸 이름으로 읽어서 칸 순서는 상관없어요.'],
