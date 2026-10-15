@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   RheaOps · 모험가(RPG) 모듈 — 미니게임 2 "캐슬 디펜스" (23차, 2026-10-15 · v221 원거리 공속 0.6·0.5·0.4초, 옛 이름 성벽 수비대)
+   RheaOps · 모험가(RPG) 모듈 — 미니게임 2 "캐슬 디펜스" (23차, 2026-10-15 · v222 지팡이 = 느리고 한 방, 옛 이름 성벽 수비대)
    세로 9:16 디펜스. 오른쪽 = 우리 성벽(사다리 2개) · 왼쪽 = 하늘·들판에서 몬스터가 몰려옴
    - 원거리 무기(지팡이·슬링샷·석궁·장궁) = 화면 어디든 눌러서 한 마리 (탑 위에서 날아감)
    - 근접 무기(칼·창·몽둥이·룬마검) = 사다리 꼭대기 / 성벽 아래(오크 대장) 판정 원 안의 적을 여러 마리 한 번에
@@ -28,7 +28,8 @@
         walk: { g: [3.4, 4.2], s: [4.6, 5.6] }, // 사다리 아래까지 걷는 시간(초) [가까운, 먼]
         climb: { g: [3.4, 4.2], s: [4.0, 4.9] }, // 사다리 오르는 시간
         bat: 3.6, orcWalk: 10, orcHit: 4, orcDmg: 2,
-        meleeDmg: 100, rangedDmg: 50, // v218: 원거리 = 고블린 2방
+        meleeDmg: 100, rangedDmg: 50, // v218: 원거리(활 계열) = 고블린 2방
+        staffDmg: 100, staffCd: { novice: 1200, common: 1000, rare: 800, master: 600 }, // v222 (대장님): 지팡이 계열 = 한 방에 고블린, 대신 느림
         rangedCd: { novice: 600, common: 500, rare: 400, master: 300 }, meleeCd: 300, // 쏘는/휘두르는 간격(ms) — v221 (대장님): 원거리 0.6 · 0.5 · 0.4초 (마스터 0.3)
         meleeMul: { novice: 1, common: 1.15, rare: 1.3, master: 1.5 }, // 근접 등급별 대미지 배수 (원거리는 간격으로 차이)
         gaugeKill: 9, gaugeCombo: 2, rockMax: 2, rockDmg: 300, rockAoe: 330, // 바위: 한 판 2번 · 대미지 · 바닥 쿵 반지름
@@ -209,7 +210,7 @@
         if (G.ranged) aimAt(e.clientX, e.clientY);
         const now = performance.now();
         if (now < G.cd) return;
-        if (G.ranged) { const cd = W_CFG.rangedCd[G.tier] || 1000; G.cd = now + cd; shootAt(x, y); coolDown(cd); }
+        if (G.ranged) { const cd = shotCd(G.wpn, G.tier); G.cd = now + cd; shootAt(x, y); coolDown(cd); }
         else { G.cd = now + W_CFG.meleeCd; meleeAt(x, y); }
     }
     function nearest(x, y, maxR) {
@@ -240,10 +241,12 @@
         if (m.type === 'o') win();
     }
 
+    // 원거리 쏘는 간격: 지팡이 계열(마법)은 느리고 세게 · 활 계열(슬링샷·석궁·장궁)은 빠르고 약하게
+    function shotCd(wpn, tier) { const t = (RANGED[wpn] || {}).k === 'magic' ? W_CFG.staffCd : W_CFG.rangedCd; return t[tier] || t.novice; }
     function shootAt(x, y) {
         const cfg = RANGED[G.wpn] || RANGED.longbow, target = nearest(x, y, 70);
         const tx = target ? target.cx : x, ty = target ? target.cy : y;
-        const dmg = W_CFG.rangedDmg;
+        const dmg = cfg.k === 'magic' ? W_CFG.staffDmg : W_CFG.rangedDmg; // 지팡이 = 한 방 셈 · 활 계열 = 빠르고 약함
         els.rw.classList.remove('fire'); void els.rw.offsetWidth; els.rw.classList.add('fire');
         projectile(SHOOT[0] - 40, SHOOT[1] - 40, tx, ty, cfg, () => {
             impact(tx, ty, cfg);
@@ -432,7 +435,7 @@
         els.panel.innerHTML = `<div class="sw-title">캐슬 디펜스</div>
             <div class="sw-sub">몰려오는 몬스터로부터 <b>성벽을 지켜라!</b><br>3파에 나타나는 <b>오크 대장</b>을 쓰러뜨리면 승리</div>
             <div class="sw-rules">
-                <div><b>${RANGED[opts.current] ? '🏹 원거리 무기' : '⚔ 근접 무기'}</b>${RANGED[opts.current] ? `화면 어디든 눌러 한 마리씩<br>${(W_CFG.rangedCd[opts.tier] || 1000) / 1000}초마다 한 발` : '사다리 꼭대기 원을 눌러<br>여러 마리 한 번에 한 방'}</div>
+                <div><b>${RANGED[opts.current] ? '🏹 원거리 무기' : '⚔ 근접 무기'}</b>${RANGED[opts.current] ? `화면 어디든 눌러 한 마리씩<br>${shotCd(opts.current, opts.tier) / 1000}초마다 한 발${RANGED[opts.current].k === 'magic' ? ' (한 방이 셈)' : ''}` : '사다리 꼭대기 원을 눌러<br>여러 마리 한 번에 한 방'}</div>
                 <div><b>❗ 1.5초</b>꼭대기에 올라온 적은<br>1.5초 안에 막아야 해요</div>
                 <div><b>🪨 바위 병사</b>처치할수록 바위 든 병사가<br>성벽 위로 와요 · 도착하면 버튼${isWide() ? '·마우스 오른쪽' : ''}으로 투척 (2번)</div>
             </div>
