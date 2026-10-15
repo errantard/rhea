@@ -19,7 +19,7 @@ const RPG_DAYS_PER_LV = 5, RPG_PTS_PER_LV = 5, RPG_DEFAULT_ICON = 'club', RPG_ST
    - 예전 기록은 처음 불러올 때 exp = 출석일×10 + 던전 클리어(bonus)×5 로 바꿔서 이어붙임
    - 마스터도 매일 EXP·P를 얻음 (테스트용). 시작값 +1000EXP(= Lv20) + 900P → 1000P. 마스터 전용 아이템(룬 흑검)만 공짜 */
 const RPG_EXP = { day: 10, pang: 5, perLv: 50, masterBase: 1000, masterPts: 900 }; // 19차-3: 마스터 테스트용 +900P (Lv20 100P + 900 = 1000P)
-let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0, pang: null, exp: 0, g: 'm', eq: { armor: 'ar_base', helm: null, off: null, deco: null } };
+let rpgState = { days: 0, last: null, owned: [], icon: null, bonus: 0, pang: null, wall: null, exp: 0, g: 'm', eq: { armor: 'ar_base', helm: null, off: null, deco: null } };
 
 function rpgInjectDefs() {
     if (document.getElementById('rpgDefs')) return;
@@ -117,12 +117,13 @@ function rpgTodayKST() { return new Date(Date.now() + 9 * 3600 * 1000).toISOStri
 function rpgLoad(user) {
     const m = (user && user.user_metadata && user.user_metadata.rpg) || {};
     const pg = m.pang && typeof m.pang === 'object' ? { d: String(m.pang.d || ''), n: Math.max(0, parseInt(m.pang.n, 10) || 0), ok: !!m.pang.ok } : null;
+    const wl = m.wall && typeof m.wall === 'object' ? { d: String(m.wall.d || ''), n: Math.max(0, parseInt(m.wall.n, 10) || 0), ok: !!m.wall.ok, best: Math.max(0, parseInt(m.wall.best, 10) || 0) } : null; // 23차: 성벽 수비대
     const days = Math.max(0, parseInt(m.days, 10) || 0), bonus = Math.max(0, parseInt(m.bonus, 10) || 0);
     const ren = (k) => (typeof RPG_RENAME !== 'undefined' && RPG_RENAME[k]) || k; // 19차-7: 쌍검류 → 새 무기 · 20차: 옛 무기 21개·옛 갑옷 15벌 → 새 것
     const eq = m.eq && typeof m.eq === 'object' ? m.eq : {};
     const ok = (k, slot) => { const it = k && rpgItem(k); return it && it.slot.id === slot ? k : null; };
     rpgState = { days, last: m.last || null,
-        owned: Array.isArray(m.owned) ? [...new Set(m.owned.map(ren))].filter(k => rpgItem(k)) : [], icon: m.icon ? ren(m.icon) : null, bonus, pang: pg,
+        owned: Array.isArray(m.owned) ? [...new Set(m.owned.map(ren))].filter(k => rpgItem(k)) : [], icon: m.icon ? ren(m.icon) : null, bonus, pang: pg, wall: wl,
         exp: m.exp != null ? Math.max(0, parseInt(m.exp, 10) || 0) : days * RPG_EXP.day + bonus * RPG_EXP.pang, // 19차: 예전 기록 → EXP
         g: m.g === 'f' ? 'f' : 'm',
         eq: { armor: ok(ren(eq.armor), 'armor') || 'ar_base', helm: ok(eq.helm, 'helm'), off: ok(eq.off, 'off'), deco: ok(eq.deco, 'deco') } }; // 20차: 옛 갑옷도 새 옷으로
@@ -221,6 +222,99 @@ function rpgOpenPang(onClose) {
 }
 
 
+/* 23차: 미니게임 2 "캐슬 디펜스"(옛 이름 성벽 수비대) ======================================================
+   - 파일: rpg-wall.js · rpg-wall.css (+ 이펙트는 rpg-pangpang.css 재사용) · img/wall_*.webp — 버튼 누를 때만 불러옴
+   - 하루 도전 3번(시작할 때 차감), 오크 대장 처치 = 성공(그날 끝) +1P · +5EXP. 최고 점수 best는 날짜 바뀌어도 유지
+   - 저장: rpgState.wall = { d, n, ok, best } */
+const RPG_WALL = { tries: 3, reward: 1 };
+function rpgWallToday() {
+    const t = rpgTodayKST(), w = rpgState.wall;
+    return w && w.d === t ? w : { d: t, n: 0, ok: false, best: (w && w.best) || 0 };
+}
+function rpgWallDaily() { const w = rpgWallToday(); return { tries: Math.max(0, RPG_WALL.tries - w.n), cleared: !!w.ok, best: w.best || 0 }; }
+async function rpgWallStart() {
+    const w = rpgWallToday();
+    if (w.ok || w.n >= RPG_WALL.tries) return false;
+    const prev = rpgState.wall;
+    rpgState.wall = Object.assign({}, w, { n: w.n + 1, ok: false });
+    try { await rpgSave(); return true; }
+    catch (e) { console.error(e); rpgState.wall = prev; alert('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)'); return false; }
+}
+// 끝났을 때: 최고 점수 저장 + 이겼으면 보상
+async function rpgWallEnd(win, score) {
+    const prevW = rpgState.wall, prevB = rpgState.bonus, prevE = rpgState.exp, lv0 = rpgLevel();
+    const w = rpgWallToday(), best = Math.max(w.best || 0, Math.round(score) || 0), nb = best > (w.best || 0);
+    if (!win && !nb) return { reward: 0, best, newBest: false };
+    rpgState.wall = Object.assign({}, w, { best }, win ? { ok: true } : {});
+    if (win) { rpgState.bonus = (rpgState.bonus || 0) + RPG_WALL.reward; rpgState.exp = (rpgState.exp || 0) + RPG_EXP.pang; }
+    try { await rpgSave(); if (rpgLevel() > lv0) applyRolePermissions(); return { reward: win ? RPG_WALL.reward : 0, best, newBest: nb }; }
+    catch (e) { console.error(e); rpgState.wall = prevW; rpgState.bonus = prevB; rpgState.exp = prevE; alert('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)'); return { reward: 0, best: (w.best || 0), newBest: false }; }
+}
+function rpgLoadWall(cb) {
+    if (window.RheaWall) return cb();
+    const v = RPG_SELF.q ? '?' + RPG_SELF.q : '';
+    [['rpgPangCss', 'rpg-pangpang.css'], ['rpgWallCss', 'rpg-wall.css']].forEach(([id, f]) => {
+        if (document.getElementById(id)) return;
+        const l = document.createElement('link'); l.id = id; l.rel = 'stylesheet'; l.href = RPG_SELF.dir + f + v; document.head.appendChild(l);
+    });
+    const s = document.createElement('script');
+    s.src = RPG_SELF.dir + 'rpg-wall.js' + v;
+    s.onload = () => (window.RheaWall ? cb() : null);
+    s.onerror = () => { s.remove(); alert('⚠️ 캐슬 디펜스를 불러오지 못했어요 (rpg 폴더의 rpg-wall.js 확인)'); };
+    document.head.appendChild(s);
+}
+function rpgOpenWall(onClose) {
+    if (isGuestUser() || !currentUserEmail) return;
+    rpgInjectDefs();
+    const lv = rpgLevel(), eq = typeof rpgEqAll === 'function' ? rpgEqAll() : { armor: 'ar_base' }, wk = rpgCurrentIcon();
+    rpgLoadWall(() => RheaWall.open({
+        current: wk, weaponHtml: rpgIconSvg(wk), weaponName: (RPG_ICONS[wk] || [''])[0], tier: (rpgTierOf(wk) || {}).id || (wk === 'master_sword' ? 'master' : 'novice'),
+        figHtml: typeof rpgFigHtml === 'function' ? rpgFigHtml(Object.assign({}, eq, { weapon: null })) : '',
+        name: typeof currentUserDisplayName === 'function' ? currentUserDisplayName() : '', title: `${rpgTitle(lv)} Lv.${lv}`,
+        getDaily: rpgWallDaily, onStart: rpgWallStart, onEnd: rpgWallEnd, onClose,
+        onReset: isAdminUser() ? async () => { const prev = rpgState.wall; rpgState.wall = prev ? { d: '', n: 0, ok: false, best: prev.best || 0 } : null;
+            try { await rpgSave(); } catch (e) { console.error(e); rpgState.wall = prev; alert('⚠️ 저장 실패'); } } : null
+    }));
+}
+/* 23차: 수첩 [던전탐험] → 미니게임 고르는 창 (던전팡팡 · 캐슬 디펜스). 게임을 닫으면 이 창으로, 이 창을 닫으면 onClose(수첩) */
+function rpgGamesDone() { const a = rpgPangDaily(), b = rpgWallDaily(); return (a.cleared || a.tries <= 0) && (b.cleared || b.tries <= 0); }
+function rpgOpenGames(onClose) {
+    if (isGuestUser() || !currentUserEmail) return;
+    if (!document.getElementById('rpgGamesCss')) {
+        const st = document.createElement('style'); st.id = 'rpgGamesCss';
+        st.textContent = `.rpg-gm{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;background:rgba(6,5,8,.78);padding:16px}
+.rpg-gm-box{position:relative;width:min(560px,100%);background:linear-gradient(180deg,#2a2420,#18140f);border:3px solid #5c5a57;box-shadow:0 0 0 2px #15130f,0 20px 60px rgba(0,0,0,.7);border-radius:6px;padding:18px 16px 16px;color:#e9dcc0;font-family:inherit}
+.rpg-gm-t{font-size:20px;font-weight:900;letter-spacing:.08em;text-align:center;color:#f4e6c6;text-shadow:0 2px 0 #000;margin-bottom:14px}
+.rpg-gm-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rpg-gm-c{position:relative;display:block;border:2px solid #6a6764;border-radius:6px;overflow:hidden;cursor:pointer;background:#000;padding:0;text-align:left;font:inherit;color:inherit;box-shadow:0 0 0 2px #15130f}
+.rpg-gm-c:hover{border-color:#c9a24a;filter:brightness(1.08)}
+.rpg-gm-c i{display:block;aspect-ratio:1.25;background:center/cover no-repeat;image-rendering:pixelated}
+.rpg-gm-c b{display:block;padding:8px 10px 2px;font-size:16px;font-weight:900;color:#f4e6c6}
+.rpg-gm-c small{display:block;padding:0 10px 10px;font-size:12px;color:#c9b48a}
+.rpg-gm-c.done{opacity:.6}
+.rpg-gm-x{position:absolute;right:8px;top:8px;width:34px;height:34px;border:0;background:url('${RPG_SELF.dir}img/nb2_x.webp') center/100% no-repeat;image-rendering:pixelated;cursor:pointer}
+@media (max-width:420px){.rpg-gm-c b{font-size:14px}}`;
+        document.head.appendChild(st);
+    }
+    const old = document.getElementById('rpgGames'); if (old) old.remove();
+    const pa = rpgPangDaily(), wa = rpgWallDaily();
+    const st = (d) => d.cleared ? '✅ 오늘 정복 완료' : d.tries > 0 ? `오늘 남은 도전 ${d.tries}/3 · 성공 +1P` : '오늘 도전 끝 · 내일 다시';
+    const el = document.createElement('div'); el.id = 'rpgGames'; el.className = 'rpg-gm';
+    el.innerHTML = `<div class="rpg-gm-box"><div class="rpg-gm-t">⚔ 던전 탐험</div><div class="rpg-gm-row">
+        <button type="button" class="rpg-gm-c${pa.cleared || pa.tries <= 0 ? ' done' : ''}" data-g="pang"><i style="background-image:url('${RPG_SELF.dir}img/pang_gate.webp')"></i><b>던전팡팡</b><small>${st(pa)}</small></button>
+        <button type="button" class="rpg-gm-c${wa.cleared || wa.tries <= 0 ? ' done' : ''}" data-g="wall"><i style="background-image:url('${RPG_SELF.dir}img/wall_bg.webp');background-position:50% 62%"></i><b>캐슬 디펜스</b><small>${st(wa)}${wa.best ? ` · 최고 ${wa.best.toLocaleString()}` : ''}</small></button>
+        </div><button type="button" class="rpg-gm-x" aria-label="닫기"></button></div>`;
+    document.body.appendChild(el);
+    const close = () => { el.remove(); if (onClose) onClose(); };
+    const back = () => rpgOpenGames(onClose);
+    el.addEventListener('click', (e) => {
+        if (e.target === el || e.target.closest('.rpg-gm-x')) return close();
+        const c = e.target.closest('[data-g]'); if (!c) return;
+        el.remove();
+        if (c.dataset.g === 'pang') rpgOpenPang(back); else rpgOpenWall(back);
+    });
+}
+
 /* dashboard가 부르는 창구 (이것만 바꾸지 않으면 안쪽은 자유롭게 고쳐도 됨) */
 window.RheaRPG = {
     load: rpgLoad,                                   // 로그인 직후: 계정 정보에서 출석·무기 불러오기
@@ -231,5 +325,6 @@ window.RheaRPG = {
     roleText: () => `${rpgTitle(rpgLevel())} Lv.${rpgLevel()}`, // 이름표 "칭호 Lv.N"
     ensureDefs: rpgInjectDefs,
     openArmory: () => (typeof openArmory === 'function' ? openArmory() : null),
+    openWall: rpgOpenWall, openGames: rpgOpenGames, // 23차
     openPang: rpgOpenPang                            // 18차: 던전팡팡 (보통은 수첩 버튼에서 열림)
 };

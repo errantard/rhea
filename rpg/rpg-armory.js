@@ -43,7 +43,7 @@ function openArmory() {
                 else if (a === 'shop') rpgSetPanel(rpgPanel === 'shop' ? null : 'shop');
                 else if (a === 'toshop') rpgSetPanel('shop');
                 else if (a === 'shopclose') rpgSetPanel(null);
-                else if (a === 'dungeon') { closeArmory(); rpgOpenPang(() => openArmory()); }
+                else if (a === 'dungeon') { closeArmory(); rpgOpenGames(() => openArmory()); } // 23차: 미니게임 고르는 창
                 else if (a === 'buyyes') rpgBuy(rpgAsk);
                 else if (a === 'buyno') { rpgAsk = null; rpgDropPreview(); rpgShopMsg = '그래, 천천히 생각해 보게.'; renderArmory(); }
                 return;
@@ -228,7 +228,7 @@ function renderArmory() {
             <span class="nb2-si" style="left:${(12 / 838 * 100).toFixed(2)}%;top:${(9 / 140 * 100).toFixed(2)}%;width:${(124 / 838 * 100).toFixed(2)}%;height:${(124 / 140 * 100).toFixed(2)}%">${ic}</span>
             <span class="nb2-sl" style="left:${((299 - 132) / (970 - 132) * 100).toFixed(2)}%"><b>${sl.name}</b><em>|</em><span>${val}</span></span></button>`;
     };
-    const pdone = (() => { const d = rpgPangDaily(); return d.cleared || d.tries <= 0; })();
+    const pdone = rpgGamesDone(); // 23차: 두 게임 다 끝났을 때만 '끝' 표시
     // v198: 수첩 조립식 — 그림 한 장을 칸(sec)으로 나눠 얹음. PC = 원래 자리 그대로, 폰 = 칸을 위→아래로 쌓음(각 칸이 화면 폭에 맞게 커짐)
     // sec(이름, [x0,y0,x1,y1], 내용) · 내용 좌표 = 원본 2048 픽셀 숫자 그대로 (칸 기준으로 자동 변환)
     const sec = (id, r, items) => {
@@ -246,7 +246,7 @@ function renderArmory() {
         sec('l', NB2_SEC.l, P => NB2_SLOT_ORDER.map((id, i) => slot(id, i, P)).join('')) +
         sec('r', NB2_SEC.r, P => `<div class="nb2-stage" style="${P(1097, 231, 1943, 1150)}">${rpgFigHtml(pend)}</div>`) +
         sec('v1', NB2_SEC.v1, P => `<button type="button" class="nb2-hit btn" data-act="shop" aria-label="상점" style="${P(366, 1742, 688, 1850)}"></button>`) +
-        sec('v2', NB2_SEC.v2, P => `<button type="button" class="nb2-hit btn${pdone ? ' done' : ''}" data-act="dungeon" aria-label="던전탐험" title="${pdone ? '오늘 던전팡팡 끝 · 내일 다시' : '던전팡팡 하러 가기'}" style="${P(1358, 1742, 1680, 1850)}"></button>`) +
+        sec('v2', NB2_SEC.v2, P => `<button type="button" class="nb2-hit btn${pdone ? ' done' : ''}" data-act="dungeon" aria-label="던전탐험" title="${pdone ? '오늘 미니게임 끝 · 내일 다시' : '던전팡팡 · 캐슬 디펜스 하러 가기'}" style="${P(1358, 1742, 1680, 1850)}"></button>`) +
         sec('f1', NB2_SEC.f1, P => `
         <button type="button" class="nb2-hit btn" data-act="nick" aria-label="닉네임 바꾸기" style="${P(78, 1902, 494, 2004)}"></button>
         <div class="nb2-note" style="${P(520, 1915, 1350, 1990)}">${changed ? '바뀐 장비가 있어요 → [적용]' : `출석 +${RPG_EXP.day} · 던전 +${RPG_EXP.pang} EXP`}</div>`) +
