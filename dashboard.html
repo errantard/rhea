@@ -1923,7 +1923,7 @@
             .filter-controls { display: flex; flex-wrap: nowrap; gap: 7px; width: 100%; }
             .filter-controls input#searchInput { flex: 1 1 auto; height: 42px; border-radius: 10px; font-size: 16px; padding: 0 12px 0 36px; min-width: 0;
                 background: rgba(255,255,255,.08) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23D6B46A' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 11px center / 17px; }
-            .filter-controls select#filterRegion { flex: 0 0 96px; width: 96px; height: 42px; border-radius: 10px; font-size: 14px; font-weight: 700; padding: 0 8px; }
+            .filter-controls select#filterRegion, .filter-controls select#sortSelect { flex: 0 0 96px; width: 96px; height: 42px; border-radius: 10px; font-size: 14px; font-weight: 700; padding: 0 8px; }
             .filter-side-tools { display: none !important; }
 
             /* ---- 카드 목록 ---- */
@@ -2103,7 +2103,7 @@
         }
     </style>
     <!-- 17차-5: 모험가(RPG) 모듈 — 업무 기능과 분리. 없어도 업체관리는 정상 -->
-    <link rel="stylesheet" href="rpg/rpg.css?v=222">
+    <link rel="stylesheet" href="rpg/rpg.css?v=224">
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════
@@ -2226,6 +2226,12 @@
                         <option value="충북">충북</option>
                         <option value="충남">충남</option>
                     </select>
+                    <!-- v224 (대장님): 정렬 고르기 — 기본 = AS 요청·회수대기·종료임박 맨 위 + 지역 가나다 -->
+                    <select id="sortSelect" title="정렬">
+                        <option value="region">정렬: 기본</option>
+                        <option value="latest">정렬: 최근등록순</option>
+                        <option value="install">정렬: 최근설치일</option>
+                    </select>
                     <span class="col-toggle-group">
                         <span class="col-toggle-title"><b>표시 항목:</b></span>
                         <label><input type="checkbox" id="toggleAddress" checked onchange="handleColumnToggle('address-group', this.checked)"> <span data-group-label="address">주소</span></label>
@@ -2241,12 +2247,6 @@
                             <option value="정상">정상</option>
                             <option value="요청">요청</option>
                             <option value="종료">종료</option>
-                        </select>
-                        <select id="sortSelect" tabindex="-1">
-                            <option value="region">정렬: 지역순</option>
-                            <option value="name">정렬: 가나다순</option>
-                            <option value="latest">정렬: 최근등록순</option>
-                            <option value="first">정렬: 처음등록순</option>
                         </select>
                     </span>
                 </div>
@@ -2314,8 +2314,8 @@
                             <th class="device-group sortable-th" data-field-label="deviceOption" data-sort-key="deviceOption">설치날짜</th>
                             <th class="sys-group sortable-th" data-field-label="kioId" data-sort-key="kioId">키오에듀ID</th>
                             <th class="sys-group sortable-th" data-field-label="reaCode" data-sort-key="reaCode">레아코드</th>
-                            <th class="rental-group">구분</th>
-                            <th class="rental-group">임대만료일</th>
+                            <th class="rental-group sortable-th" data-sort-key="division">구분</th>
+                            <th class="rental-group sortable-th" data-sort-key="rentalEnd">임대만료일</th>
                             <th class="sortable-th" data-field-label="memo" data-sort-key="memo">메모</th>
                         </tr>
                         <!-- 2026-09-18: "상태"/"수정" 컬럼 제거 — 수정은 장소명 클릭(상세팝업)으로 이미 가능하고,
@@ -2748,9 +2748,9 @@
         </div>
     </div>
 
-    <script src="rpg/rpg-data.js?v=222"></script>
-    <script src="rpg/rpg-core.js?v=222"></script>
-    <script src="rpg/rpg-armory.js?v=222"></script>
+    <script src="rpg/rpg-data.js?v=224"></script>
+    <script src="rpg/rpg-core.js?v=224"></script>
+    <script src="rpg/rpg-armory.js?v=224"></script>
     <script>
         /* ═══════════════════════════════════════════════════════════════
            [DASHBOARD] dashboard.html 전용 스크립트 (업체관리 앱 로직)
@@ -4283,6 +4283,8 @@ function generateUniqueId() {
 
         /* ===================== ⑦ 메인 테이블 렌더링 (검색/필터/정렬 포함) ===================== */
         function getColumnSortValue(item, key) {
+            if (key === 'division') return item.division || '판매'; // v224: 구분(판매/임대)
+            if (key === 'rentalEnd') { const d = getRentalEndDateObj(item); return d ? formatDateYMD(d) : ''; } // v224: 임대만료일 (판매 = 빈칸)
             if (key === 'memo') {
                 const list = item.memoList || [];
                 return list.length ? (list[list.length - 1].date || '') : '';
@@ -4306,8 +4308,8 @@ function generateUniqueId() {
                 const base = el.dataset.fieldLabel ? getLabel(el.dataset.fieldLabel) : el.textContent.replace(/[▲▼]$/, '').trim();
                 if (columnSort.key === key) {
                     el.innerHTML = `${escapeHtml(base)} <span class="sort-arrow">${columnSort.dir === 'asc' ? '▲' : '▼'}</span>`;
-                } else if (el.dataset.fieldLabel) {
-                    el.textContent = base;
+                } else {
+                    el.textContent = base; // v224: 라벨 없는 칸(시/도·구분·임대만료일)도 화살표 지움
                 }
             });
         }
@@ -4358,7 +4360,9 @@ function generateUniqueId() {
             if (columnSort.key) {
                 // 테이블 헤더를 클릭해서 정렬 중이면 상단 "정렬:" 드롭다운보다 우선 적용
                 const dir = columnSort.dir === 'desc' ? -1 : 1;
-                filteredData.sort((a, b) => getColumnSortValue(a, columnSort.key).localeCompare(getColumnSortValue(b, columnSort.key), 'ko') * dir);
+                filteredData.sort((a, b) => { const va = getColumnSortValue(a, columnSort.key), vb = getColumnSortValue(b, columnSort.key);
+                    if (!va !== !vb) return !va ? 1 : -1; // v224: 빈칸은 오름/내림 상관없이 맨 아래
+                    return va.localeCompare(vb, 'ko') * dir; });
             } else {
                 filteredData.sort((a, b) => {
                     // 12차: 기본(지역순) 정렬일 때는 조치가 필요한 업체(AS 요청·회수대기·종료임박)를 맨 위로
@@ -4366,12 +4370,12 @@ function generateUniqueId() {
                         const pr = getActionPriority(a) - getActionPriority(b);
                         if (pr) return pr;
                     }
-                    if (sortType === 'name') {
-                        return (a.placeName || '').localeCompare(b.placeName || '');
-                    } else if (sortType === 'latest') {
+                    if (sortType === 'latest') { // 등록한 순서(불러올 때 created_at 순) 거꾸로
                         return currentData.findIndex(d => d.id === b.id) - currentData.findIndex(d => d.id === a.id);
-                    } else if (sortType === 'first') {
-                        return currentData.findIndex(d => d.id === a.id) - currentData.findIndex(d => d.id === b.id);
+                    } else if (sortType === 'install') { // v224: 설치날짜(기기 여러 대면 가장 최근, 15차 getLatestInstallDate) 최근 순 · 날짜 없으면 맨 아래
+                        const da = getLatestInstallDate(a), db = getLatestInstallDate(b), ta = da ? da.getTime() : 0, tb = db ? db.getTime() : 0;
+                        if (ta !== tb) return !ta ? 1 : !tb ? -1 : tb - ta;
+                        return (a.placeName || '').localeCompare(b.placeName || '', 'ko');
                     } else {
                         const regionA = `${a.regionSi || ''} ${a.regionGu || ''}`;
                         const regionB = `${b.regionSi || ''} ${b.regionGu || ''}`;
