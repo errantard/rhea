@@ -1228,6 +1228,7 @@
         }
         .filter-controls input::placeholder { color: #8CA3B8; }
         .filter-controls select option { background: #14283F; color: #EAF1F8; }
+        .filter-controls select#filterRegion, .filter-controls select#sortSelect { width: 108px; } /* v224 (대장님): 지역(2글자)·정렬(4글자)은 짧게 */
         .btn-primary { background: #F2C94C; color: #12312A; }
         .btn-primary:hover { background: #E5BB39; color: #12312A; }
 
@@ -1923,7 +1924,7 @@
             .filter-controls { display: flex; flex-wrap: nowrap; gap: 7px; width: 100%; }
             .filter-controls input#searchInput { flex: 1 1 auto; height: 42px; border-radius: 10px; font-size: 16px; padding: 0 12px 0 36px; min-width: 0;
                 background: rgba(255,255,255,.08) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23D6B46A' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 11px center / 17px; }
-            .filter-controls select#filterRegion, .filter-controls select#sortSelect { flex: 0 0 96px; width: 96px; height: 42px; border-radius: 10px; font-size: 14px; font-weight: 700; padding: 0 8px; }
+            .filter-controls select#filterRegion, .filter-controls select#sortSelect { flex: 0 0 84px; width: 84px; height: 42px; border-radius: 10px; font-size: 14px; font-weight: 700; padding: 0 6px; }
             .filter-side-tools { display: none !important; }
 
             /* ---- 카드 목록 ---- */
@@ -2207,7 +2208,7 @@
                 <div class="filter-controls">
                     <input type="text" id="searchInput" placeholder="종합검색...">
                     <select id="filterRegion">
-                        <option value="">지역필터: 전체</option>
+                        <option value="">지역: 전체</option>
                         <option value="강원">강원</option>
                         <option value="경기">경기</option>
                         <option value="경북">경북</option>
@@ -2228,9 +2229,11 @@
                     </select>
                     <!-- v224 (대장님): 정렬 고르기 — 기본 = AS 요청·회수대기·종료임박 맨 위 + 지역 가나다 -->
                     <select id="sortSelect" title="정렬">
-                        <option value="region">정렬: 기본</option>
-                        <option value="latest">정렬: 최근등록순</option>
-                        <option value="install">정렬: 최근설치일</option>
+                        <option value="region">기본정렬</option>
+                        <option value="latest">최근등록</option>
+                        <option value="first">처음등록</option>
+                        <option value="install">최근설치</option>
+                        <option value="installOld">처음설치</option>
                     </select>
                     <span class="col-toggle-group">
                         <span class="col-toggle-title"><b>표시 항목:</b></span>
@@ -4370,11 +4373,12 @@ function generateUniqueId() {
                         const pr = getActionPriority(a) - getActionPriority(b);
                         if (pr) return pr;
                     }
-                    if (sortType === 'latest') { // 등록한 순서(불러올 때 created_at 순) 거꾸로
-                        return currentData.findIndex(d => d.id === b.id) - currentData.findIndex(d => d.id === a.id);
-                    } else if (sortType === 'install') { // v224: 설치날짜(기기 여러 대면 가장 최근, 15차 getLatestInstallDate) 최근 순 · 날짜 없으면 맨 아래
+                    if (sortType === 'latest' || sortType === 'first') { // 등록한 순서(불러올 때 created_at 순) · 최근등록 = 거꾸로
+                        const d = currentData.findIndex(x => x.id === a.id) - currentData.findIndex(x => x.id === b.id);
+                        return sortType === 'latest' ? -d : d;
+                    } else if (sortType === 'install' || sortType === 'installOld') { // v224: 설치날짜(기기 여러 대면 가장 최근, 15차 getLatestInstallDate) · 날짜 없으면 맨 아래
                         const da = getLatestInstallDate(a), db = getLatestInstallDate(b), ta = da ? da.getTime() : 0, tb = db ? db.getTime() : 0;
-                        if (ta !== tb) return !ta ? 1 : !tb ? -1 : tb - ta;
+                        if (ta !== tb) return !ta ? 1 : !tb ? -1 : (sortType === 'install' ? tb - ta : ta - tb);
                         return (a.placeName || '').localeCompare(b.placeName || '', 'ko');
                     } else {
                         const regionA = `${a.regionSi || ''} ${a.regionGu || ''}`;
