@@ -250,18 +250,29 @@ async function rpgWallEnd(win, score) {
     try { await rpgSave(); if (rpgLevel() > lv0) applyRolePermissions(); return { reward: win ? RPG_WALL.reward : 0, best, newBest: nb }; }
     catch (e) { console.error(e); rpgState.wall = prevW; rpgState.bonus = prevB; rpgState.exp = prevE; alert('⚠️ 저장 실패 (인터넷 연결을 확인해주세요)'); return { reward: 0, best: (w.best || 0), newBest: false }; }
 }
+// v223: 그림 꾸밈(css) 2개 + 게임(js) 다 받은 뒤에 열기 — 폰에서 css가 늦게 오면 그림이 화면 밖으로 크게 깨져 보이던 것
 function rpgLoadWall(cb) {
-    if (window.RheaWall) return cb();
+    if (window.RheaWall && document.getElementById('rpgWallCss')?.sheet) return cb();
     const v = RPG_SELF.q ? '?' + RPG_SELF.q : '';
-    [['rpgPangCss', 'rpg-pangpang.css'], ['rpgWallCss', 'rpg-wall.css']].forEach(([id, f]) => {
-        if (document.getElementById(id)) return;
-        const l = document.createElement('link'); l.id = id; l.rel = 'stylesheet'; l.href = RPG_SELF.dir + f + v; document.head.appendChild(l);
+    const load = (el, what, soft) => new Promise((ok, no) => { el.onload = ok; el.onerror = () => (soft ? ok() : no(what)); }); // css는 soft: 안의 구글 글꼴이 막혀도 error가 나서 → 받기만 끝나면 진행
+    const jobs = [['rpgPangCss', 'rpg-pangpang.css'], ['rpgWallCss', 'rpg-wall.css']].map(([id, f]) => {
+        const old = document.getElementById(id);
+        if (old) return old.sheet ? Promise.resolve() : load(old, f, true);
+        const l = document.createElement('link'); l.id = id; l.rel = 'stylesheet'; l.href = RPG_SELF.dir + f + v;
+        const p = load(l, f, true); document.head.appendChild(l); return p;
     });
-    const s = document.createElement('script');
-    s.src = RPG_SELF.dir + 'rpg-wall.js' + v;
-    s.onload = () => (window.RheaWall ? cb() : null);
-    s.onerror = () => { s.remove(); alert('⚠️ 캐슬 디펜스를 불러오지 못했어요 (rpg 폴더의 rpg-wall.js 확인)'); };
-    document.head.appendChild(s);
+    if (!window.RheaWall) {
+        const s = document.createElement('script'); s.src = RPG_SELF.dir + 'rpg-wall.js' + v;
+        jobs.push(load(s, 'rpg-wall.js')); document.head.appendChild(s);
+    }
+    Promise.all(jobs).then(() => {
+        const t = document.createElement('div'); t.className = 'sw-dim'; document.body.appendChild(t);
+        const cssOk = getComputedStyle(t).position === 'fixed'; t.remove(); // rpg-wall.css 가 없으면 화면이 깨지니 열지 않음
+        if (!cssOk) { document.getElementById('rpgWallCss')?.remove(); alert('⚠️ 캐슬 디펜스를 불러오지 못했어요 (rpg 폴더의 rpg-wall.css 확인)'); return; }
+        if (window.RheaWall) cb();
+    })
+        .catch((f) => { const el = [...document.querySelectorAll('script')].find(e => (e.src || '').includes(f)); if (el) el.remove();
+            alert('⚠️ 캐슬 디펜스를 불러오지 못했어요 (rpg 폴더의 ' + f + ' 확인)'); });
 }
 function rpgOpenWall(onClose) {
     if (isGuestUser() || !currentUserEmail) return;
