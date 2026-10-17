@@ -1,865 +1,629 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RheaOps</title>
-    <!-- 📱 14차-3: 홈 화면 앱 설치(주소창·버튼줄 없는 전체화면) — manifest.webmanifest + assets/app-icon-*.png -->
-    <link rel="manifest" href="manifest.webmanifest">
-    <meta name="theme-color" content="#0A1626">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RheaOps">
-    <!-- 14차-4: 즐겨찾기·탭용 작은 아이콘(헬멧, 16/32/48px) — 이름 RheaOps로 통일 -->
-    <link rel="icon" href="favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
-    <!-- 15차-4: 웨일·크롬 즐겨찾기 타일이 큰 아이콘을 쓰도록 큰 크기도 알려줌 (없으면 작은 탭 아이콘을 줄여서 보여줌) -->
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="assets/app-icon-180.png">
-    <!-- Supabase 연동용 SDK (테스트 버전에서 새로 추가) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
-    <!-- ═══════════════════════════════════════════════════════════════
-         [PART 1] STYLE — 전체 디자인/레이아웃 CSS
-         ═══════════════════════════════════════════════════════════════ -->
-    <style>
-        :root {
-            --ink: #0A1729;      /* 상단 네브바 다크 네이비 (로그인 화면과 통일) */
-            --ink2: #17293F;     /* 활성 탭 배경 (한 단계 밝은 네이비) */
-            --mint: #C3D6E6;     /* 비활성 탭 텍스트 (쿨톤 블루그레이, 밝게) */
-            --teal: #0F6E5C;     /* 메인 액센트(버튼/성공) */
-            --teal-dark: #0B5344;
-            --amber: #F2C94C;    /* 로고/관리자 뱃지 */
-            --coral: #C1552C;    /* 경고/지원 */
-            --coral-text: #A54823; /* 연분홍(#F7E2D8) 배지 위에 올라가는 코랄 글씨 전용 — 명암비 4.5:1 이상 확보용으로 var(--coral)보다 살짝 더 진하게 */
-            --paper: #FBFAF6;    /* 배경 */
-            --paper2: #F5F2EA;   /* 스트립/표시 영역 */
-            --border-warm: #E7E3D9;
-            --muted: #8a8578;
-            --muted-light: #787360; /* 2026-08-29: 명암비 개선 — 기존 #a29c8a(흰 배경 위 2.7:1)는 WCAG AA(4.5:1) 미달이라 살짝 더 진한 톤으로 조정(4.75:1) */
-            /* ---- 디자인 토큰 확장 (2026-08-29): 반경/간격 스케일화 + 경고색 통합 + 표 밀도 프리셋 ---- */
-            --r-xs: 4px; --r-sm: 7px; --r-md: 10px; --r-lg: 14px; --r-pill: 20px;
-            --sp-0: 2px; --sp-1: 4px; --sp-2: 6px; --sp-3: 8px; --sp-4: 10px; --sp-5: 12px; --sp-6: 16px; --sp-7: 20px;
-            /* 대시보드 전역 "위험/주의" 경고색 — .rental-alert와 "요청" 카드가 항상 이 색을 공유 (하나만 바꾸면 전체 반영) */
-            --coral-dark: #FF9E76;
-            --coral-dark-hover: #FFB395;
-            --coral-dark-tint: #FFD1BB;
-            --coral-dark-bg-active: rgba(255,158,118,0.22);
-            /* 표 밀도 프리셋 기본값(=기본 밀도). #customerTable.density-compact / .density-comfortable 가 아래서 재정의 */
-            --tbl-font: 11.7px; --tbl-pad-v: 6px; --tbl-pad-h: 10px;
-            /* 네이비+격자 배경 패턴 (navbar·hero·toggles·side-accent 4곳에서 공통으로 사용).
-               색/격자 간격을 바꾸고 싶으면 여기 한 곳만 고치면 4곳 전부 반영됨 */
-            --navy-grid-bg:
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 46px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 46px),
-                linear-gradient(160deg, #0D2036 0%, #17293F 55%, #0D2036 100%);
-            /* 2026-09-06 5차: 로그인 화면이 "핫스팟 좌표매핑"(원화 자체가 카드) 방식으로 완전히
-               바뀌면서, 예전 CSS로 그리던 로그인 카드 팔레트 변수들(로즈골드 1번/글로우/패널
-               배경/테두리/잉크 톤, 룬석벽 리스킨용 파란 악센트 등)이 전부 미사용 상태가 되어
-               제거함. 실제 쓰이는 건 눈 아이콘 hover 색상 하나(--login-gold-2)뿐이라 그것만 남김. */
-            --login-gold-2: #E5C384;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Public Sans', 'Malgun Gothic', 'Segoe UI', sans-serif; }
-        .mono-num { font-family: 'IBM Plex Mono', 'Malgun Gothic', monospace; font-variant-numeric: tabular-nums; }
-        body { background-color: var(--paper); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        input[type="checkbox"] { accent-color: var(--amber); }/* ===================== Supabase 로그인 오버레이 ===================== */
-        /* 2026-09-12 7차: 로그인 배경 원화를 완전히 새로운 구도("받침대 위 기사 석상 + 뒤쪽 대성당 +
-           보름달" 다크판타지 씬)로 전면 교체. 이전 6차 계열("고대 비석형·벽면 일체형")의 룬 5개
-           점광원, 텍스트 스윕, 먼지/불씨 파티클 이펙트 레이어는 전부 그 원화의 특정 픽셀 요소(엠블럼
-           안 룬 글자, 특정 위치의 벽걸이 횃불 등)에 좌표를 맞춰 만든 것이라, 원화 자체가 완전히 다른
-           구도로 바뀌면서 전부 무효가 됨 — 좌표만 억지로 새로 잡아도 애초에 그 요소들(파란 룬 등)이
-           새 원화엔 존재하지 않아 의미가 없으므로, 이번엔 과거 이펙트를 재활용하지 않고 전부 제거하고
-           깨끗한 상태로 다시 시작함(필요하면 새 원화의 횃불 2개 위치를 다시 실측해서 나중에 다시
-           추가 가능 — 아래 syncLoginHotspots()는 여전히 같은 scale/offset 수식을 쓰므로 확장 쉬움).
-           핵심 구조는 그대로 유지: 하나의 완성된 원화(assets/login-bg-scene.webp)를 배경으로 쓰고,
-           그 위에 "보이지 않는" 진짜 입력창/체크박스/버튼만 좌표로 정확히 겹쳐 올리는 "핫스팟" 방식. */
-        #loginOverlay {
-            position: fixed; inset: 0; z-index: 9999;
-            background-color: #09080d;
-            overflow: hidden;
-        }
-        .login-bg-image {
-            position: absolute; inset: 0; z-index: 0; pointer-events: none;
-            background-repeat: no-repeat;
-            opacity: 0; transition: opacity 0.6s ease;
-        }
-        #loginOverlay.reveal-card .login-bg-image { opacity: 1; }
-        #loginOverlay::before {
-            content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-            background: linear-gradient(180deg, rgba(4,6,10,0.10) 0%, rgba(4,6,10,0.02) 32%, rgba(4,6,10,0.30) 76%, rgba(4,6,10,0.58) 100%);
-        }
-        #loginOverlay.hidden { display: none; }
-        @media (prefers-reduced-motion: reduce) {
-            .login-bg-image, .login-content { transition: none; }
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>RheaOps</title>
+<!-- 홈 화면 앱 설치 · 아이콘 -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0A1626">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RheaOps">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
+<link rel="preload" as="image" href="assets/login/bg.webp?v=227">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<!-- ═══════════════════════════════════════════════════════════════
+     index.html — 로그인 전용 (v225 새로 만듦 · v226 효과 추가 · v227 망토·깃발 그림 내장)
+     장면: 안개 낀 마을로 들어서는 기사 (assets/login/, 원본 좌표 2880×1632 기준)
+     효과: 까마귀(성 둘레·산 뒤·먼 탑) · 망토/깃발 휘날림(WebGL) · 창문 불빛 · 성 굴뚝 연기 · 재 흩날림 · 시네마틱 오프닝(문구가 불타 사라짐)
+     폼: 판때기 없는 게임 타이틀식 (PC 왼쪽 · 폰 아래)
+     ═══════════════════════════════════════════════════════════════ -->
+<style>
+html,body{margin:0;height:100%;background:#07090d;overflow:hidden}
+body{height:100vh;height:100dvh}
+*{box-sizing:border-box}
 
-        /* 2026-09-12 7차-2: 챗지피티 추천 이펙트 2종 반영 — (1) 아주 옅은 안개(하단 30%만, 전체화면에
-           깔면 원화의 선명함이 죽어서 하단 일부에만 약하게), (2) 촛불 흔들림(원화 하단 계단에 이미
-           그려진 촛불 무리 위에 은은한 빛 웅덩이만 얹어 미세하게 깜빡이게 함 — 원화 자체는 그대로,
-           투명 글로우 레이어만 겹치는 기존 fx-torch 방식과 동일 원리). */
-        /* 2026-09-14 9차-10: 대장님이 "안개가 있는지도 모르겠다"고 함 — 측정해보니 실제로는 애니메이션이
-           돌고는 있는데(로드 후 정착 시점 기준 밝기 스윙이 하단 안개 26~28, 폭포 안개 92~99 정도),
-           범위가 좁아서 정적인 배경처럼 보이는 게 맞았음. 챗지피티가 제안한 "화면 전체 새 공기층
-           레이어 추가"는 기각(그 자체가 더 옅게 설계된 제안이라 기존과 똑같이 안 보일 위험) — 대신
-           대장님 선택대로 새 레이어 없이 기존 두 안개(.login-fog / .login-fog-mist)의 opacity·이동폭
-           진폭만 키워서 실제로 체감되게 함. 원화 선명도는 blur/blend 방식 그대로라 훼손 없음. */
-        .login-fog {
-            position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
-            pointer-events: none; z-index: 1; opacity: 0.8; mix-blend-mode: screen;
-            background: radial-gradient(ellipse at 50% 100%, rgba(190,202,214,0.11), rgba(190,202,214,0) 62%);
-            filter: blur(22px);
-            animation: fxFogDrift 17s ease-in-out infinite alternate;
-        }
-        @keyframes fxFogDrift {
-            0%   { transform: translate(-2.4%, 0.5%);  opacity: 0.36; }
-            45%  { transform: translate(2.2%, -2.6%);  opacity: 0.96; }
-            100% { transform: translate(-1.4%, 1.1%);  opacity: 0.5; }
-        }
-        /* 2026-09-14 9차: 대장님 요청으로 계단 촛불 무리 위 pulsing 글로우(.login-fx-candle, 구버전)는
-           완전히 제거하고 아래 3종 이펙트로 교체 — ① 명판 좌우 대형 횃불(브라지어) 불꽃 흔들림,
-           ② 촛불 자리엔 은은한 불씨 파티클, ③ 오른쪽 폭포 착수부 국소 물안개.
-           (챗지피티가 준 5가지 아이디어 중 이 배경화면에 실제로 있는 요소와 맞는 것만 골라 적용 —
-           안개를 화면 전체에 까는 것 등 원화 선명도를 해치는 제안은 그대로 따르지 않고 축소/각색함.) */
+/* ── 장면 레이어 (아래→위): 흐린 배경 · 그림 · 깃발/망토 · 뒤 새 · 산/성 조각 · 창문 · 앞 새 ── */
+#scene{position:fixed;inset:0;transform-origin:52% 38%;animation:push 11s cubic-bezier(.15,.6,.25,1) both}
+@keyframes push{from{transform:scale(1.07)}to{transform:scale(1)}}
+/* 높이에 맞춰 그림 전체가 보이게 → 화면이 더 넓으면 양옆은 흐린 그림으로 채움 */
+.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=227) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
+#bgimg{position:fixed;display:block;pointer-events:none;--e:0px;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent)}
+.lay{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.fx{position:fixed;pointer-events:none;visibility:hidden}
+#castle,#mount{position:fixed;pointer-events:none;display:block}
 
-        /* ① 횃불 불꽃 흔들림 + 주변 빛 흔들림 — 명판 좌우 대형 브라지어(assets 원화에 이미 불꽃이
-           그려진 두 곳)에 얹음. 촛불 pulsing과 다르게 불꽃 "모양" 자체가 scaleY/scaleX/translateX로
-           옆으로 살짝씩 흔들리는 레이어(.torch-flame)와, 그 주변으로 번지는 주황빛이 숨쉬듯 opacity/
-           scale이 변하는 레이어(.torch-halo)를 분리해서 얹음 — 완전히 꺼졌다 켜지지 않고 항상
-           "살아서 흔들리는" 정도로만 범위를 좁게 유지, 개체별 주기는 1.8~3.5초 사이에서 서로 다르게
-           둬서 두 횃불이 같은 박자로 움직이는 "싸구려 게임 홈페이지" 느낌을 피함. */
-        .login-fx-torch {
-            position: absolute; pointer-events: none; z-index: 1; mix-blend-mode: screen;
-        }
-        .login-fx-torch .torch-halo {
-            position: absolute; inset: 8%; border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,170,90,0.26) 0%, rgba(255,130,50,0.10) 50%, rgba(255,90,30,0) 75%);
-            filter: blur(10px);
-            animation: fxTorchHalo 3s ease-in-out infinite;
-        }
-        .login-fx-torch .torch-flame {
-            position: absolute; left: 50%; top: 46%; width: 34%; height: 48%;
-            transform: translate(-50%, -50%); transform-origin: 50% 88%;
-            background: radial-gradient(ellipse at 50% 30%, rgba(255,235,180,0.55) 0%, rgba(255,160,70,0.32) 46%, rgba(255,90,30,0) 78%);
-            filter: blur(3px);
-            border-radius: 50% 50% 42% 42% / 62% 62% 38% 38%;
-            animation: fxTorchFlame 2.3s ease-in-out infinite;
-        }
-        #fxTorchLeft .torch-flame  { animation-duration: 2.1s; }
-        #fxTorchLeft .torch-halo   { animation-duration: 2.9s; }
-        #fxTorchRight .torch-flame { animation-duration: 2.7s; animation-delay: -1s; }
-        #fxTorchRight .torch-halo  { animation-duration: 3.4s; animation-delay: -0.6s; }
-        @keyframes fxTorchFlame {
-            0%, 100% { transform: translate(-50%, -50%) scaleY(1)    scaleX(1)    translateX(0);    opacity: 0.5; }
-            25%      { transform: translate(-50%, -50%) scaleY(1.14) scaleX(0.9)  translateX(-3%);  opacity: 0.68; }
-            50%      { transform: translate(-50%, -50%) scaleY(0.92) scaleX(1.06) translateX(2%);   opacity: 0.38; }
-            75%      { transform: translate(-50%, -50%) scaleY(1.08) scaleX(0.95) translateX(-2%);  opacity: 0.6; }
-        }
-        @keyframes fxTorchHalo {
-            0%, 100% { opacity: 0.32; transform: scale(1); }
-            50%      { opacity: 0.55; transform: scale(1.08); }
-        }
+/* ── 시네마틱 오프닝: 검은 화면 → 밝아짐 · 영화 띠 · 가운데 문구 → 띠 걷힘 ── */
+.fadeBlack{position:fixed;inset:0;z-index:40;background:#000;pointer-events:none;animation:unblack 3.2s ease .2s forwards}
+@keyframes unblack{to{opacity:0}}
+.bar{position:fixed;left:0;right:0;z-index:35;height:11vh;background:#000;pointer-events:none;transition:transform 1.8s cubic-bezier(.6,0,.2,1)}
+.bar.top{top:0}.bar.bot{bottom:0}
+body.open .bar.top{transform:translateY(-100%)}body.open .bar.bot{transform:translateY(100%)}
+.quote{position:fixed;z-index:36;left:50%;top:50%;transform:translate(-50%,-50%);width:min(1100px,90vw);text-align:center;
+  font:italic 500 clamp(22px,2.3vw,44px)/1.3 'Cormorant Garamond',Georgia,serif;letter-spacing:.06em;color:#e6d7b6;
+  text-shadow:0 0 10px #000,0 0 30px rgba(0,0,0,.9);pointer-events:none;
+  transition:opacity 1.5s ease,filter 1.5s ease,transform 1.8s cubic-bezier(.6,0,.2,1)}
+.quote .c{display:inline-block;width:2px;height:.9em;margin-left:4px;background:#e6d7b6;vertical-align:-.1em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+/* 사라질 때: 띠가 걷히는 방향(위아래)으로 번지며 사라짐 */
+body.qOut .quote,body.open .quote{opacity:0;filter:blur(5px);transform:translate(-50%,-50%) scaleY(2.2)}
+/* 불타 사라짐: 글자를 캔버스에 옮겨 아래에서 위로 태움 (그동안 원래 글자는 바로 숨김) */
+body.burning .quote{opacity:0;transition:none}
+#burn{position:fixed;inset:0;width:100%;height:100%;z-index:37;pointer-events:none}
 
-        /* ⑤ 횃불 먼지 파티클 — 2026-09-14 9차-3: 계단 촛불에서 솟아오르던 이전 버전은 "바닥에서
-           불씨가 난다"는 느낌이라 피드백을 받고 전면 교체. 화면에 보이는 횃불(명판 좌우 대형 2개 +
-           검 옆/배너 옆/폭포 쪽 벽걸이 횃불)마다 그 위 아주 가까운 자리에 작은 먼지 입자 1~2개만
-           살짝 떠올랐다 사그라드는 정도로 얹음 — 불씨라기보단 "횃불 열기에 날리는 재/먼지" 느낌으로
-           이동 범위도 짧게(12~24px) 줄임. 흰색(.dust-white) 입자는 진짜 작게 만들어서 눈이 쌓인
-           화면 좌우 바깥쪽 횃불(검 옆/폭포 쪽)에만 아주 소량 섞음. */
-        .login-fx-dust {
-            position: absolute; pointer-events: none; z-index: 1; overflow: visible;
-            mix-blend-mode: screen;
-        }
-        .login-fx-dust .dust {
-            position: absolute; width: var(--sz, 1.8px); height: var(--sz, 1.8px);
-            border-radius: 50%; opacity: 0;
-            box-shadow: 0 0 5px 1px currentColor; /* 2026-09-14 9차-4: 어두운 배경 사진 속에서 그냥
-                점만 찍으면 묻혀서 안 보인다는 피드백 → currentColor 글로우로 존재감을 더함(색은
-                JS에서 background와 함께 color도 같이 셋팅) */
-            animation-name: fxDustFloat; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
-        }
-        .login-fx-dust .dust-white { box-shadow: 0 0 3px 0.5px rgba(255,255,255,0.6); }
-        /* 2026-09-14 9차-4: "떠오르는 게 티가 안 난다" 피드백 → 짧게 위로만 뜨던 것에서, 옆으로도
-           제법 흩날리는(바람에 날리는 재 느낌) 궤적으로 재설계. 이동 거리도 훨씬 늘림(--dy 35~70px). */
-        @keyframes fxDustFloat {
-            0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
-            20%  { transform: translate(calc(var(--dx, 14px) * 0.35), calc(var(--dy, -45px) * 0.3))  scale(1);    opacity: 0.9; }
-            55%  { transform: translate(calc(var(--dx, 14px) * 0.8),  calc(var(--dy, -45px) * 0.6))  scale(0.6);  opacity: 0.5; }
-            100% { transform: translate(var(--dx, 14px), var(--dy, -45px)) scale(0.15); opacity: 0; }
-        }
+/* ── 로그인 폼 (게임 타이틀식) ── */
+.tShade{position:fixed;inset:0;z-index:19;pointer-events:none;transition:opacity 1.8s ease .3s;
+  /* 글자 바로 뒤만 부드럽게 어둡게 (경계 없는 타원) + 왼쪽 끝만 살짝 */
+  background:radial-gradient(ellipse 25% 44% at 16% 54%,rgba(3,5,8,.66),rgba(3,5,8,.3) 55%,rgba(3,5,8,0) 100%),
+    linear-gradient(90deg,rgba(4,6,10,.55) 0%,rgba(4,6,10,.2) 18%,rgba(4,6,10,0) 32%)}
+body:not(.formOn) .tShade{opacity:0}
+.title{position:fixed;z-index:20;left:clamp(28px,6.5vw,150px);top:50%;transform:translateY(-54%);margin:0;
+  width:clamp(290px,22vw,420px);font-family:'Cinzel',Georgia,serif;color:#e8d5aa;
+  text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.7)}
+body:not(.formOn) .title{pointer-events:none}
+/* 등장: 왼쪽에서 밀려 나오며 한 줄씩 */
+.title>*{opacity:0}
+body.formOn .title>*:not(.lore){animation:tIn 1.3s cubic-bezier(.2,.7,.2,1) forwards}
+body.formOn .title>:nth-child(2){animation-delay:.75s}body.formOn .title>:nth-child(3){animation-delay:.9s}
+body.formOn .title>:nth-child(4){animation-delay:1.05s}body.formOn .title>:nth-child(5){animation-delay:1.2s}
+body.formOn .title>:nth-child(6){animation-delay:1.35s}body.formOn .title>:nth-child(7){animation-delay:1.5s}
+@keyframes tIn{from{opacity:0;transform:translateX(-46px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+/* 위 문장: 한 줄씩 페이드인 */
+.title .lore{opacity:1;width:clamp(360px,33vw,640px);margin-bottom:2.2em;
+  font:italic 400 clamp(15px,1.06vw,20.5px)/1.65 'Cormorant Garamond',Georgia,serif;letter-spacing:.02em;color:#cbbd9f;text-shadow:0 1px 8px #000}
+.title .lore span{display:block;opacity:0;transform:translateY(6px);filter:blur(3px);transition:opacity 1.6s ease,transform 1.6s ease,filter 1.6s ease}
+.title .lore span.on{opacity:1;transform:none;filter:none}
+.title h1{margin:0;font-weight:600;font-size:clamp(28px,2.35vw,46px);letter-spacing:.12em;line-height:1.05;color:#efdcb2;
+  text-shadow:0 2px 18px rgba(0,0,0,.8),0 0 30px rgba(255,190,110,.10)}
+.title h1 span{display:block;font-size:.42em;letter-spacing:.62em;color:#b39a6e;margin-top:.55em}
+/* 타이틀 조명: ① 금빛 빛줄기가 가끔 천천히 훑음 ② 아래에서 횃불빛이 불규칙하게 숨 쉼 */
+.title h1 .nm{position:relative;display:inline-block;font-weight:inherit;animation:ember 5.3s ease-in-out infinite}
+@keyframes ember{
+  0%,100%{text-shadow:0 2px 18px rgba(0,0,0,.8),0 6px 22px rgba(255,140,60,.10)}
+  17%{text-shadow:0 2px 18px rgba(0,0,0,.8),0 6px 24px rgba(255,140,60,.24)}
+  31%{text-shadow:0 2px 18px rgba(0,0,0,.8),0 6px 20px rgba(255,140,60,.12)}
+  52%{text-shadow:0 2px 18px rgba(0,0,0,.8),0 7px 28px rgba(255,150,70,.30)}
+  64%{text-shadow:0 2px 18px rgba(0,0,0,.8),0 6px 22px rgba(255,140,60,.16)}
+  83%{text-shadow:0 2px 18px rgba(0,0,0,.8),0 6px 25px rgba(255,140,60,.26)}}
+.title h1 .nm::after{content:attr(data-t);position:absolute;inset:0;pointer-events:none;text-shadow:none;opacity:0;
+  background:linear-gradient(105deg,transparent 0%,rgba(255,244,214,0) 38%,rgba(255,236,190,.55) 45%,#fff8e6 50%,rgba(255,236,190,.55) 55%,rgba(255,244,214,0) 62%,transparent 100%) no-repeat;
+  background-size:260% 100%;background-position:130% 0;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 6px rgba(255,210,140,.45))}
+body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2.4s infinite}
+@keyframes sweep{0%{background-position:130% 0;opacity:1}21%{background-position:-30% 0;opacity:1}22%,100%{background-position:-30% 0;opacity:0}}
+.title .orn{display:flex;align-items:center;gap:.7em;margin:1.05em 0 .9em}
+.title .orn i{flex:1;height:1px;background:linear-gradient(90deg,rgba(201,163,98,.75),rgba(201,163,98,0))}
+.title .orn i:first-child{flex:0 0 2.2em;background:linear-gradient(90deg,rgba(201,163,98,0),rgba(201,163,98,.75))}
+.title .orn b{width:6px;height:6px;transform:rotate(45deg);border:1px solid rgba(220,182,115,.9);box-shadow:0 0 8px rgba(255,190,110,.35)}
+.title .sub{font-size:clamp(10px,.66vw,12.5px);letter-spacing:.38em;color:#c0a982;margin-bottom:2.2em}
+/* 입력칸: 밑줄만 · 누르면 금빛 밑줄이 번지고 안내 글씨가 위로 뜸 */
+.title .fld{position:relative;margin-bottom:1.9em}
+.title .fld input{width:100%;background:transparent;border:0;border-bottom:1px solid rgba(201,163,98,.55);border-radius:0;outline:none;
+  padding:1.9em 2em .55em 0;font:400 clamp(14px,.86vw,16.5px) Georgia,serif;letter-spacing:.04em;color:#f3e7c9}
+.title .fld::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;transform:scaleX(0);transform-origin:left;
+  background:linear-gradient(90deg,#f0cf8e,rgba(240,207,142,.15));box-shadow:0 0 10px rgba(255,200,120,.55);transition:transform .45s ease}
+.title .fld:focus-within::after{transform:scaleX(1);animation:coal 2.2s ease-in-out infinite}
+/* 입력칸 누르면: 금빛 밑줄이 숯불처럼 일렁이고, 불씨가 선 위를 타고 가다 톡 튀어 사라짐 */
+@keyframes coal{0%,100%{box-shadow:0 0 8px rgba(255,190,110,.5);filter:brightness(1)}
+  23%{box-shadow:0 0 14px rgba(255,160,70,.85),0 0 3px #ffd9a0;filter:brightness(1.35)}
+  41%{box-shadow:0 0 9px rgba(255,180,100,.55)}61%{box-shadow:0 0 16px rgba(255,150,60,.9),0 0 3px #ffe2b0;filter:brightness(1.45)}
+  80%{box-shadow:0 0 10px rgba(255,185,105,.6)}}
+.title .fld::before{content:'';position:absolute;left:0;bottom:-1px;width:3px;height:3px;border-radius:50%;opacity:0;pointer-events:none;
+  background:#ffe0a8;box-shadow:0 0 6px 2px rgba(255,150,60,.85)}
+.title .fld:focus-within::before{animation:spark 2.6s ease-in-out .3s infinite}
+@keyframes spark{0%{left:4%;transform:translate(0,0) scale(.6);opacity:0}12%{opacity:1}
+  70%{left:86%;transform:translate(0,0) scale(1);opacity:.95}100%{left:94%;transform:translate(6px,-16px) scale(.3);opacity:0}}
+.title .fld label{position:absolute;left:0;bottom:.7em;pointer-events:none;font-size:clamp(11px,.7vw,13.5px);letter-spacing:.3em;color:rgba(232,213,170,.72);transition:.25s}
+.title .fld input:focus+label,.title .fld input:not(:placeholder-shown)+label{bottom:3.3em;font-size:clamp(8.5px,.52vw,10px);color:rgba(220,190,135,.75)}
+/* 브라우저 자동완성이 칸을 흰/노랗게 칠하는 것 막기 */
+.title input:-webkit-autofill,.title input:-webkit-autofill:hover,.title input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#f3e7c9!important;-webkit-box-shadow:0 0 0 1000px transparent inset!important;caret-color:#f3e7c9;transition:background-color 5000s}
+.title .eye{position:absolute;right:0;bottom:.45em;background:none;border:0;padding:4px;cursor:pointer;color:rgba(232,213,170,.45)}
+.title .eye:hover{color:#f0cf8e}.title .eye svg{width:1.1em;height:1.1em;display:block}
+.title .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2.2em}
+.title .seal{display:flex;align-items:center;gap:.6em;white-space:nowrap;cursor:pointer;user-select:none;font-size:clamp(9px,.56vw,11px);letter-spacing:.24em;color:#bba57c}
+.title .seal input{appearance:none;-webkit-appearance:none;margin:0;width:.95em;height:.95em;transform:rotate(45deg);border:1px solid rgba(201,163,98,.6);background:transparent;cursor:pointer}
+.title .seal input:checked{background:radial-gradient(circle,#f0cf8e 0 30%,transparent 34%);box-shadow:0 0 8px rgba(255,200,120,.5)}
+.title .go{position:relative;background:none;border:0;cursor:pointer;padding:.8em .2em;white-space:nowrap;
+  font:600 clamp(11px,.72vw,14px) 'Cinzel',serif;letter-spacing:.32em;color:#efd9a8;text-shadow:0 0 10px rgba(255,190,110,.28);transition:color .3s,text-shadow .3s}
+.title .go::before,.title .go::after{content:'';position:absolute;left:50%;width:0;height:1px;background:linear-gradient(90deg,transparent,#f0cf8e,transparent);transition:.45s ease}
+.title .go::before{top:0}.title .go::after{bottom:0}
+.title .go:hover{color:#fff3d2;text-shadow:0 0 14px rgba(255,200,120,.75),0 0 30px rgba(255,150,60,.35)}
+.title .go:hover::before,.title .go:hover::after{left:-10%;width:120%}
+.title .go:disabled{opacity:.6;cursor:wait}
+.title .err{min-height:1.3em;margin-top:1.2em;font:13px Georgia,serif;color:#ff9c78;text-shadow:0 1px 3px #000}
 
-        /* 2026-09-14 9차-5: 눈발(전체 화면 낙하)은 "너무 과하다"는 피드백으로 완전히 폐기 — 대신
-           재(ash)가 공중에 떠서 아주 천천히 흩날리는 느낌으로 교체. 눈처럼 위→아래로 떨어지는 게
-           아니라, 이미 공중에 떠 있던 재가 느릿하게 위아래/좌우로 표류하다 사라지는 쪽이 실제
-           불씨 재 느낌에 더 가까워서 화면 전체(뷰포트) 아무 위치에서나 시작하도록 함. 크기/개수/
-           밝기 전부 크게 낮춰서 눈발보다 훨씬 절제된 인상. */
-        .login-ashdrift {
-            position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden;
-        }
-        .login-ashdrift .ash {
-            position: absolute; border-radius: 50%; background: #B9AF9E; opacity: 0;
-            animation-name: fxAshDrift; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
-        }
-        @keyframes fxAshDrift {
-            0%   { transform: translate(0, 0); opacity: 0; }
-            15%  { opacity: var(--op, 0.22); }
-            50%  { transform: translate(var(--sway, 10px), var(--rise, -30px)); }
-            85%  { opacity: var(--op, 0.22); }
-            100% { transform: translate(calc(var(--sway, 10px) * -1), calc(var(--rise, -30px) * 1.7)); opacity: 0; }
-        }
-
-        /* ② 아주 옅은 안개 — 원화 전체에 깔면 선명도가 죽으므로, 하단 전역은 기존 .login-fog(아래)가
-           이미 담당 중. 그와 별개로, 이 배경엔 마침 오른쪽에 폭포가 그려져 있어서 그 착수 지점에만
-           국소적으로 아주 옅은 물안개 레이어를 하나 더 얹어 깊이감을 보탬(챗지피티 원안의 "폭포 옆
-           안개" 아이디어를 실제 원화의 폭포 위치에 맞게 각색). */
-        /* 2026-09-14 9차-2: 1차 버전은 opacity 변화폭이 좁고 주기도 길어서(14s) "그냥 하얗게 밝아지기만
-           하는 정적인 얼룩"처럼 보인다는 피드백 → opacity 진폭을 크게 키우고 좌우로도 살짝 드리프트를
-           줘서 짧은 시간 봐도 "떠다니는 안개"라는 게 느껴지도록 주기를 10초로 단축. */
-        .login-fog-mist {
-            position: absolute; pointer-events: none; z-index: 1; mix-blend-mode: screen;
-            background: radial-gradient(ellipse at 50% 60%, rgba(205,215,225,0.22), rgba(205,215,225,0) 70%);
-            filter: blur(16px);
-            animation: fxMistDrift 10s ease-in-out infinite alternate;
-        }
-        @keyframes fxMistDrift {
-            0%   { opacity: 0.12; transform: translate(-4.5%, 4%) scale(0.94); }
-            50%  { opacity: 0.9;  transform: translate(4.5%, -5.5%) scale(1.16); }
-            100% { opacity: 0.2;  transform: translate(-3%, 2.5%) scale(1.06); }
-        }
-        /* 2026-09-14 9차-9: 검 각인 글로우(9차-6~8, 세 번 다 시도)는 결국 전부 "허접하다"는 판정을
-           받고 폐기 — 대장님이 대신 챗지피티가 제안한 다른 방향("횃불/화로의 동적 광원": 불꽃 자체는
-           안 건드리고, 그 빛이 주변 돌벽/석상/갑옷/바닥/로그인 석판에 아주 미세하게 반사되어
-           밝아졌다 어두워지는 효과, 2~4초 불규칙 주기, "효과가 움직인다고 느껴지면 실패"할 정도로
-           약하게)을 검토해달라고 함 — 판단: 이미 있는 torch-flame/halo 인프라와 자연스럽게 어울리고
-           리스크가 낮은 좋은 제안이라 채택. 기존 명판 좌우 대형 횃불(LOGIN_FX_TORCHES) 좌표를 그대로
-           재사용하되, halo보다 훨씬 큰 반경의 아주 옅은 radial-gradient를 얹어서 화로 주변 돌벽/석상
-           받침대/석판까지 빛이 번지는 느낌만 살짝 냄. mix-blend-mode: soft-light는 screen보다 훨씬
-           순한 방식으로 "밝게"만 만들어서(어둡게는 절대 안 만듦) 은은한 반사광 표현에 적합 —
-           opacity 진폭도 아주 좁게(0.3~0.6 사이) 잡고, 키프레임 퍼센트를 불균등하게 흩어서
-           기계적으로 뛰지 않는 불규칙한 숨쉬기를 만듦. */
-        .login-fx-ambient {
-            position: absolute; pointer-events: none; z-index: 1;
-            border-radius: 50%;
-            mix-blend-mode: soft-light;
-            background: radial-gradient(circle, rgba(255,180,120,0.9) 0%, rgba(255,155,95,0.5) 38%, rgba(255,130,70,0) 70%);
-            animation: fxAmbientBreathe 3.6s ease-in-out infinite;
-        }
-        #fxAmbientLeft  { animation-duration: 3.3s; }
-        #fxAmbientRight { animation-duration: 4.1s; animation-delay: -1.8s; }
-        @keyframes fxAmbientBreathe {
-            0%   { opacity: 0.32; }
-            18%  { opacity: 0.48; }
-            37%  { opacity: 0.36; }
-            58%  { opacity: 0.58; }
-            79%  { opacity: 0.4; }
-            100% { opacity: 0.32; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-fog, .login-fog-mist, .torch-flame, .torch-halo, .dust, .ash, .login-fx-ambient { animation: none; }
-        }
-
-        /* ===================== 로그인 폼 "핫스팟" 레이어 =====================
-           원화(assets/login-bg-scene.webp, 2752×1536) 안에 타이틀/아이콘/입력칸 홈/체크박스/버튼이
-           전부 이미 돌에 새겨진 그림으로 그려져 있음. 그 위에 "보이지 않는" 진짜 <input>/<button>만
-           좌표로 정확히 겹쳐 올려서, 카드를 CSS로 새로 그리지 않고도 100% 원화와 동일하게 보이면서
-           실제 폼 기능(입력/포커스/제출)이 동작하게 함.
-           화면 비율이 바뀌면 배경(cover)이 잘리는 위치가 달라지는 문제는 syncLoginHotspots()
-           (스크립트 영역 참고, object-fit:cover 수학 공식)가 리사이즈/로드마다 재계산해서 해결 —
-           좌표 기준값은 전부 원본 이미지 픽셀. */
-        .login-content {
-            position: absolute; inset: 0; z-index: 2;
-            opacity: 0; transition: opacity 0.6s ease;
-        }
-        #loginOverlay.reveal-card .login-content { opacity: 1; }
-        .login-hotspot {
-            position: absolute; box-sizing: border-box;
-        }
-        /* ID/비밀번호 입력창: 그림에 이미 그려진 홈(빈 오목한 홈, 안내문구 없음)이 그대로 "입력창"처럼
-           보이도록 배경/테두리 없이 완전히 투명하게 — 타이핑한 글자만 그 홈 위에 자연스럽게 얹힘.
-           2026-09-12 7차: 새 원화는 입력칸 내부를 완전히 비워둔 채로(그림 자체에 안내문구가 전혀
-           없음, 좌우 아이콘만 홈 밖에 별도로 새겨짐) 만들어서, 이전 6차-15의 ":not(:placeholder-shown)
-           덮개" 트릭(타이핑한 글자와 원화 속 baked 안내문구가 겹쳐 보이는 문제 방지용)이 더 이상
-           필요 없어짐 — 그만큼 코드가 단순해짐. */
-        #loginEmail, #loginPassword {
-            background: transparent; border: none; outline: none;
-            color: #f2e6c8; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 0.3px;
-            padding: 0 0.6em 0 0.6em;
-        }
-        #loginPassword { padding-right: 2.4em; }
-        #loginEmail::placeholder, #loginPassword::placeholder { color: transparent; }
-        /* 2026-09-16: 브라우저 "자동 로그인"(저장된 비밀번호 자동완성) 시 크롬이 입력창에 강제로
-           흰색/노란색 배경을 칠해버리는 문제 수정 — input 자체의 background:transparent는 크롬의
-           자동완성 전용 내부 스타일(-webkit-autofill)을 못 이김. 표준 우회법인 inset box-shadow로
-           배경을 안쪽에서 덮어써서 항상 투명하게(=돌에 새겨진 홈처럼) 유지하고, 글자색도 자동완성
-           시 크롬이 검정으로 강제하는 -webkit-text-fill-color를 원래 디자인 색(#f2e6c8)으로 재지정.
-           transition을 아주 길게(5000s) 걸어두는 건 자동완성 배경이 바뀌는 짧은 순간에도 색이
-           깜빡이지 않게 하는 널리 쓰이는 트릭. */
-        #loginEmail:-webkit-autofill, #loginPassword:-webkit-autofill,
-        #loginEmail:-webkit-autofill:hover, #loginPassword:-webkit-autofill:hover,
-        #loginEmail:-webkit-autofill:focus, #loginPassword:-webkit-autofill:focus,
-        #loginEmail:-webkit-autofill:active, #loginPassword:-webkit-autofill:active {
-            -webkit-text-fill-color: #f2e6c8 !important;
-            -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
-            box-shadow: 0 0 0 1000px transparent inset !important;
-            background-color: transparent !important;
-            transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
-            caret-color: #f2e6c8;
-        }
-        /* 2026-09-14 8차-9: 아래 앰버 글로우 테두리(box-shadow)는 원래 #loginEmail/#loginPassword
-           본인에게 직접 걸려 있었는데, textNudgeNative가 그 입력창 자체에 transform으로 걸리다 보니
-           box-shadow까지 같이 딸려서 움직여버림(칸 자체 좌표는 안 바뀌는데, "칸이 내려간다"고
-           느껴진 진짜 원인 — transform은 요소가 그리는 모든 것(글자+box-shadow)을 통째로 옮김).
-           그래서 이 글로우 테두리를 입력창과 완전히 분리된 별도 요소(#loginEmailGlow/
-           #loginPasswordGlow, HTML/JS 쪽 참고)로 옮기고, 그 요소는 textNudgeNative 없이 순수
-           LOGIN_HOTSPOTS 좌표에만 고정 — 이제 글자를 아무리 내려도 이 테두리는 배경그림 좌표에
-           박제된 것처럼 절대 안 움직임. */
-        .login-input-glow { pointer-events: none; }
-        /* 2026-09-14 8차-10: 대장님 요청으로 위치 조정 중 헷갈림 방지 위해 잠시 꺼뒀다가,
-           라벨 글자색이 이 글로우 없이는 배경 위에서 칙칙하게 죽어 보인다는 게 확인돼서
-           8차-11에서 다시 복원함 — 아래 두 규칙은 8차-9 이후 값 그대로. */
-        #loginEmail:not(:placeholder-shown) ~ #loginEmailGlow,
-        #loginPassword:not(:placeholder-shown) ~ #loginPasswordGlow {
-            box-shadow: inset 0 0 0 1px rgba(229,195,132,0.30), 0 0 8px rgba(229,195,132,0.12);
-            border-radius: 6px;
-        }
-        #loginEmail:focus ~ #loginEmailGlow,
-        #loginPassword:focus ~ #loginPasswordGlow {
-            box-shadow: inset 0 0 0 2px rgba(229,195,132,0.55), 0 0 14px rgba(229,195,132,0.25);
-            border-radius: 6px;
-        }
-        /* 2026-09-12 7차-2: 플로팅 라벨 — 대장님이 참고로 준 은행앱 로그인폼처럼, 평소엔 입력칸
-           안쪽에 안내 텍스트처럼 앉아있다가 포커스/입력 시 작아지면서 위로 떠오르는 효과.
-           원화 자체엔 안내문구가 없으므로(7차) 이 라벨은 순수 CSS/HTML로 새로 얹는 것 — sibling
-           선택자(~)로 input 상태에 따라 반응하게 함(label이 input 바로 뒤에 와야 동작). */
-        .login-floating-label {
-            position: absolute; pointer-events: none; z-index: 3;
-            display: flex; align-items: center;
-            padding: 0 0.6em; box-sizing: border-box;
-            font-family: Georgia, 'Times New Roman', serif; letter-spacing: 1.5px;
-            color: rgba(242,230,200,0.42);
-            transition: transform 0.22s ease, color 0.22s ease, opacity 0.22s ease, font-size 0.22s ease;
-            white-space: nowrap;
-        }
-		#loginEmailLabel { transform: translateY(10px); }
-		#loginPasswordLabel { transform: translateY(6px); }
-
-        /* 2026-09-14 8차-8: 기존엔 아이디/패스워드가 이 규칙 하나(translateY 값 공유)를 같이 썼는데,
-           패스워드 쪽만 살짝 내리려고 값을 바꾸면 아이디 쪽도 같이 움직여버리는 문제가 있어서
-           완전히 두 개로 분리함 — 이제 아래 두 블록은 서로 완전히 독립적으로, 한쪽 값을 바꿔도
-           다른 쪽엔 전혀 영향 없음. ⚠️ 파일을 편집기에 열어둔 채로 오래 두면 편집기가 들고 있는
-           옛날 버전으로 덮어써질 수 있으니, 수정 전엔 항상 파일을 새로 열어서 최신 상태인지
-           확인할 것. */
-        #loginEmail:focus ~ #loginEmailLabel,
-        #loginEmail:not(:placeholder-shown) ~ #loginEmailLabel {
-            /* 명판 프레임 안 입력칸 사이 여백이 좁아서(제목 줄~ID칸, ID칸~PW칸 간격이 각각 15~20px
-               정도) 라벨을 박스 밖으로 완전히 띄우면 위/아래 다른 요소와 겹침 — 그 대신 박스 안쪽
-               상단으로만 살짝 떠오르게(은행앱처럼 박스 밖으로 나가지 않는 컴팩트 버전).
-               2026-09-12 7차-3: 기존 scale(0.52) 방식은 라벨 중심이 박스 위쪽 테두리 밖으로
-               절반 가까이 빠져나가 제목 줄과 겹쳐 보이고, 극소 크기(약 8px)로 시각적으로 축소된
-               세리프 폰트가 화면(특히 Windows ClearType)에서 세로줄만 남은 것처럼 뭉개지는
-               문제가 있었음 — scale() 대신 font-size 자체를 줄이고(라벨 폰트도 세리프 유지하되
-               실제 렌더 크기를 키워 가독성 확보), translateY 값도 박스 테두리를 넘지 않도록
-               재조정. --baseFs는 place()가 인라인으로 셋팅(입력창과 동일한 기준 크기).
-               2026-09-14 8차-8: 아이디 전용으로 분리됨 — 이 값을 바꿔도 패스워드 쪽엔 영향 없음. */
-            transform: translateY(-6%); /* 2026-09-18: 글자가 작아지면서 상대적으로 너무 위(천장쪽)로 붙어보인다는 피드백 — -9%→-6%로 살짝 내림 */
-            font-size: max(8px, calc(var(--baseFs, 1em) * 0.50)) !important; /* 2026-09-18: 0.60→0.40으로 줄였다가 너무 작다는 피드백으로 0.50으로 재조정. JS가 인라인
-               font-size를 직접 셋팅해서(다른 .login-hotspot 요소와 공유하는 place() 헬퍼) 그냥
-               두면 인라인 스타일 우선순위에 밀려 이 규칙이 아예 적용되지 않음 — !important로
-               명시 승격. max(8px, ...)는 아주 좁은 모바일 화면에서 너무 작아지는 것 방지 */
-            color: rgba(242,230,200,0.42); /* 8차-2: 평소(placeholder) 색과 동일 — 밝아지지 않음 */
-        }
-        #loginPassword:focus ~ #loginPasswordLabel,
-        #loginPassword:not(:placeholder-shown) ~ #loginPasswordLabel {
-            /* 2026-09-14 8차-8: 패스워드 전용으로 분리됨 — 이 값을 바꿔도 아이디 쪽엔 영향 없음.
-               나머지 설명은 위 아이디 블록과 동일(공통 이력 참고). */
-            transform: translateY(-9%); /* 2026-09-18: -12%→-9%로 살짝 내림, 위 아이디 블록과 동일 사유 */
-            font-size: max(8px, calc(var(--baseFs, 1em) * 0.50)) !important; /* 2026-09-18: 0.60→0.40→0.50, 위 아이디 블록과 동일 사유 */
-            color: rgba(242,230,200,0.42);
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .login-floating-label { transition: none; }
-        }
-        /* 위치/크기는 다른 .login-hotspot과 마찬가지로 syncLoginHotspots()가 비밀번호 입력창
-           우측 안쪽 일부 영역으로 계산해서 인라인 style로 채움(부모 상대좌표가 아니라 오버레이
-           기준 절대좌표라서 별도 wrapper 없이도 정확히 겹쳐짐) */
-        .login-password-toggle {
-            position: absolute; display: flex; align-items: center; justify-content: center;
-            background: transparent; border: none; padding: 0; cursor: pointer; color: rgba(242,230,200,0.55);
-            transition: color 0.25s ease;
-        }
-        .login-password-toggle:hover { color: var(--login-gold-2); }
-        .login-password-toggle svg { width: 60%; height: 60%; pointer-events: none; }
-        /* 체크박스: 그림 속 빈 네모 칸을 그대로 클릭 영역으로 사용 — 평소엔 완전 투명하다가 체크되면
-           그 칸 안에 은은한 금색 체크마크만 나타남(그림 자체는 항상 "체크 안 된" 빈 칸 상태로 고정 —
-           2026-09-12 7차: 대장님이 baked 이미지가 처음부터 체크된 것처럼 보이면 안 된다고 지적해서
-           명판 자체를 항상 빈 칸으로 새기도록 프롬프트를 확정함). */
-        .login-checkbox-hotspot {
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-        }
-        .login-checkbox-hotspot input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
-        /* 옆 걸쇠 금속의 명암과 같은 방향으로 그림자를 겹겹이 얹어서 "쇠에 새겨진 체크마크"처럼 보이게 함 */
-        .login-checkbox-mark {
-            width: 74%; height: 74%; opacity: 0; transform: scale(0.5);
-            transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none;
-            filter:
-                drop-shadow(-0.6px -0.6px 0.4px rgba(255,230,180,0.65))
-                drop-shadow(1px 1.2px 0.6px rgba(0,0,0,0.9))
-                drop-shadow(0 0 3px rgba(0,0,0,0.7));
-        }
-        .login-checkbox-hotspot input:checked + .login-checkbox-mark { opacity: 1; transform: scale(1); }
-        /* "SEAL MY IDENTITY" 문구도 그림에 이미 있으므로, 접근성을 위한 텍스트만 남기고 시각적으로는
-           숨김 처리(그림 속 문구가 라벨 역할을 대신함) */
-        .login-remember-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-        /* OPEN THE GATE 버튼: 그림 속 명판 그래픽 위에 완전히 투명한 실제 <button>만 얹음. 원화 자체에
-           이미 테두리+글자가 은은하게 발광하는 상태로 새겨져 있어서, hover 시엔 그 불빛이 "확 밝아지는"
-           느낌으로 box-shadow를 한층 더 강하게 얹어줌(2026-09-12 7차, 대장님 요청 — 평소엔 은은하게,
-           마우스 올리면 화르륵 밝아지도록). */
-        #loginBtn {
-            background: transparent; border: none; padding: 0; cursor: pointer;
-            font-size: 0; color: transparent; border-radius: 6px;
-            transition: box-shadow 0.3s ease, background 0.3s ease;
-        }
-        #loginBtn:hover {
-            background: rgba(255,180,90,0.14);
-            box-shadow: 0 0 18px 2px rgba(255,190,110,0.55), 0 0 46px 10px rgba(255,140,60,0.3);
-        }
-        #loginBtn:active { background: rgba(255,180,90,0.22); }
-        #loginBtn:disabled { cursor: not-allowed; opacity: 0.7; }
-        #loginError {
-            color: #ff8f6b; font-size: 12px; text-align: center; line-height: 1.3;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-        }
-        /* ===================== 로그인 화면 배경 히스토리 메모 =====================
-           영상 기반 인트로 → 여러 레이어를 합성한 던전 씬 → CSS로 그린 카드 → "핫스팟" 방식(원화 한 장 +
-           좌표 매핑, 3차) → 여러 차례 원화 교체(6차 계열, "고대 비석형·벽면 일체형") → 2026-09-12 7차,
-           "받침대 위 기사 석상 + 대성당 + 보름달" 구도로 전면 교체(현재). 핫스팟 매핑 방식 자체는
-           3차 이후 한 번도 안 바뀌었고, 원화만 계속 교체되어 왔음. 자세한 내용은 #loginOverlay 규칙과
-           syncLoginHotspots()/playLoginIntro() 참고. */
-
-
-        @media (max-width: 880px) {
-            /* 로그인 화면(#loginOverlay)은 position:fixed라 body 높이 설정과 무관하게 따로 화면 전체를
-               차지하는데, 폰 브라우저가 주소창을 보여주고 있는 "첫 진입 순간"엔 100vh가 주소창까지 포함한
-               더 큰 높이로 계산돼서 안의 내용(로고/문구)이 가운데정렬되며 위쪽이 주소창 밑에 가려 보이는
-               문제가 있었음 → 지금 실제로 보이는 화면 높이 기준인 100dvh로 교체해서 해결 */
-            #loginOverlay { height: 100vh; height: 100dvh; }
-            /* 2026-09-05 3차: 로그인 화면이 "핫스팟 좌표 매핑" 방식으로 바뀌면서(위 CSS 블록 참고),
-               카드가 더 이상 CSS로 그리는 별도 요소가 아니라 배경 그림 자체 + JS가 실시간 계산하는
-               좌표라서, 모바일 전용으로 폭/패딩/폰트를 따로 손볼 게 없어짐 — syncLoginHotspots()가
-               어떤 화면비에서도 항상 그림 속 정확한 위치에 입력창을 맞춰줌. */
-        }
-    </style>
+/* ── 📱 폰 (폭 760 이하): 아래 돌바닥 위 · 입력 글씨 16px(아이폰 확대 방지) · 자간 줄임 · 누르는 칸 44px ── */
+@media (max-width:760px){
+  .bar{height:8vh}.quote{font-size:22px}
+  .tShade{background:linear-gradient(0deg,rgba(4,6,10,.88) 0%,rgba(4,6,10,.62) 38%,rgba(4,6,10,0) 62%)}
+  .title{left:50%;top:auto;bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px));transform:translateX(-50%);width:min(88vw,380px)}
+  .title .lore{width:auto;font-size:13.5px;margin-bottom:1.2em}
+  .title .orn{margin:.7em 0 .6em}.title .sub{margin-bottom:1.4em;letter-spacing:.26em}
+  .title h1{letter-spacing:.09em}.title h1 span{letter-spacing:.44em}
+  .title .fld{margin-bottom:1.4em}
+  .title .fld input{font-size:16px;padding:1.6em 2.4em .5em 0}
+  .title .fld label{letter-spacing:.2em}
+  .title .fld input:focus+label,.title .fld input:not(:placeholder-shown)+label{bottom:2.9em;font-size:9.5px}
+  .title .eye{padding:10px;bottom:0}
+  .title .row{margin-top:1.4em}
+  .title .seal{min-height:44px;letter-spacing:.16em;font-size:10px}
+  .title .go{min-height:44px;letter-spacing:.22em;font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  #scene,.title h1 .nm,.title h1 .nm::after{animation:none!important}.fadeBlack{display:none}
+  body.formOn .title>*{animation:none;opacity:1}
+}
+</style>
 </head>
 <body>
-    <!-- ═══════════════════════════════════════════════════════════════
-         index.html — 로그인 전용 페이지 (2026-09-13 8차 파일 분리)
-         업체관리 화면은 dashboard.html에 있음. 로그인 성공 시 dashboard.html로 이동.
-         ═══════════════════════════════════════════════════════════════ -->
+<div id="scene">
+  <div class="bgBlur"></div>
+  <img id="bgimg" src="assets/login/bg.webp?v=227" alt="">
+  <canvas id="fxFlag" class="fx"></canvas>
+  <canvas id="fxCape" class="fx"></canvas>
+  <canvas id="bBack" class="lay"></canvas>
+  <img id="mount" src="assets/login/mount.webp?v=227" alt="">
+  <img id="castle" src="assets/login/castle.webp?v=227" alt="">
+  <canvas id="smoke" class="lay"></canvas>
+  <canvas id="lights" class="lay"></canvas>
+  <canvas id="bFront" class="lay"></canvas>
+  <canvas id="ash" class="lay"></canvas>
+</div>
 
-    <!-- ===================== Supabase 로그인 오버레이 =====================
-         2026-08-30: 영상 기반 인트로(#introSplash)를 완전히 폐기하고, 이 화면 위에서 바로 재생되는
-         빛 입자 조립 효과(.login-particles)로 대체함. 검은 인트로 화면 → 크로스페이드하던 단계가
-         아예 없어져서 처음부터 끝까지 "한 화면" 위에서만 연출이 이어짐. -->
-    <div id="loginOverlay">
-        <!-- 2026-09-06 6차-3: 배경 이미지를 #loginOverlay 자체가 아니라 이 자식 요소에 그려서,
-             부모(#loginOverlay)는 항상 즉시 불투명하게 대시보드를 가리고 이 요소만 살짝 늦게
-             페이드인 — 대시보드가 살짝 비치는 순간을 원천적으로 없앰. -->
-        <div class="login-bg-image" id="loginBgImage"></div>
-        <!-- 2026-09-12 7차-2: 챗지피티 추천 안개/촛불 이펙트 — 둘 다 원화는 그대로 두고 위에 얇은
-             글로우/블러 레이어만 얹는 방식(6차 계열 fx-torch와 같은 원리). -->
-        <div class="login-fog" id="loginFog"></div>
-        <!-- 2026-09-14 9차: 명판 좌우 대형 횃불(브라지어) — 불꽃 흔들림 + 주변 빛 흔들림 -->
-        <div class="login-fx-torch" id="fxTorchLeft"><span class="torch-flame"></span><span class="torch-halo"></span></div>
-        <div class="login-fx-torch" id="fxTorchRight"><span class="torch-flame"></span><span class="torch-halo"></span></div>
-        <!-- 2026-09-14 9차-9: 챗지피티 제안 — 횃불빛이 주변 돌벽/석상/바닥/석판에 아주 미세하게
-             반사되어 밝아졌다 어두워지는 "동적 광원" 효과. 명판 좌우 대형 횃불과 같은 중심좌표, 훨씬
-             큰 반경으로 은은하게 퍼짐. -->
-        <div class="login-fx-ambient" id="fxAmbientLeft"></div>
-        <div class="login-fx-ambient" id="fxAmbientRight"></div>
-        <!-- 2026-09-14 9차-3: 화면에 보이는 횃불 5곳(명판 좌우 대형 2개 + 검 옆/배너 옆/폭포 쪽 벽걸이
-             횃불)에 먼지 파티클 컨테이너. 실제 입자(span)는 스크립트 쪽에서 개수/흩날림을 랜덤하게
-             생성해서 채움(9차-4, 아래 spawnTorchDust 참고) — 컨테이너 자체는 비워둠. -->
-        <div class="login-fx-dust" id="fxDustMainLeft"></div>
-        <div class="login-fx-dust" id="fxDustMainRight"></div>
-        <div class="login-fx-dust" id="fxDustSwordLeft"></div>
-        <div class="login-fx-dust" id="fxDustLampRight"></div>
-        <div class="login-fx-dust" id="fxDustFarRight"></div>
-        <!-- 2026-09-14 9차-5: 눈발 대신, 화면 전체에 아주 옅게 떠서 천천히 흩날리는 재(ash) 레이어 -->
-        <div class="login-ashdrift" id="loginAshdrift"></div>
-        <!-- 2026-09-14 9차: 오른쪽 폭포 착수 지점 국소 물안개 -->
-        <div class="login-fog-mist" id="fxMistWaterfall"></div>
-        <!-- 2026-09-12 7차: 원화(assets/login-bg-scene.webp) 안에 타이틀/아이콘/입력칸 홈/체크박스/
-             버튼이 전부 이미 그려져 있음. 아래 form은 그 위에 "보이지 않는" 진짜 입력 요소만 좌표로
-             겹쳐 올리는 핫스팟 레이어 — 실제 위치/크기는 syncLoginHotspots()가 매 리사이즈마다
-             계산해서 인라인 style로 채워줌(아래 초기값은 자바스크립트 실행 전 깜빡임 방지용 대략치). -->
-        <form class="login-content" id="loginForm" onsubmit="handleLogin(event); return false;" autocomplete="on">
-            <input type="email" id="loginEmail" class="login-hotspot" name="email" autocomplete="username" placeholder=" " onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('loginPassword').focus(); }">
-            <label class="login-hotspot login-floating-label" id="loginEmailLabel" for="loginEmail">Adventurer</label>
-            <!-- 2026-09-14 8차-9: 앰버 글로우 테두리 전용 요소 — #loginEmail의 textNudgeNative transform과
-                 완전히 분리해서, LOGIN_HOTSPOTS 좌표에만 고정(글자를 내려도 이 테두리는 안 움직임). -->
-            <div class="login-hotspot login-input-glow" id="loginEmailGlow"></div>
-            <input type="password" id="loginPassword" class="login-hotspot" name="password" autocomplete="current-password" placeholder=" ">
-            <label class="login-hotspot login-floating-label" id="loginPasswordLabel" for="loginPassword">Arcane Key</label>
-            <div class="login-hotspot login-input-glow" id="loginPasswordGlow"></div>
-            <button type="button" class="login-password-toggle" id="loginPasswordToggle" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="Show/hide password">
-                <svg id="eyeIconOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg id="eyeIconClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.32 21.32 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.4 21.4 0 0 1-3.22 4.53M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-            <label class="login-hotspot login-checkbox-hotspot" id="loginCheckboxHotspot">
-                <input type="checkbox" id="rememberEmailCheck">
-                <svg class="login-checkbox-mark" viewBox="0 0 24 24" fill="none" stroke="#E5C384" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
-                <span class="login-remember-text">Seal my identity</span>
-            </label>
-            <button type="submit" id="loginBtn" class="login-hotspot">Open the Gate</button>
-            <div id="loginError" class="login-hotspot"></div>
-        </form>
-    </div>
+<div class="tShade"></div>
+<form class="title" id="loginForm" autocomplete="on" onsubmit="handleLogin(event);return false;">
+  <div class="lore" id="lore"><span>Beneath the bruised, weeping skies,</span><span>where the towering citadel watches over the damp shadows of the valley,</span><span>a lone traveler rides toward a destiny</span><span>sealed in mist and ancient stone.</span></div>
+  <h1><b class="nm" data-t="RHEAVISION">RHEAVISION</b><span>CORP.</span></h1>
+  <div class="orn"><i></i><b></b><i></i></div>
+  <div class="sub">KIOSK MANAGEMENT SYSTEM</div>
+  <div class="fld"><input type="email" id="loginEmail" name="email" autocomplete="username" placeholder=" "
+      onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('loginPassword').focus()}"><label for="loginEmail">ADVENTURER</label></div>
+  <div class="fld"><input type="password" id="loginPassword" name="password" autocomplete="current-password" placeholder=" "><label for="loginPassword">ARCANE KEY</label>
+    <button type="button" class="eye" tabindex="-1" aria-label="Show/hide password" onclick="togglePassword()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+  <div><div class="row"><label class="seal"><input type="checkbox" id="rememberEmailCheck">SEAL MY IDENTITY</label>
+    <button type="submit" class="go" id="loginBtn">OPEN THE GATE</button></div>
+  <div class="err" id="loginError"></div></div>
+</form>
 
-    <script>
-        /* ═══════════════════════════════════════════════════════════════
-           [LOGIN PAGE] index.html 전용 스크립트
-           2026-09-13 8차: 기존 단일 index.html(로그인+업체관리 통합)을
-           index.html(로그인 전용, 이 파일) + dashboard.html(업체관리 전용)로 분리.
-           분리 이유: 로그인 화면만 수정할 때도 매번 26만자짜리 통합 파일 전체를 훑어야 해서
-           Claude 응답 속도/사용량 부담이 컸음 — 이제 로그인 관련 수정은 이 작은 파일만 보면 됨.
-           흐름: ① Supabase 연결 → ② 로그인 화면 핫스팟 좌표 동기화 → ③ 아이디 기억하기 →
-                 ④ 로그인 처리(성공 시 dashboard.html로 이동) → ⑤ 기존 세션 있으면 바로 이동
-           ═══════════════════════════════════════════════════════════════ */
+<div class="fadeBlack"></div>
+<div class="bar top"></div><div class="bar bot"></div>
+<div class="quote"><span id="qt"></span><span class="c"></span></div>
+<canvas id="burn"></canvas>
 
-/* ===================== 로그인 화면 핫스팟 좌표 동기화 =====================
-           "떠있는 UI 카드"가 아니라 "벽에 박힌 한 장의 그림"처럼 보이게 하기 위해, 카드를 CSS로
-           그리지 않고 원화(assets/login-bg-scene.webp, 원본 해상도 2752×1536 — 타이틀/아이콘/입력칸
-           홈/체크박스/버튼까지 전부 이미 그려져 있음) 위에 "보이지 않는" 진짜 입력 요소만 좌표로
-           정확히 겹쳐 올림. LOGIN_HOTSPOTS 값은 그 원본 이미지를 픽셀 단위로 직접 측정해서 얻은 고정
-           좌표(왼쪽,위,오른쪽,아래). background-size:cover가 화면 비율에 따라 이미지를 확대/크롭하는
-           방식은 (컨테이너 크기, 이미지 원본 크기)만 알면 100% 예측 가능한 수학 공식이므로,
-           syncLoginHotspots() 함수가 리사이즈/방향전환마다 재계산 — 화면 비율이 무엇이든 항상 그림
-           속 정확한 자리에 입력창이 맞춰짐. */
-        const LOGIN_BG_NATIVE_W = 2752, LOGIN_BG_NATIVE_H = 1536;
-        /* 큰 모니터에서 그림이 화면 전체를 꽉 채우는 게 부담스럽다는 피드백 → cover 배율 계산 후
-           이 값만큼 추가로 한 번 더 줄여서 상하좌우에 여백이 생기게 함(rawScale이 1보다 클 때만
-           적용됨 — 일반 화면에서는 이 값을 낮춰도 체감 효과가 없을 수 있음, 의도된 동작).
-           1.0 = 여백 없음, 값을 낮출수록 그림이 작아지고 여백이 커짐. */
-        const LOGIN_BG_SHRINK = 0.85;
-        /* 2026-09-12 7차: 원화를 "받침대 위 기사 석상 + 대성당 + 보름달" 구도로 완전히 새로 교체 —
-           패널이 화면 중앙 하단부, 받침대 정면에 위치. 아래 6개 좌표는 전부 새 원화를 그리드
-           오버레이로 확대해서 픽셀 단위로 재실측한 값(이전 6차 계열 "고대 비석형" 좌표는 구도가
-           완전히 달라서 재활용 불가 — 전부 새로 측정). 입력칸 내부는 완전히 비워둔 채로(안내문구
-           없음) 새겼기 때문에, 이전처럼 ":not(:placeholder-shown)" 덮개를 씌워 baked 안내문구를
-           가릴 필요가 없어짐(CSS 영역 참고). */
-        const LOGIN_HOTSPOTS = {
-            id:       [1210, 1091, 1585, 1145], /* 2026-09-13 8차-3: 밝기 그래디언트로 실측한 결과
-               기존 y좌표가 실제 명판 테두리보다 5px 위로 어긋나 있었음(패스워드 칸은 이미 정확했음) —
-               ID 라벨/입력값이 유독 세로 중앙정렬이 안 맞아 보인 진짜 원인. 아래로 5px 보정. */
-            password: [1210, 1158, 1585, 1212],
-            /* 2026-09-14 8차-12: 금박 글로우 테두리 전용 좌표 — 대장님 요청으로 실제 입력창(id/password,
-               클릭·타이핑 되는 진짜 영역)과 완전히 분리함. 지금은 값이 위 id/password와 동일해서
-               시각적으로 아무 변화 없지만, 이 두 줄만 따로 건드리면 테두리만 움직이고 입력 가능
-               영역은 전혀 안 움직임(반대도 마찬가지). */
-            idGlow:       [1210, 1100, 1585, 1156],
-            passwordGlow: [1210, 1168, 1585, 1222],
-            toggle:   [1535, 1176, 1575, 1216],
-            checkbox: [1128, 1240, 1167, 1280],
-            enter:    [1393, 1233, 1585, 1288],
-            /* 명판 프레임 안에는 에러 문구를 넣을 여유 공간이 따로 없어서(버튼 바로 아래가 곧 명판
-               하단 테두리), 명판 밖 촛불 계단 쪽 어두운 배경 위에 배치 — #loginError에 이미 걸려있는
-               text-shadow 덕분에 어두운 배경 위에서도 잘 읽힘. */
-            error:    [1122, 1296, 1585, 1330]
-        };
-        /* 화면이 극단적으로 가로로 넓고 세로로 짧아서(예: 와이드 모니터 + 브라우저 주소창/북마크바로
-           실사용 높이가 줄어든 상태) 순수 cover 배율대로면 버튼이나 에러문구가 화면 아래로 밀려날
-           상황이면, 그 지점이 항상 화면 안쪽(margin만큼 여유 두고)에 들어오도록 배율 상한을 계산해서
-           cover 배율과 비교해 더 작은 쪽을 씀. LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y = 패널에서 가장
-           아래에 있는 요소(에러 문구 바깥 테두리 근처)의 원화 y좌표. */
-        const LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y = 1330;
-        /* 2026-09-14 9차 → 9차-2 재실측: 처음엔 "밝은 주황빛" 전체(R>170 등)로 잡았더니, 불꽃 위로
-           뻗어나가는 장식용 번개/균열 이펙트(원화에 이미 그려진, 불꽃과는 별개인 효과)까지 같이
-           잡혀서 halo 중심이 실제 불꽃보다 너무 위로/넓게 잡혔던 게 "좌표가 이상하다" 피드백의
-           원인이었음 — connected-component로 가장 큰 덩어리(=불꽃 몸통)만 분리해서 재실측한 값. */
-        const LOGIN_FX_TORCHES = {
-            left:  [905, 1050, 85],
-            right: [1769, 1080, 90]
-        };
-        /* 2026-09-14 9차-9: 횃불 주변 돌벽/석상/석판까지 은은하게 번지는 "동적 광원" — 중심좌표는
-           위 LOGIN_FX_TORCHES와 동일(같은 불꽃에서 나오는 빛이므로), 반경만 훨씬 크게 잡아서 명판
-           주변 넓은 영역을 옅게 덮음. */
-        const LOGIN_FX_AMBIENT = {
-            left:  [905, 1050, 420],
-            right: [1769, 1080, 440]
-        };
-        /* 2026-09-14 9차-3: 화면에 보이는 횃불 5곳(원화를 connected-component 분석으로 재실측)의
-           먼지 파티클 컨테이너 zone(x1, y1, x2, y2) — 각 횃불 불꽃 바로 위/주변을 감싸는 작은 박스. */
-        const LOGIN_FX_DUST_ZONES = {
-            mainLeft:  [845, 955, 975, 1105],   // 명판 좌측 대형 횃불
-            mainRight: [1685, 995, 1845, 1145], // 명판 우측 대형 횃불
-            swordLeft: [400, 940, 480, 1050],   // 검 옆 벽걸이 횃불(화면 좌측 바깥)
-            lampRight: [1800, 880, 1890, 980],  // 배너 옆 벽걸이 횃불
-            farRight:  [2030, 1190, 2110, 1280] // 폭포 아래쪽 원경 횃불(화면 우측 바깥)
-        };
-        /* 오른쪽 폭포 착수 지점 물안개 zone(x1, y1, x2, y2) — 원화 속 폭포가 바닥에 떨어지며 이미
-           옅게 그려진 물보라 위치를 실측 */
-        const LOGIN_FX_MIST_ZONE = [2050, 1080, 2400, 1250];
-        function syncLoginHotspots() {
-            const overlay = document.getElementById('loginOverlay');
-            if (!overlay) return;
-            const cw = overlay.clientWidth, ch = overlay.clientHeight;
-            if (!cw || !ch) return;
-            const coverScale = Math.max(cw / LOGIN_BG_NATIVE_W, ch / LOGIN_BG_NATIVE_H);
-            const margin = 24; // 패널 아래로 최소 이만큼은 화면이 남도록
-            const halfH = LOGIN_BG_NATIVE_H / 2;
-            const capScale = (ch / 2 - margin) / (LOGIN_PANEL_SAFE_BOTTOM_NATIVE_Y - halfH);
-            /* 2026-09-15: 모바일 세로 화면에서 로그인폼 글자/입력칸이 작아 보인다는 피드백 — 세로가
-               긴 좁은 화면(cw < ch, 폰)에서는 coverScale이 항상 "세로를 꽉 채우는" 배율로 결정되는데,
-               원화가 가로로 긴 landscape라 이 경우 가로 방향으로는 이미 화면보다 훨씬 넓게 잘리는
-               여유가 남아있음. 그 여유를 이용해 살짝만 더 확대(MOBILE_ZOOM_BOOST)해서 명판/글자가
-               커 보이게 하되, capScale(로그인 버튼·에러문구가 화면 아래로 밀려나지 않도록 보장하는
-               상한)은 절대 넘지 않음 — 기존 안전장치 그대로 유지. */
-            const MOBILE_ZOOM_BOOST = 1.18;
-            const isPortraitNarrow = cw < ch;
-            const boostedCoverScale = (isPortraitNarrow && capScale > coverScale)
-                ? Math.min(coverScale * MOBILE_ZOOM_BOOST, capScale)
-                : coverScale;
-            const rawScale = Math.min(boostedCoverScale, capScale > 0 ? capScale : boostedCoverScale);
-            const scale = rawScale > 1 ? rawScale * LOGIN_BG_SHRINK : rawScale;
-            const offsetX = (cw - LOGIN_BG_NATIVE_W * scale) / 2;
-            const offsetY = (ch - LOGIN_BG_NATIVE_H * scale) / 2;
-            // 배경 이미지도 입력창과 완전히 같은 배율/위치로 직접 그림 — CSS의 cover 키워드를 쓰지
-            // 않으므로 위에서 배율을 줄여도(=화면이 극단적 비율이어도) 입력창과 절대 어긋나지 않음.
-            const bgImageEl = document.getElementById('loginBgImage');
-            if (bgImageEl) {
-                bgImageEl.style.backgroundImage = "url('assets/login-bg-scene.webp')";
-                bgImageEl.style.backgroundSize = (LOGIN_BG_NATIVE_W * scale) + 'px ' + (LOGIN_BG_NATIVE_H * scale) + 'px';
-                bgImageEl.style.backgroundPosition = offsetX + 'px ' + offsetY + 'px';
-            }
-            const place = (el, key, fontRatio, textNudgeNative) => {
-                if (!el) return;
-                const [x1, y1, x2, y2] = LOGIN_HOTSPOTS[key];
-                el.style.left = (offsetX + x1 * scale) + 'px';
-                el.style.top = (offsetY + y1 * scale) + 'px';
-                el.style.width = ((x2 - x1) * scale) + 'px';
-                const height = (y2 - y1) * scale;
-                el.style.height = height + 'px';
-                if (fontRatio) {
-                    const fs = Math.max(9, height * fontRatio);
-                    el.style.fontSize = fs + 'px';
-                    el.style.setProperty('--baseFs', fs + 'px');
-                }
-                /* 2026-09-14 8차-5: 대장님 지적 — 칸(왼/위/너비/높이, 위 4줄) 자체는 배경 그림과
-                   그대로 딱 맞아야 하고(8차-3에서 픽셀 실측으로 이미 맞춰둔 값, 절대 건드리면 안 됨),
-                   "살짝 아래로"는 칸이 아니라 그 안의 글자(타이핑한 값)만 내려달라는 의미였음.
-                   8차-4에서 top 좌표 자체를 밀었던 건 결과적으로 칸까지 같이 밀어버린 잘못된 접근이라
-                   되돌림. padding-top/line-height는 크롬이 <input> 값 텍스트에 무시한다는 게 실측
-                   확인된 상태라(8차-4 참고) 못 쓰고, 대신 레이아웃 박스(top/left/width/height,
-                   클릭 히트박스)는 전혀 안 바꾸면서 "그려지는 모습"만 살짝 옮기는 transform을 씀 —
-                   레이아웃상 칸은 100% 원화와 일치한 채로 유지되고, 그 안의 글자만 미세하게(원화
-                   기준 3px, 화면 배율에 비례) 아래로 보이게 됨.
-                   2026-09-14 8차-7: 아이디(10)/패스워드(6) textNudgeNative 값이 서로 달라서 두 칸의
-                   글자 줄간격이 다르게 보이는 진짜 원인이었음 — 아이디 기준(10)으로 통일. */
-                if (textNudgeNative) {
-                    el.style.transform = `translateY(${textNudgeNative * scale}px)`;
-                }
-            };
-            place(document.getElementById('loginEmail'), 'id', 0.38, 18);
-            place(document.getElementById('loginEmailLabel'), 'id', 0.40);
-            place(document.getElementById('loginEmailGlow'), 'idGlow'); /* 8차-12: 전용 좌표(idGlow) 사용 — 실제 입력창(id)과 분리 */
-            place(document.getElementById('loginPassword'), 'password', 0.38, 16);
-            place(document.getElementById('loginPasswordLabel'), 'password', 0.40);
-            place(document.getElementById('loginPasswordGlow'), 'passwordGlow'); /* 8차-12: 전용 좌표(passwordGlow) 사용 — 실제 입력창(password)과 분리 */
-            place(document.getElementById('loginPasswordToggle'), 'toggle');
-            place(document.getElementById('loginCheckboxHotspot'), 'checkbox');
-            place(document.getElementById('loginBtn'), 'enter');
-            place(document.getElementById('loginError'), 'error', 0.55);
+<script>
+/* ═══ 장면 ═══ */
+/* 공통 배치: 그림(2880×1632)을 화면 높이에 맞춤 → 넓으면 가운데, 좁으면(폰) 기사·성 쪽(40%) 기준으로 좌우를 잘라냄 */
+function FIT(W,H){const IW=2880,IH=1632,s=H/IH,w=IW*s,ox=w<W?(W-w)/2:(W-w)*.4;return {s,ox,oy:0}}
+(()=>{const im=document.getElementById('bgimg');function f(){const W=innerWidth,H=innerHeight,F=FIT(W,H);
+  Object.assign(im.style,{left:F.ox+'px',top:'0px',width:2880*F.s+'px',height:H+'px'});
+  im.style.setProperty('--e',Math.min(Math.max(F.ox,0),W*.05)+'px')}   // 양옆 빈틈만큼만 가장자리 흐림
+  addEventListener('resize',f);f()})();
+</script>
+<script>
+/* 까마귀 연출 (좌표 = 원본 그림 2880×1632 기준)
+   A: 오른쪽 위 화면 밖에서 크게 → 성 쪽으로 작아지며 날아옴 → 성 둘레 2바퀴 → 성 오른쪽 안개로 사라짐
+   B: 왼쪽 바위산 뒤에서 나와 → 성 앞을 지나며 점점 작아짐 → 오른쪽 안개 속으로 사라짐 (A와 같이 출발)
+   C: 왼쪽 먼 탑 근처 아주 작은 까마귀 2~3마리가 늘 배회
+   레이어: 배경 → bBack(가려지는 새) → 산·성 조각 → bFront(앞 새) */
+(()=>{
+const CAS={x:1119,y:20,w:769}, MT={x:0,y:0,w:950};
+const ORB={x:1503,y:235,rx:450,ry:70};            // 성 둘레 (rx는 성 폭보다 넓게)
+const back=document.getElementById('bBack'),front=document.getElementById('bFront');
+const cb=back.getContext('2d'),cf=front.getContext('2d');
+const cas=document.getElementById('castle'),mt=document.getElementById('mount');
+let W,H,dpr,s,ox,oy;
+const rnd=(a,b)=>a+Math.random()*(b-a), sm=e=>e*e*(3-2*e), lerp=(a,b,e)=>a+(b-a)*e;
+function place(el,o){Object.assign(el.style,{left:ox+o.x*s+'px',top:oy+o.y*s+'px',width:o.w*s+'px'})}
+function size(){
+  dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  for(const c of [back,front]){c.width=W*dpr;c.height=H*dpr}
+  cb.setTransform(dpr,0,0,dpr,0,0);cf.setTransform(dpr,0,0,dpr,0,0);
+  ({s,ox,oy}=FIT(W,H));
+  place(cas,CAS);place(mt,MT);
+}
+addEventListener('resize',size);size();
+const toS=(x,y)=>[ox+x*s,oy+y*s], toI=(X,Y)=>[(X-ox)/s,(Y-oy)/s];
 
-            // 원(반지름) 기반 배치 — 횃불 halo용, 정사각형 박스가 아니라서 place()와 다른 헬퍼 사용
-            const placeCircle = (el, [cx, cy, r]) => {
-                if (!el) return;
-                const rs = r * scale;
-                el.style.left = (offsetX + cx * scale - rs) + 'px';
-                el.style.top = (offsetY + cy * scale - rs) + 'px';
-                el.style.width = (rs * 2) + 'px';
-                el.style.height = (rs * 2) + 'px';
-            };
-            // 사각형 zone 기반 배치 — 불씨 파티클 컨테이너, 물안개 패치
-            const placeBox = (el, [x1, y1, x2, y2]) => {
-                if (!el) return;
-                el.style.left = (offsetX + x1 * scale) + 'px';
-                el.style.top = (offsetY + y1 * scale) + 'px';
-                el.style.width = ((x2 - x1) * scale) + 'px';
-                el.style.height = ((y2 - y1) * scale) + 'px';
-            };
-            placeCircle(document.getElementById('fxTorchLeft'), LOGIN_FX_TORCHES.left);
-            placeCircle(document.getElementById('fxTorchRight'), LOGIN_FX_TORCHES.right);
-            placeCircle(document.getElementById('fxAmbientLeft'), LOGIN_FX_AMBIENT.left);
-            placeCircle(document.getElementById('fxAmbientRight'), LOGIN_FX_AMBIENT.right);
-            placeBox(document.getElementById('fxDustMainLeft'), LOGIN_FX_DUST_ZONES.mainLeft);
-            placeBox(document.getElementById('fxDustMainRight'), LOGIN_FX_DUST_ZONES.mainRight);
-            placeBox(document.getElementById('fxDustSwordLeft'), LOGIN_FX_DUST_ZONES.swordLeft);
-            placeBox(document.getElementById('fxDustLampRight'), LOGIN_FX_DUST_ZONES.lampRight);
-            placeBox(document.getElementById('fxDustFarRight'), LOGIN_FX_DUST_ZONES.farRight);
-            placeBox(document.getElementById('fxMistWaterfall'), LOGIN_FX_MIST_ZONE);
-        }
-        syncLoginHotspots();
-        window.addEventListener('resize', syncLoginHotspots);
-        window.addEventListener('orientationchange', syncLoginHotspots);
+const INK=[18,19,24],FOG=[92,106,122];
+function draw(cx,x,y,sz,flap,a,fog){             // sz = 날개 반폭(원본 px), fog 0~1 = 안개색으로
+  const [X,Y]=toS(x,y),w=Math.max(1.6,sz*s),up=flap*w*.55;
+  const c=INK.map((v,i)=>Math.round(lerp(v,FOG[i],fog||0)));
+  cx.globalAlpha=a;cx.strokeStyle=cx.fillStyle=`rgb(${c})`;cx.lineCap='round';
+  cx.beginPath();cx.moveTo(X-w,Y-up);
+  cx.quadraticCurveTo(X-w*.42,Y-up*.25-w*.18,X,Y);
+  cx.quadraticCurveTo(X+w*.42,Y-up*.25-w*.18,X+w,Y-up);
+  cx.lineWidth=Math.max(1,w*.2);cx.stroke();
+  cx.beginPath();cx.arc(X,Y+w*.05,w*.12,0,6.28);cx.fill();
+}
+const flapOf=b=>Math.sin(b.t*b.fq+b.ph)*((Math.sin(b.t*.8+b.ph)>.62)?.22:1);
 
-        /* ===================== 파티클 생성 (횃불 먼지 + 재 표류) =====================
-           2026-09-14 9차-4: "티가 안 난다" 피드백으로 손으로 하나하나 span 치던 방식 대신 런타임
-           생성으로 교체 — 개수/흩날림 폭을 상수 하나로 조절할 수 있고, 랜덤값 덕분에 자연스러운
-           변주도 생김. 횃불 먼지 컨테이너(.login-fx-dust)는 syncLoginHotspots()가 좌표/크기를 잡아둔
-           상태이고, #loginAshdrift는 CSS로 이미 화면 전체(inset:0)를 덮고 있음 — 두 경우 다 안의
-           입자들은 전부 %(퍼센트) 기준이라 리사이즈 때 컨테이너만 따라가면 되므로 이 생성은 페이지
-           로드 시 한 번만 실행하면 충분함(리사이즈마다 다시 만들 필요 없음). */
-        function spawnTorchDust(containerId, count, colors, whiteCount) {
-            const el = document.getElementById(containerId);
-            if (!el) return;
-            for (let i = 0; i < count; i++) {
-                const s = document.createElement('span');
-                const isWhite = whiteCount && i < whiteCount;
-                s.className = 'dust' + (isWhite ? ' dust-white' : '');
-                const color = isWhite ? '#F4F6F8' : colors[i % colors.length];
-                s.style.background = color;
-                s.style.color = color; /* box-shadow: currentColor 글로우용 */
-                s.style.left = (8 + Math.random() * 78) + '%';
-                s.style.bottom = (Math.random() * 55) + '%';
-                const sz = isWhite ? (1.1 + Math.random() * 0.7) : (2.2 + Math.random() * 2.2);
-                s.style.setProperty('--sz', sz.toFixed(1) + 'px');
-                s.style.setProperty('--dx', (Math.random() * 50 - 20).toFixed(1) + 'px'); /* -20~30px 옆으로 흩날림 */
-                s.style.setProperty('--dy', (-(35 + Math.random() * 35)).toFixed(1) + 'px'); /* -35~-70px 위로 */
-                const dur = 3.2 + Math.random() * 3.2;
-                s.style.animationDuration = dur.toFixed(2) + 's';
-                s.style.animationDelay = (-Math.random() * dur).toFixed(2) + 's'; /* 음수 delay로 시작부터 제각각 위상 */
-                el.appendChild(s);
-            }
-        }
-        /* 2026-09-14 9차-5: 눈발(spawnSnowfall, 화면 위→아래 낙하)은 폐기 — 화면 아무 데서나 떠서
-           아주 느리게 표류하다 사라지는 재(ash)로 교체. 눈보다 훨씬 작고 느리고 옅게. */
-        function spawnAshdrift(containerId, count) {
-            const el = document.getElementById(containerId);
-            if (!el) return;
-            for (let i = 0; i < count; i++) {
-                const s = document.createElement('span');
-                s.className = 'ash';
-                s.style.left = (Math.random() * 100) + '%';
-                s.style.top = (Math.random() * 100) + '%';
-                const sz = 1 + Math.random() * 1.4; /* 1~2.4px — 눈발보다 훨씬 작게 */
-                s.style.width = sz.toFixed(1) + 'px';
-                s.style.height = sz.toFixed(1) + 'px';
-                s.style.setProperty('--op', (0.14 + Math.random() * 0.18).toFixed(2)); /* 0.14~0.32 — 훨씬 옅게 */
-                s.style.setProperty('--sway', (6 + Math.random() * 10).toFixed(1) + 'px');
-                s.style.setProperty('--rise', (-(14 + Math.random() * 18)).toFixed(1) + 'px');
-                const dur = 16 + Math.random() * 14; /* 16~30초 — "천천히" 표류 */
-                s.style.animationDuration = dur.toFixed(2) + 's';
-                s.style.animationDelay = (-Math.random() * dur).toFixed(2) + 's';
-                el.appendChild(s);
-            }
-        }
-        spawnTorchDust('fxDustMainLeft',  6, ['#F2C94C', '#FF8A3D', '#9AA0A6']);
-        spawnTorchDust('fxDustMainRight', 6, ['#FF8A3D', '#F2C94C', '#9AA0A6']);
-        spawnTorchDust('fxDustSwordLeft', 4, ['#F2C94C', '#9AA0A6'], 1);
-        spawnTorchDust('fxDustLampRight', 4, ['#9AA0A6', '#FF8A3D']);
-        spawnTorchDust('fxDustFarRight',  4, ['#FF8A3D', '#9AA0A6'], 1);
-        spawnAshdrift('loginAshdrift', 22);
+/* ── A: 오른쪽 위 → 성 둘레 → 성 오른쪽 안개 ── */
+function birdA(delay,i){
+  const [sx,sy]=toI(W+rnd(40,140),-rnd(30,90));
+  return {kind:'A',t:-delay,ph:rnd(0,6.28),fq:rnd(5,6.5),
+    S:{x:sx+i*60,y:sy-i*40},C:{x:rnd(2100,2400),y:rnd(40,120)},
+    D1:rnd(10,12),turns:2,                     // 2바퀴 돌고 → 오른쪽 옆에서 안개로
+    per:rnd(26,30),D3:rnd(9,11),F:{x:rnd(2150,2300),y:rnd(360,410)},
+    rx:ORB.rx+rnd(-20,40),ry:ORB.ry+rnd(-15,20),cy:ORB.y+rnd(-50,40)+i*25,big:rnd(15,19),sm:rnd(5,6)};
+}
+function stepA(b){
+  if(b.t<0)return true;
+  const {rx,ry,cy}=b;
+  const D2=b.turns*b.per;
+  let x,y,sz,z=-1,a=1,fog=0;
+  if(b.t<b.D1){                                   // 날아옴 (곡선, 가까울 때 빠름 → 멀어지며 느려짐)
+    const e=sm(b.t/b.D1),q=1-Math.pow(1-e,1.4);
+    const E={x:ORB.x+rx,y:cy};
+    x=(1-q)*(1-q)*b.S.x+2*(1-q)*q*b.C.x+q*q*E.x;
+    y=(1-q)*(1-q)*b.S.y+2*(1-q)*q*b.C.y+q*q*E.y;
+    sz=b.big/(1+(b.big/b.sm-1)*q);z=-.2;
+  }else if(b.t<b.D1+D2){                          // 성 둘레 (앞쪽부터 돌기 시작)
+    const th=-(b.t-b.D1)/b.per*6.2832;
+    x=ORB.x+Math.cos(th)*rx;z=Math.sin(th);y=cy-z*ry+Math.sin(b.t*.6+b.ph)*10;
+    sz=b.sm*(1-z*.32);
+  }else{                                          // 성 오른쪽 옆 → 오른쪽 안개 쪽으로 멀어지며 사라짐
+    const e=Math.min((b.t-b.D1-D2)/b.D3,1),zf=1+5*e;
+    const S0={x:ORB.x+rx,y:cy+Math.sin(b.t*.6+b.ph)*10};
+    x=lerp(S0.x,b.F.x,1-1/zf);
+    y=lerp(S0.y,b.F.y,1-1/zf);sz=b.sm/zf;
+    fog=e*.85;a=e<.6?1:1-(e-.6)/.4;z=-.1;
+    if(e>=1)return false;
+  }
+  draw(z>0?cb:cf,x,y,sz,flapOf(b),a*(z>0?.85:.95),fog);
+  return true;
+}
 
-        (function playLoginIntro() {
-            const overlay = document.getElementById('loginOverlay');
-            if (!overlay) return;
-            // 배경 이미지가 실제로 로드된 뒤 한 번 더 좌표를 재계산(레이아웃/캐시 타이밍 이슈 방지)
-            // 하고 나서 페이드인 — 좌표가 틀어진 채로 잠깐 보이는 깜빡임을 막기 위함.
-            const img = new Image();
-            img.onload = function () {
-                syncLoginHotspots();
-                requestAnimationFrame(() => overlay.classList.add('reveal-card'));
-            };
-            img.onerror = function () { overlay.classList.add('reveal-card'); };
-            img.src = 'assets/login-bg-scene.webp';
-        })();
+/* ── B: 바위산 뒤 → 성 앞 → 오른쪽 안개 ── */
+function birdB(delay,i){
+  return {kind:'B',t:-delay,ph:rnd(0,6.28),fq:rnd(5.5,7),
+    S:{x:rnd(520,580),y:rnd(300,350)+i*30},M:{x:rnd(1250,1450),y:rnd(220,290)+i*15},E:{x:rnd(2200,2350),y:rnd(360,420)},
+    dur:rnd(24,30),big:rnd(11,13)};
+}
+function stepB(b){
+  if(b.t<0)return true;
+  const p=Math.min(b.t/b.dur,1), z=1+5*Math.pow(p,1.5);       // 거리 1 → 6
+  const e=Math.min(1,(1-1/z)*1.2);                            // 화면 진행도 (가까울 때 빠르고 멀수록 느림)
+  const x=(1-e)*(1-e)*b.S.x+2*(1-e)*e*b.M.x+e*e*b.E.x;
+  const y=(1-e)*(1-e)*b.S.y+2*(1-e)*e*b.M.y+e*e*b.E.y+Math.sin(b.t*2+b.ph)*8/z;
+  const sz=b.big/z;
+  const fog=Math.max(0,(p-.55)/.45), a=p>.8?1-(p-.8)/.2:1;
+  const behindMt=x<760;                                         // 산 오른쪽 끝 전까진 산 뒤
+  draw(behindMt?cb:cf,x,y,sz,flapOf(b),.95*a,fog*.8);
+  return p<1;
+}
 
-        // "아이디 저장" 체크박스 - 비밀번호는 절대 저장 안 하고, 이메일 주소만 이 브라우저에 기억해둠
-        // (비밀번호 저장/자동완성은 브라우저 자체 비밀번호 관리자가 담당)
-        const REMEMBER_EMAIL_KEY = 'kiosk_remembered_email';
-        (function restoreRememberedEmail() {
-            const saved = localStorage.getItem(REMEMBER_EMAIL_KEY);
-            if (saved) {
-                document.getElementById('loginEmail').value = saved;
-                document.getElementById('rememberEmailCheck').checked = true;
-            }
-        })();
+/* ── C: 왼쪽 먼 탑 근처를 아주 작게 배회하는 까마귀 (안개에 흐림) — 늘 2~3마리, 하나 사라지면 새로 하나 ── */
+const TOWER={x:880,y:390};
+function birdC(start){
+  return {t:start?rnd(0,8):0,life:rnd(16,30),ph:rnd(0,6.28),ph2:rnd(0,6.28),fq:rnd(5,6.5),
+    cx:TOWER.x+rnd(-140,140),cy:TOWER.y+rnd(-70,30),ax:rnd(60,150),ay:rnd(12,30),w1:rnd(.08,.16)*(Math.random()<.5?1:-1),w2:rnd(.15,.3),sz:rnd(4.2,5.4)};
+}
+function stepC(b){
+  if(b.t>b.life)return false;
+  const x=b.cx+Math.sin(b.t*b.w1*6.28/6+b.ph)*b.ax, y=b.cy+Math.sin(b.t*b.w2+b.ph2)*b.ay;
+  const a=Math.min(1,b.t/2,(b.life-b.t)/2);                     // 2초 동안 서서히 나타났다 사라짐
+  draw(cf,x,y,b.sz,flapOf(b),.9*a,.3);
+  return true;
+}
+let far=[];const NFAR=()=>Math.random()<.5?2:3;
+for(let i=0;i<3;i++)far.push(birdC(true));
 
-        /* ===================== ① Supabase 연결 설정 =====================
-           ⚠️ SUPABASE_URL 부분만 대장님이 직접 채워주셔야 해요!
-           Supabase 대시보드 → 프로젝트 → Project Settings → Data API 페이지에서
-           "Project URL" 값을 복사해서 아래 따옴표 안에 붙여넣어주세요. (예: https://abcdefgh.supabase.co)
-        */
-        const SUPABASE_URL = 'https://ioqxulvuasjsabcvikug.supabase.co';
-        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G';
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+/* A(오른쪽 위 → 성 둘레)와 B(산 뒤 → 오른쪽 안개)는 방향이 달라서 같이 출발 → 다 사라지면 5~9초 쉬고 다시 */
+let birds=[],nextEv=performance.now()+1200;
+function event(){
+  const na=Math.random()<.5?2:3,nb=Math.random()<.5?2:3;
+  for(let i=0;i<na;i++)birds.push(birdA(i*rnd(1,1.8),i));
+  for(let i=0;i<nb;i++)birds.push(birdB(1.5+i*rnd(.9,1.6),i));
+}
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,.05);last=now;
+  cb.clearRect(0,0,W,H);cf.clearRect(0,0,W,H);
+  if(!birds.length&&now>nextEv){event();nextEv=Infinity}
+  birds=birds.filter(b=>{b.t+=dt;return b.kind==='A'?stepA(b):stepB(b)});
+  if(!birds.length&&nextEv===Infinity)nextEv=now+rnd(5000,9000);
+  far=far.filter(b=>{b.t+=dt;return stepC(b)});
+  if(far.length<2||(far.length<3&&Math.random()<dt*.05))far.push(birdC(false));
+  cb.globalAlpha=cf.globalAlpha=1;
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+<script>
+/* 창문 불빛 — 불 꺼진 모습 조각(lights.webp)을 불빛 위에 살짝 덮어 어둡게 (0=그대로) · 깜빡임 없이 천천히만
+   shy = 왼쪽 마을 창문이 천천히 밝아졌다 어두워졌다 · glow = 나머지 집 창문이 가끔 천천히 살짝 어두워짐 · fire = 랜턴 불꽃 일렁임 · 성 창문은 효과 없음 */
+(()=>{
+const L=[{"k":"shy","x":954,"y":545,"w":26,"h":27,"sx":0,"sy":0},{"k":"shy","x":986,"y":545,"w":26,"h":30,"sx":27,"sy":0},{"k":"shy","x":976,"y":566,"w":46,"h":40,"sx":54,"sy":0},{"k":"shy","x":941,"y":591,"w":27,"h":33,"sx":101,"sy":0},{"k":"fire","x":0,"y":642,"w":71,"h":92,"sx":129,"sy":0},{"k":"shy","x":442,"y":659,"w":37,"h":63,"sx":201,"sy":0},{"k":"glow","x":1726,"y":707,"w":27,"h":31,"sx":239,"sy":0},{"k":"glow","x":1702,"y":729,"w":27,"h":31,"sx":267,"sy":0},{"k":"shy","x":907,"y":772,"w":29,"h":35,"sx":295,"sy":0},{"k":"glow","x":2110,"y":793,"w":39,"h":64,"sx":325,"sy":0},{"k":"glow","x":2199,"y":797,"w":44,"h":65,"sx":365,"sy":0},{"k":"shy","x":1022,"y":810,"w":28,"h":32,"sx":410,"sy":0},{"k":"shy","x":1039,"y":818,"w":47,"h":64,"sx":439,"sy":0},{"k":"glow","x":1369,"y":831,"w":27,"h":61,"sx":0,"sy":93},{"k":"shy","x":917,"y":832,"w":28,"h":27,"sx":28,"sy":93},{"k":"shy","x":487,"y":846,"w":37,"h":37,"sx":57,"sy":93},{"k":"shy","x":1092,"y":849,"w":31,"h":32,"sx":95,"sy":93},{"k":"shy","x":381,"y":853,"w":30,"h":53,"sx":127,"sy":93},{"k":"glow","x":1404,"y":852,"w":27,"h":51,"sx":158,"sy":93},{"k":"glow","x":1160,"y":863,"w":26,"h":29,"sx":186,"sy":93},{"k":"glow","x":1710,"y":863,"w":62,"h":73,"sx":213,"sy":93},{"k":"glow","x":2060,"y":865,"w":56,"h":52,"sx":276,"sy":93},{"k":"shy","x":913,"y":867,"w":29,"h":59,"sx":333,"sy":93},{"k":"glow","x":1067,"y":866,"w":32,"h":28,"sx":363,"sy":93},{"k":"shy","x":809,"y":869,"w":31,"h":64,"sx":396,"sy":93},{"k":"shy","x":716,"y":876,"w":29,"h":95,"sx":428,"sy":93},{"k":"shy","x":740,"y":883,"w":29,"h":68,"sx":458,"sy":93},{"k":"glow","x":765,"y":884,"w":43,"h":56,"sx":0,"sy":189},{"k":"glow","x":2337,"y":890,"w":38,"h":46,"sx":44,"sy":189},{"k":"glow","x":1858,"y":892,"w":26,"h":28,"sx":83,"sy":189},{"k":"glow","x":2023,"y":898,"w":60,"h":48,"sx":110,"sy":189},{"k":"glow","x":1916,"y":902,"w":26,"h":27,"sx":171,"sy":189},{"k":"glow","x":1853,"y":910,"w":40,"h":52,"sx":198,"sy":189},{"k":"glow","x":1366,"y":916,"w":62,"h":76,"sx":239,"sy":189},{"k":"glow","x":1914,"y":929,"w":36,"h":47,"sx":302,"sy":189},{"k":"shy","x":880,"y":930,"w":36,"h":26,"sx":339,"sy":189},{"k":"glow","x":1539,"y":930,"w":28,"h":28,"sx":376,"sy":189},{"k":"glow","x":1558,"y":931,"w":29,"h":27,"sx":405,"sy":189},{"k":"glow","x":2024,"y":941,"w":28,"h":41,"sx":435,"sy":189},{"k":"glow","x":1539,"y":947,"w":48,"h":75,"sx":464,"sy":189},{"k":"glow","x":735,"y":948,"w":28,"h":29,"sx":0,"sy":266},{"k":"fire","x":161,"y":955,"w":83,"h":69,"sx":29,"sy":266},{"k":"fire","x":729,"y":1013,"w":85,"h":54,"sx":113,"sy":266},{"k":"fire","x":589,"y":1037,"w":60,"h":88,"sx":199,"sy":266}];
+const cv=document.getElementById('lights'),cx=cv.getContext('2d'),sp=new Image();
+let W,H,s,ox,oy;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function size(){const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0);
+  ({s,ox,oy}=FIT(W,H))}
+addEventListener('resize',size);size();
+for(const l of L){l.a=rnd(.1,.4);l.tg=l.a;l.nx=l.k==='glow'?rnd(1,12):rnd(0,4);l.fl=0;l.ph=rnd(0,99)}
+function step(l,t,dt){
+  if(l.k==='fire'){l.v=.1+.07*Math.sin(t*7.3+l.ph)+.05*Math.sin(t*13.1+l.ph*2)+.04*Math.sin(t*21.7);return}
+  if(l.k==='glow'){                                                   // 평소 그대로 → 가끔 천천히 살짝 어두워졌다 밝아짐 (깜빡임 없음)
+    if(!l.ev){if((l.nx-=dt)>0){l.v=0;return}l.ev={et:0,d:rnd(3,7),m:rnd(.18,.34)}}
+    const e=l.ev;e.et+=dt;const f=Math.min(e.et/e.d,1);
+    l.v=e.m*Math.sin(f*Math.PI)**2;
+    if(f>=1){l.ev=null;l.nx=rnd(4,16)}
+    return}
+  if((l.nx-=dt)<=0){const r=Math.random();l.tg=r<.6?rnd(.05,.3):rnd(.35,.6);l.nx=rnd(4,10)}   // 목표 밝기를 가끔 바꿈
+  const d=l.tg-l.a;l.a+=d*Math.min(1,dt*.35);                                                         // 아주 천천히 따라감
+  l.v=Math.max(0,Math.min(1,l.a));
+}
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,.05),t=now/1000;last=now;
+  cx.clearRect(0,0,W,H);
+  for(const l of L){step(l,t,dt);if(l.v<=.01)continue;
+    cx.globalAlpha=Math.min(1,l.v);cx.drawImage(sp,l.sx,l.sy,l.w,l.h,ox+l.x*s,oy+l.y*s,l.w*s,l.h*s)}
+  cx.globalAlpha=1;requestAnimationFrame(loop);
+}
+sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=227';
+})();
+</script>
+<script>
+/* 성 굴뚝 연기 — 그림 속 검은 연기 줄기 윗부분에서 연기 덩어리가 피어올라 위·오른쪽으로 천천히 퍼지며 흩어짐 (2D 캔버스) */
+(()=>{
+const cv=document.getElementById('smoke'),cx=cv.getContext('2d');
+let W,H,s,ox,oy;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function size(){const d=Math.min(devicePixelRatio||1,1.5);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0);({s,ox,oy}=FIT(W,H))}
+addEventListener('resize',size);size();
+const A={x:1482,y:160},B={x:1566,y:12};                 // 연기 줄기 (아래 → 위 끝)
+const puffs=[];
+function puff(age){const k=rnd(.3,1);return {x:A.x+(B.x-A.x)*k+rnd(-12,12),y:A.y+(B.y-A.y)*k,r:rnd(16,28),vx:rnd(4,10),vy:rnd(-22,-13),l:age||0,L:rnd(9,13),a:rnd(.32,.46)}}
+for(let i=0;i<30;i++)puffs.push(puff(rnd(0,12)));
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,.05),t=now/1000;last=now;
+  cx.clearRect(0,0,W,H);
+  for(let i=puffs.length-1;i>=0;i--){const p=puffs[i];p.l+=dt;if(p.l>p.L){puffs[i]=puff();continue}
+    const f=p.l/p.L;p.x+=(p.vx*(1+f*1.6)+Math.sin(t*.4+i)*3)*dt;p.y+=p.vy*(1-f*.35)*dt;   // 올라갈수록 옆으로 더 번짐
+    const R=(p.r+f*f*150+f*30)*s,a=p.a*Math.min(1,f*5)*Math.pow(1-f,1.6);              // 위로 갈수록 크게 퍼지며 옅어짐
+    const X=ox+p.x*s,Y=oy+p.y*s,g=cx.createRadialGradient(X,Y,0,X,Y,R);
+    g.addColorStop(0,`rgba(22,24,31,${a})`);g.addColorStop(.6,`rgba(26,29,36,${a*.45})`);g.addColorStop(1,'rgba(26,29,36,0)');
+    cx.fillStyle=g;cx.beginPath();cx.arc(X,Y,R,0,6.28);cx.fill()}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+<script>
+/* 재 흩날림 — 회색 재 + 주황 불씨(약 1/5) + 아주 작은 재가 섞여 바람 따라 천천히 떠다님 (PC 60개 · 폰 26개) */
+(()=>{
+const cv=document.getElementById('ash'),cx=cv.getContext('2d');
+let W,H;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function size(){const d=Math.min(devicePixelRatio||1,1.5);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',size);size();
+const N=innerWidth<=760?18:42, NS=innerWidth<=760?8:18;   // 기본 재 + 아주 작은 재
+function bit(edge,small){const ember=!small&&Math.random()<.18;
+  return {x:edge?-10:rnd(0,W),y:rnd(0,H),vx:rnd(6,20),vy:rnd(-9,4),sw:rnd(.4,1.1),ph:rnd(0,6.28),r:small?rnd(.35,.7):ember?rnd(.8,1.5):rnd(.7,1.9),small,
+    ember,a:ember?rnd(.5,.85):rnd(.18,.42),fl:rnd(2,5)}}
+const bits=[];for(let i=0;i<N;i++)bits.push(bit(false,false));for(let i=0;i<NS;i++)bits.push(bit(false,true));
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,.05),t=now/1000;last=now;
+  cx.clearRect(0,0,W,H);
+  for(let i=0;i<bits.length;i++){const b=bits[i];
+    b.x+=(b.vx+Math.sin(t*b.sw+b.ph)*8)*dt;b.y+=(b.vy+Math.cos(t*b.sw*.8+b.ph)*6)*dt;
+    if(b.x>W+10||b.y<-10||b.y>H+10)bits[i]=bit(true,b.small);
+    const a=b.a*(b.ember?.6+.4*Math.sin(t*b.fl+b.ph):1);
+    cx.fillStyle=b.ember?`rgba(255,${150+Math.sin(t*b.fl+b.ph)*40|0},70,${a})`:`rgba(190,184,172,${a})`;
+    if(b.ember){cx.shadowColor='rgba(255,140,50,.8)';cx.shadowBlur=6}else cx.shadowBlur=0;
+    cx.beginPath();cx.arc(b.x,b.y,b.r,0,6.28);cx.fill()}
+  cx.shadowBlur=0;requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+<script>
+/* 망토·깃발 조각 그림 (WebGL은 파일을 따로 불러오면 PC에서 더블클릭으로 열 때 보안 규칙에 막혀 멈춤 → 작은 그림이라 여기 글자로 넣음) */
+const TEX={"cape.webp": "data:image/webp;base64,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", "cape_bg.webp": "data:image/webp;base64,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", "flag.webp": "data:image/webp;base64,UklGRgYCAABXRUJQVlA4WAoAAAAQAAAALAAATwAAQUxQSHgAAAABZ0CQbZs6QhFm8IiICYfASbVtT8Yo8B4SbPRnifFZ5AyAxdIAteyX4cvACHb/e6iI/k+A838sscuEnceo2X8GeoH6FZq2ZyAGCi2k9memD6g/oel6YmKg0EJqf9dCC8l4Mo4+ILUPHlS6SGgLBxUDOVUORQH0eQNWUDggaAEAAHAHAJ0BKi0AUAA+KRKHQiGhCq2azAwBQljDcMlXO5P8g42YD+aOIX7k3ewvCf1Aj/zXz3v1kmJSYNu3mvz2C4HJaLwAAP77w++4f/o97wozT+IWxgBtzUzUKRcGYdJoPWiOWaYZl0wP9R2tzxMFbzs+mppG55f+zLv+c335w6O6wD89r/+P+Dx/IO1JxtBnMoNZXuouO+cfsttBCmhfmHmY+doEvsGKNHDt2lIHJY5Kc/4U2dJj7tOUYO6DEtWbnn/CbHjWyF/ZhrOM3Wu55ERheHq06zX+Hdm17T60PRlTua51wXfTlIHDEftFPS2eMqQB8Wqqfwe7nfWaJ3h/PsbWjB+UDx/6di5hGAtr0rc7bOa5zn9y9haMEgLwe00/6GYXVmOo7YIIXxQKHupLDxuYZb79b7mOmgQPDP+GId4wYr1ZLzF+9/eru4aHQILkgdnioM7waxx9uiMxIZw0NUPW5IGvM1wAAA==", "flag_bg.webp": "data:image/webp;base64,UklGRgoCAABXRUJQVlA4IP4BAAAwDQCdASotAFAAPikSh0KhoQomAroMAUJZ1uWUoK+vIZUGRABAtP71Ww2vHe1DbUSehIQSiqza3FJA0+EKsDNpaaJQjpljt2mgB3RyOBE8He9cJmcsP8/ktVQ5UVe75oFrJUrzmJnPc56DcC3vU0j7CAAA/vs0vyZg5iuvVc9/zXsKjzcmeZD/ih2P8q80/EVLcThjAt2WWrpF22nlScFjVhFYmYYLKvc+Fs6LKV7J/XQoOA87XAAwignwW+h5tolDYJpIrr6RFFhU2wbbBHGlN6Bq/nWWLZrj8rKpTLhT/Z7OFefXTtv+/839T3bSfCYlvPIoNgYQBPu87K/V1m6C2q5z4ZjKWND0E2RtwSFjEClxcw09mjaWOZOxUcqvmA0Kbedth7VVYbvyIwFaxJxFK77EihGDgzIfChZGOzstfykFPzCIZbQ6mHOiRhIh/eezz+/p//6udpNnLxoGerLlBqQ1tS4/LA6troEgiNBCjcKA5OGi6rqJGV3QmjYpPGRCV8HVIvwggYq+PNd9B7nhS0Q/I5zqsy8e4Rnl0heA9DAYLmu5e9ElDNZsMgF7oufRyEov8MA1olK/jg2K6yJpvGmy505G3cMEq+MFqkNIyGR4vLhZWEGa9Y0Wv6+/khyqyeP7/vgsR5ztzto0KqZdsBSG1O9ytbRlMpH7IAA="};
+</script>
+<script>
+/* 망토·깃발 휘날림 — WebGL로 조각 그림만 물결 왜곡 (안 되는 기기는 멈춘 그림)
+   망토: 어깨 고정 → 아래로 갈수록 크게 · 말에 걸친 오른쪽은 약하게 · 왼쪽 자락 끝은 위→아래로 갈수록 세게 / 깃발: 깃대 쪽 고정 */
+(()=>{
+const NOISE=`float h(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}`;
+const FX=[
+ {id:'fxCape',box:{x:1030,y:990,w:260,h:490},tex:['cape.webp','cape_bg.webp'],frag:`
+  vec2 px=uv*vec2(260.,490.);
+  float w=smoothstep(.06,.5,uv.y)*(1.+.8*smoothstep(.5,1.,uv.y));
+  float L=smoothstep(.75,.15,uv.x); float wx=mix(.22,1.7,L)*(1.+.7*L*uv.y), g=.65+.35*sin(t*.45)+.15*sin(t*1.3);
+  float dx=(sin(px.y*.045-t*2.1)*3.2+sin(px.y*.11+px.x*.03+t*3.3)*1.1)*w*wx*g;
+  float dy=sin(px.y*.03-t*1.6+px.x*.02)*1.1*w*g;
+  vec4 c=texture2D(T0,uv-vec2(dx/260.,dy/490.));
+  float sh=1.+cos(px.y*.045-t*2.1)*.07*w*g;
+  gl_FragColor=vec4(mix(texture2D(T1,uv).rgb,c.rgb*sh,c.a),1.);`},
+ {id:'fxFlag',box:{x:900,y:850,w:45,h:80},tex:['flag.webp','flag_bg.webp'],frag:`
+  vec2 px=uv*vec2(45.,80.);
+  float free=smoothstep(29.,20.,px.x)*smoothstep(30.,62.,px.y)+.35*smoothstep(30.,70.,px.y);
+  float g=.7+.3*sin(t*.7)+.2*sin(t*1.9);
+  float dx=(sin(px.y*.32-t*4.2)*1.3+sin(t*1.3)*.7)*free*g;
+  vec4 c=texture2D(T0,uv-vec2(dx/45.,0.));
+  float sh=1.+cos(px.y*.32-t*4.2)*.12*free;
+  gl_FragColor=vec4(mix(texture2D(T1,uv).rgb,c.rgb*sh,c.a),1.);`},
+];
+const VS=`attribute vec2 p;varying vec2 uv;void main(){uv=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0,1);}`;
+const items=[];
+for(const f of FX){
+  const cv=document.getElementById(f.id),gl=cv&&cv.getContext('webgl',{premultipliedAlpha:true,alpha:true});
+  if(!gl)continue;                                       // 안 되면 그냥 멈춘 그림
+  const fs=`#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 uv;uniform float t;uniform sampler2D T0,T1;${NOISE}void main(){${f.frag}}`;
+  const sh=(ty,src)=>{const s=gl.createShader(ty);gl.shaderSource(s,src);gl.compileShader(s);return s};
+  const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS))continue;
+  gl.useProgram(pr);
+  gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const it={f,cv,gl,ut:gl.getUniformLocation(pr,'t'),ready:false};items.push(it);
+  Promise.all(f.tex.map((src,i)=>new Promise(r=>{const im=new Image();im.onload=()=>{
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,gl.NONE);
+    const tx=gl.createTexture();gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,tx);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);
+    for(const [k,v] of [[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE],[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR]])gl.texParameteri(gl.TEXTURE_2D,k,v);
+    gl.uniform1i(gl.getUniformLocation(pr,'T'+i),i);r()};im.src=TEX[src]})))
+   .then(()=>{it.ready=true;cv.style.visibility='visible'});
+}
+function size(){
+  const W=innerWidth,H=innerHeight,{s,ox,oy}=FIT(W,H),d=Math.min(devicePixelRatio||1,2);
+  for(const it of items){const b=it.f.box;
+    Object.assign(it.cv.style,{left:ox+b.x*s+'px',top:oy+b.y*s+'px',width:b.w*s+'px',height:b.h*s+'px'});
+    it.cv.width=Math.max(1,Math.round(b.w*s*d));it.cv.height=Math.max(1,Math.round(b.h*s*d));it.gl.viewport(0,0,it.cv.width,it.cv.height)}
+}
+addEventListener('resize',size);size();
+function loop(n){const t=n/1000;
+  for(const it of items)if(it.ready){it.gl.uniform1f(it.ut,t);it.gl.drawArrays(it.gl.TRIANGLE_STRIP,0,4)}
+  requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+})();
+</script>
+<script>
+/* ═══ 오프닝 ═══
+   가운데 문구 타이핑 → 위아래로 번지며 사라짐 → 영화 띠 걷힘 → 폼이 왼쪽에서 등장 + 위 문장 한 줄씩 페이드인
+   아무 키·클릭이면 바로 본 화면으로 */
+(()=>{
+const Q='Beyond the Mist, The Gate Awaits.',el=document.getElementById('qt');
+let opened=false,tm;
+function type(i){el.textContent=Q.slice(0,i);
+  if(i<Q.length){const ch=Q[i-1];tm=setTimeout(()=>type(i+1),ch===','?240:70+Math.random()*56)}
+  else tm=setTimeout(()=>{if(!burnQuote(open)){document.body.classList.add('qOut');tm=setTimeout(open,150)}},1500)}
+function open(){if(opened)return;opened=true;clearTimeout(tm);
+  document.body.classList.add('open','formOn');
+  document.querySelectorAll('#lore span').forEach((l,k)=>setTimeout(()=>l.classList.add('on'),700+k*900))}
+/* 문구가 불에 타서 사라짐 (canvas 2D — GPU 안 씀)
+   글자를 그대로 캔버스에 옮김 → 노이즈 섞인 불 경계가 아래에서 위로 올라감 → 경계는 주황/빨강으로 이글, 그 위는 그을림, 지나간 곳은 사라짐 + 불씨 가루
+   다 타기 직전에 띠가 걷힘(done). 안 되면 false → 원래처럼 흐려지며 사라짐 */
+function burnQuote(done){
+  try{
+    const q=document.querySelector('.quote'),cv=document.getElementById('burn');
+    const r=q.getBoundingClientRect(),cs=getComputedStyle(q);
+    const d=Math.min(devicePixelRatio||1,2),PAD=40;
+    const W=Math.ceil(r.width+PAD*2),H=Math.ceil(r.height+PAD*2);
+    const ox=r.left-PAD,oy=r.top-PAD;
+    cv.width=innerWidth*d;cv.height=innerHeight*d;
+    const cx=cv.getContext('2d');cx.setTransform(d,0,0,d,0,0);
+    /* 1) 글자를 작업용 캔버스에 그림 (DOM과 같은 글꼴·자간·줄바꿈) */
+    const tw=W*d,th=H*d,src=document.createElement('canvas');src.width=tw;src.height=th;
+    const sx=src.getContext('2d');sx.scale(d,d);
+    sx.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    if('letterSpacing' in sx)sx.letterSpacing=cs.letterSpacing;
+    sx.textAlign='center';sx.textBaseline='middle';sx.fillStyle=cs.color;
+    const txt=document.getElementById('qt').textContent,lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.3;
+    const lines=[];let cur='';for(const w of txt.split(' ')){const t=cur?cur+' '+w:w;if(sx.measureText(t).width>r.width&&cur){lines.push(cur);cur=w}else cur=t}lines.push(cur);
+    lines.forEach((l,i)=>{const y=PAD+r.height/2+(i-(lines.length-1)/2)*lh;
+      sx.shadowColor='rgba(0,0,0,.9)';sx.shadowBlur=14;sx.fillText(l,W/2,y);sx.shadowBlur=0;sx.fillText(l,W/2,y)});
+    const base=sx.getImageData(0,0,tw,th),out=sx.createImageData(tw,th),B=base.data,O=out.data;
+    /* 2) 불 경계용 값: 아래쪽일수록 먼저 탐 + 들쭉날쭉 노이즈 */
+    const G=24,gw=Math.ceil(tw/G)+2,gh=Math.ceil(th/G)+2,g1=new Float32Array(gw*gh),g2=new Float32Array(gw*gh*4);
+    for(let i=0;i<g1.length;i++)g1[i]=Math.random();for(let i=0;i<g2.length;i++)g2[i]=Math.random();
+    const vn=(g,w,x,y)=>{const xi=x|0,yi=y|0,fx=x-xi,fy=y-yi,a=g[yi*w+xi],b=g[yi*w+xi+1],c=g[(yi+1)*w+xi],e=g[(yi+1)*w+xi+1],ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);return a+(b-a)*ux+(c-a)*uy+(a-b-c+e)*ux*uy};
+    let y0=th,y1=0;for(let y=0;y<th;y++)for(let x=0;x<tw;x+=2)if(B[(y*tw+x)*4+3]>60){if(y<y0)y0=y;if(y>y1)y1=y}   // 글자가 실제로 있는 높이만 기준
+    const hh=Math.max(1,y1-y0),V=new Float32Array(tw*th);
+    for(let y=0;y<th;y++)for(let x=0;x<tw;x++){
+      const n=vn(g1,gw,x/G,y/G)*.65+vn(g2,gw*2,x/G*2,y/G*2)*.35;
+      V[y*tw+x]=(1-(y-y0)/hh)*.62+n*.38+(Math.abs(x/tw-.5))*.06}
+    /* 3) 불씨 가루 */
+    const sparks=[];
+    const T0=performance.now(),DUR=2400;let handed=false;
+    cv.style.display='block';document.body.classList.add('burning');
+    (function frame(now){
+      const p=Math.min((now-T0)/DUR,1),T=.02+p*1.14,E1=.035,E2=.10;
+      if(p<1)for(let i=0,k=0;i<V.length;i++,k+=4){
+        const a=B[k+3];if(!a){O[k+3]=0;continue}
+        const v=V[i]-T;
+        if(v<0){O[k+3]=0;continue}                                   // 다 탐
+        if(v<E1){const f=v/E1;                                         // 불 경계: 밝은 노랑 → 주황 → 빨강
+          O[k]=255;O[k+1]=120+f*110|0;O[k+2]=30+f*40|0;O[k+3]=a*(.55+f*.45)|0;
+          if(p<.97&&Math.random()<.0009&&sparks.length<160){const px=(i%tw)/d,py=((i/tw)|0)/d;sparks.push({x:ox+px,y:oy+py,vx:(Math.random()-.5)*28,vy:-30-Math.random()*60,l:0,L:.6+Math.random()*.9,s:.6+Math.random()*1.4})}
+          continue}
+        if(v<E2){const f=(v-E1)/(E2-E1),c=.25+f*.75;                   // 그을림
+          O[k]=B[k]*c+40*(1-f)|0;O[k+1]=B[k+1]*c*.85|0;O[k+2]=B[k+2]*c*.7|0;O[k+3]=a;continue}
+        O[k]=B[k];O[k+1]=B[k+1];O[k+2]=B[k+2];O[k+3]=a}
+      if(p<1)sx.putImageData(out,0,0);else sx.clearRect(0,0,W,H);
+      cx.clearRect(0,0,innerWidth,innerHeight);
+      cx.globalCompositeOperation='lighter';cx.filter='blur(6px)';cx.globalAlpha=.55;cx.drawImage(src,ox,oy,W,H);  // 불빛 번짐
+      cx.filter='none';cx.globalAlpha=1;cx.globalCompositeOperation='source-over';cx.drawImage(src,ox,oy,W,H);
+      const dt=1/60;cx.globalCompositeOperation='lighter';
+      for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.l+=dt;if(s.l>s.L){sparks.splice(i,1);continue}
+        s.x+=s.vx*dt+Math.sin(s.l*9+i)*.4;s.y+=s.vy*dt;s.vy*=.985;const f=1-s.l/s.L;
+        cx.fillStyle=`rgba(255,${150+f*90|0},${60+f*40|0},${f})`;cx.beginPath();cx.arc(s.x,s.y,s.s*(.5+f*.5),0,6.28);cx.fill()}
+      cx.globalCompositeOperation='source-over';
+      if(p>.78&&!handed){handed=true;done()}                          // 거의 다 탔을 때 띠 걷힘
+      if(p<1||sparks.length)requestAnimationFrame(frame);else{cx.clearRect(0,0,innerWidth,innerHeight);cv.style.display='none'}
+    })(T0);
+    return true;
+  }catch(e){console.warn(e);return false}
+}
+tm=setTimeout(()=>type(1),2000);
+addEventListener('keydown',open,{once:true});addEventListener('pointerdown',open,{once:true});
+})();
+</script>
+<script>
+/* ═══ 로그인 (Supabase) ═══
+   성공하면 dashboard.html로 이동 · 이미 로그인돼 있으면 바로 이동 · 아이디만 이 브라우저에 기억(비번은 브라우저 비번 관리자 몫) */
+const SUPABASE_URL='https://ioqxulvuasjsabcvikug.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const REMEMBER_EMAIL_KEY='kiosk_remembered_email';
 
-function togglePasswordVisibility() {
-            const input = document.getElementById('loginPassword');
-            const openIcon = document.getElementById('eyeIconOpen');
-            const closedIcon = document.getElementById('eyeIconClosed');
-            const showing = input.type === 'text';
-            input.type = showing ? 'password' : 'text';
-            openIcon.style.display = showing ? '' : 'none';
-            closedIcon.style.display = showing ? 'none' : '';
-        }
+(function restoreRememberedEmail(){
+  let saved=null;try{saved=localStorage.getItem(REMEMBER_EMAIL_KEY)}catch(e){}
+  if(saved){document.getElementById('loginEmail').value=saved;document.getElementById('rememberEmailCheck').checked=true}
+})();
 
-                async function handleLogin(event) {
-            if (event) event.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('loginBtn');
-            const errEl = document.getElementById('loginError');
-            errEl.textContent = '';
-            if (!email || !password) {
-                errEl.textContent = 'Please enter both email and password.';
-                return;
-            }
-            btn.disabled = true;
-            btn.textContent = 'SIGNING IN...';
-            try {
-                const { error } = await sb.auth.signInWithPassword({ email, password });
-                if (error) {
-                    errEl.textContent = 'Login failed: please check your email or password.';
-                    return;
-                }
-                if (document.getElementById('rememberEmailCheck').checked) {
-                    localStorage.setItem(REMEMBER_EMAIL_KEY, email);
-                } else {
-                    localStorage.removeItem(REMEMBER_EMAIL_KEY);
-                }
-                /* 8차: 파일 분리 이후 로그인 성공 시 여기서 initApp()을 직접 부르지 않고
-                   dashboard.html로 이동만 함 — 실제 데이터 로딩/화면 렌더링은 dashboard.html
-                   자신이 부팅 시(bootDashboard()) 세션을 확인하고 알아서 진행함. */
-                location.replace('dashboard.html');
-            } catch (err) {
-                console.error(err);
-                errEl.textContent = 'Connection error. Please check the SUPABASE_URL setting.';
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'LOG IN';
-            }
-        }
+function togglePassword(){const i=document.getElementById('loginPassword');i.type=i.type==='password'?'text':'password'}
 
-        // 페이지를 새로고침해도 로그인이 풀리지 않도록, 시작할 때 기존 세션이 있는지 먼저 확인
-        // (8차: 같은 페이지에서 화면을 바꾸는 대신, 이미 로그인돼 있으면 dashboard.html로 이동)
-        async function checkExistingSession() {
-            const { data } = await sb.auth.getSession();
-            if (data && data.session) {
-                location.replace('dashboard.html');
-            }
-        }
-        checkExistingSession();
-    </script>
+async function handleLogin(event){
+  if(event)event.preventDefault();
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const btn=document.getElementById('loginBtn'),errEl=document.getElementById('loginError');
+  errEl.textContent='';
+  if(!email||!password){errEl.textContent='Please enter both email and password.';return}
+  btn.disabled=true;btn.textContent='OPENING...';
+  try{
+    const {error}=await sb.auth.signInWithPassword({email,password});
+    if(error){errEl.textContent='The gate stays shut: check your email or password.';return}
+    try{if(document.getElementById('rememberEmailCheck').checked)localStorage.setItem(REMEMBER_EMAIL_KEY,email);else localStorage.removeItem(REMEMBER_EMAIL_KEY)}catch(e){}
+    location.replace('dashboard.html');
+  }catch(err){console.error(err);errEl.textContent='Connection error. Please try again.'}
+  finally{btn.disabled=false;btn.textContent='OPEN THE GATE'}
+}
 
-    <script>
-        // 📱 14차-3: 홈 화면 앱 설치용 서비스워커 등록 (캐시 없음, 실패해도 화면엔 영향 없음)
-        if ('serviceWorker' in navigator && location.protocol === 'https:') {
-            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-        }
-    </script>
+(async function checkExistingSession(){
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session)location.replace('dashboard.html');
+})();
+
+/* 홈 화면 앱 설치용 서비스워커 (캐시 없음) */
+if('serviceWorker' in navigator&&location.protocol==='https:'){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
 </body>
 </html>
