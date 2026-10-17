@@ -16,7 +16,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
-<link rel="preload" as="image" href="assets/login/bg.webp?v=228">
+<link rel="preload" as="image" href="assets/login/bg.webp?v=229">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@ body{height:100vh;height:100dvh}
 #scene{position:fixed;inset:0;transform-origin:52% 38%;animation:push 11s cubic-bezier(.15,.6,.25,1) both}
 @keyframes push{from{transform:scale(1.07)}to{transform:scale(1)}}
 /* 높이에 맞춰 그림 전체가 보이게 → 화면이 더 넓으면 양옆은 흐린 그림으로 채움 */
-.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=228) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
+.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=229) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
 #bgimg{position:fixed;display:block;pointer-events:none;--e:0px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent)}
@@ -164,26 +164,35 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
   #scene,.title h1 .nm,.title h1 .nm::after{animation:none!important}.fadeBlack{display:none}
   body.formOn .title>*{animation:none;opacity:1}
 }
-/* 배경음악 버튼 (오른쪽 아래, 폼 나온 뒤 보임) */
-.snd{position:fixed;z-index:30;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));
-  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
-  background:rgba(10,8,6,.35);border:1px solid rgba(214,170,110,.28);color:rgba(232,205,160,.75);
-  opacity:0;pointer-events:none;transition:opacity 1.2s ease,border-color .3s,color .3s,background .3s;backdrop-filter:blur(3px)}
-body.formOn .snd{opacity:1;pointer-events:auto}
-.snd:hover{border-color:rgba(255,170,90,.6);color:#ffd7a0;background:rgba(30,18,8,.5)}
-.snd svg{width:18px;height:18px}.snd .x{display:none}
-.snd.off .w{display:none}.snd.off .x{display:inline}.snd.off{color:rgba(200,180,150,.45)}
+/* 배경음악 — CORP. 옆 작은 스피커 + 마우스 올리면 오른쪽으로 볼륨 줄 */
+.title h1 span{display:flex;align-items:center}
+.snd{display:inline-flex;align-items:center;margin-left:-.1em;letter-spacing:0;font-size:12px}
+.snd button{width:30px;height:30px;margin:-8px 0;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center;
+  color:rgba(214,180,122,.7);transition:color .3s,filter .3s}
+.snd button:hover,.snd button:focus-visible{color:#ffd7a0;filter:drop-shadow(0 0 5px rgba(255,170,90,.55));outline:none}
+.snd svg{width:15px;height:15px}.snd .x{display:none}
+.snd.off .w{display:none}.snd.off .x{display:inline}.snd.off button{color:rgba(190,165,125,.42)}
+.snd input{-webkit-appearance:none;appearance:none;width:0;opacity:0;height:16px;margin:0;background:none;cursor:pointer;
+  transition:width .45s cubic-bezier(.2,.7,.2,1),opacity .35s,margin .45s;--v:45%}
+@media (hover:hover){.snd:hover input,.snd:focus-within input{width:92px;opacity:1;margin-left:4px}}
+.snd input::-webkit-slider-runnable-track{height:1px;background:linear-gradient(90deg,rgba(232,190,120,.85) var(--v),rgba(201,163,98,.22) var(--v))}
+.snd input::-moz-range-track{height:1px;background:rgba(201,163,98,.22)}
+.snd input::-moz-range-progress{height:1px;background:rgba(232,190,120,.85)}
+.snd input::-webkit-slider-thumb{-webkit-appearance:none;width:7px;height:7px;margin-top:-3px;border-radius:50%;
+  background:#ffcf8a;box-shadow:0 0 6px 1px rgba(255,150,60,.75)}
+.snd input::-moz-range-thumb{width:7px;height:7px;border:0;border-radius:50%;background:#ffcf8a;box-shadow:0 0 6px 1px rgba(255,150,60,.75)}
+.snd.off input{opacity:.35}
 </style>
 </head>
 <body>
 <div id="scene">
   <div class="bgBlur"></div>
-  <img id="bgimg" src="assets/login/bg.webp?v=228" alt="">
+  <img id="bgimg" src="assets/login/bg.webp?v=229" alt="">
   <canvas id="fxFlag" class="fx"></canvas>
   <canvas id="fxCape" class="fx"></canvas>
   <canvas id="bBack" class="lay"></canvas>
-  <img id="mount" src="assets/login/mount.webp?v=228" alt="">
-  <img id="castle" src="assets/login/castle.webp?v=228" alt="">
+  <img id="mount" src="assets/login/mount.webp?v=229" alt="">
+  <img id="castle" src="assets/login/castle.webp?v=229" alt="">
   <canvas id="smoke" class="lay"></canvas>
   <canvas id="lights" class="lay"></canvas>
   <canvas id="bFront" class="lay"></canvas>
@@ -193,7 +202,9 @@ body.formOn .snd{opacity:1;pointer-events:auto}
 <div class="tShade"></div>
 <form class="title" id="loginForm" autocomplete="on" onsubmit="handleLogin(event);return false;">
   <div class="lore" id="lore"><span>Beneath the bruised, weeping skies,</span><span>where the towering citadel watches over the damp shadows of the valley,</span><span>a lone traveler rides toward a destiny</span><span>sealed in mist and ancient stone.</span></div>
-  <h1><b class="nm" data-t="RHEAVISION">RHEAVISION</b><span>CORP.</span></h1>
+  <h1><b class="nm" data-t="RHEAVISION">RHEAVISION</b><span>CORP.<span class="snd" id="snd"><button type="button" id="sndBtn" aria-label="Music on/off" title="Music">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><g class="w"><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></g><g class="x"><path d="m16 9 6 6"/><path d="m22 9-6 6"/></g></svg>
+  </button><input type="range" id="sndVol" min="0" max="100" value="45" aria-label="Music volume"></span></span></h1>
   <div class="orn"><i></i><b></b><i></i></div>
   <div class="sub">KIOSK MANAGEMENT SYSTEM</div>
   <div class="fld"><input type="email" id="loginEmail" name="email" autocomplete="username" placeholder=" "
@@ -207,10 +218,7 @@ body.formOn .snd{opacity:1;pointer-events:auto}
 </form>
 
 <div class="fadeBlack"></div>
-<button type="button" class="snd" id="sndBtn" aria-label="Music on/off" title="Music">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><g class="w"><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></g><g class="x"><path d="m16 9 6 6"/><path d="m22 9-6 6"/></g></svg>
-</button>
-<audio id="bgm" src="assets/login/bgm.mp3?v=228" loop preload="auto"></audio>
+<audio id="bgm" src="assets/login/bgm.mp3?v=229" loop preload="auto"></audio>
 <div class="bar top"></div><div class="bar bot"></div>
 <div class="quote"><span id="qt"></span><span class="c"></span></div>
 <canvas id="burn"></canvas>
@@ -387,7 +395,7 @@ function loop(now){
     cx.globalAlpha=Math.min(1,l.v);cx.drawImage(sp,l.sx,l.sy,l.w,l.h,ox+l.x*s,oy+l.y*s,l.w*s,l.h*s)}
   cx.globalAlpha=1;requestAnimationFrame(loop);
 }
-sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=228';
+sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=229';
 })();
 </script>
 <script>
@@ -639,22 +647,27 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){
 }
 </script>
 <script>
-/* 배경음악 — 서서히 커지며 시작 (브라우저가 막으면 첫 클릭·키 입력 때 시작), 끄고 켠 건 기억 */
+/* 배경음악 — 서서히 커지며 시작 (브라우저가 막으면 첫 클릭·키 입력 때 시작) · CORP. 옆 스피커로 켜기/끄기 · 마우스 올리면 볼륨 줄 · 둘 다 기억 */
 (()=>{
-  const au=document.getElementById('bgm'),bt=document.getElementById('sndBtn'),KEY='rhea_bgm',VOL=.45;
-  let on=true,raf=0;try{on=localStorage.getItem(KEY)!=='off'}catch(e){}
+  const au=document.getElementById('bgm'),box=document.getElementById('snd'),bt=document.getElementById('sndBtn'),vr=document.getElementById('sndVol');
+  let on=true,vol=.45,raf=0;
+  try{on=localStorage.getItem('rhea_bgm')!=='off';const v=parseFloat(localStorage.getItem('rhea_bgm_vol'));if(v>=0&&v<=1)vol=v}catch(e){}
   const fade=(to,ms,done)=>{cancelAnimationFrame(raf);const from=au.volume,t0=performance.now();
     const st=n=>{const p=Math.min(1,(n-t0)/ms),e=p*p*(3-2*p);au.volume=from+(to-from)*e;
       if(p<1)raf=requestAnimationFrame(st);else if(done)done()};raf=requestAnimationFrame(st)};
   const start=()=>{if(!on||!au.paused)return;au.volume=0;
-    au.play().then(()=>{fade(VOL,7000);unhook()}).catch(()=>{})};
+    au.play().then(()=>{fade(vol,7000);unhook()}).catch(()=>{})};
   const evs=['pointerdown','keydown','touchstart'],kick=e=>{if(!bt.contains(e.target))start()};
   const unhook=()=>evs.forEach(e=>removeEventListener(e,kick,true));
   evs.forEach(e=>addEventListener(e,kick,true));
-  const paint=()=>bt.classList.toggle('off',!on);paint();
+  const paint=()=>{box.classList.toggle('off',!on);vr.value=Math.round(vol*100);vr.style.setProperty('--v',vr.value+'%')};paint();
   bt.addEventListener('click',ev=>{ev.stopPropagation();on=!on;paint();
-    try{localStorage.setItem(KEY,on?'on':'off')}catch(e){}
-    if(on){au.paused?start():fade(VOL,1500)}else fade(0,900,()=>au.pause())});
+    try{localStorage.setItem('rhea_bgm',on?'on':'off')}catch(e){}
+    if(on){au.paused?start():fade(vol,1500)}else fade(0,900,()=>au.pause())});
+  vr.addEventListener('input',()=>{vol=vr.value/100;vr.style.setProperty('--v',vr.value+'%');
+    try{localStorage.setItem('rhea_bgm_vol',vol)}catch(e){}
+    if(!on){on=true;paint();try{localStorage.setItem('rhea_bgm','on')}catch(e){}}
+    if(au.paused)start();else{cancelAnimationFrame(raf);au.volume=vol}});
   start();
 })();
 </script>
