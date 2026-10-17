@@ -16,7 +16,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
-<link rel="preload" as="image" href="assets/login/bg.webp?v=229">
+<link rel="preload" as="image" href="assets/login/bg.webp?v=231">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@ body{height:100vh;height:100dvh}
 #scene{position:fixed;inset:0;transform-origin:52% 38%;animation:push 11s cubic-bezier(.15,.6,.25,1) both}
 @keyframes push{from{transform:scale(1.07)}to{transform:scale(1)}}
 /* 높이에 맞춰 그림 전체가 보이게 → 화면이 더 넓으면 양옆은 흐린 그림으로 채움 */
-.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=229) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
+.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=231) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
 #bgimg{position:fixed;display:block;pointer-events:none;--e:0px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent)}
@@ -166,11 +166,11 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 }
 /* 배경음악 — CORP. 옆 작은 스피커 + 마우스 올리면 오른쪽으로 볼륨 줄 */
 .title h1 span{display:flex;align-items:center}
-.snd{display:inline-flex;align-items:center;margin-left:-.1em;letter-spacing:0;font-size:12px}
-.snd button{width:30px;height:30px;margin:-8px 0;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center;
+.snd{display:inline-flex;align-items:center;margin-left:-.15em;letter-spacing:0;font-size:inherit}
+.snd button{width:2.3em;height:2.3em;margin:-.6em 0;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center;
   color:rgba(214,180,122,.7);transition:color .3s,filter .3s}
 .snd button:hover,.snd button:focus-visible{color:#ffd7a0;filter:drop-shadow(0 0 5px rgba(255,170,90,.55));outline:none}
-.snd svg{width:15px;height:15px}.snd .x{display:none}
+.snd svg{width:1.8em;height:1.8em}.snd .x{display:none}
 .snd.off .w{display:none}.snd.off .x{display:inline}.snd.off button{color:rgba(190,165,125,.42)}
 .snd input{-webkit-appearance:none;appearance:none;width:0;opacity:0;height:16px;margin:0;background:none;cursor:pointer;
   transition:width .45s cubic-bezier(.2,.7,.2,1),opacity .35s,margin .45s;--v:45%}
@@ -187,12 +187,12 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 <body>
 <div id="scene">
   <div class="bgBlur"></div>
-  <img id="bgimg" src="assets/login/bg.webp?v=229" alt="">
+  <img id="bgimg" src="assets/login/bg.webp?v=231" alt="">
   <canvas id="fxFlag" class="fx"></canvas>
   <canvas id="fxCape" class="fx"></canvas>
   <canvas id="bBack" class="lay"></canvas>
-  <img id="mount" src="assets/login/mount.webp?v=229" alt="">
-  <img id="castle" src="assets/login/castle.webp?v=229" alt="">
+  <img id="mount" src="assets/login/mount.webp?v=231" alt="">
+  <img id="castle" src="assets/login/castle.webp?v=231" alt="">
   <canvas id="smoke" class="lay"></canvas>
   <canvas id="lights" class="lay"></canvas>
   <canvas id="bFront" class="lay"></canvas>
@@ -218,7 +218,7 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 </form>
 
 <div class="fadeBlack"></div>
-<audio id="bgm" src="assets/login/bgm.mp3?v=229" loop preload="auto"></audio>
+<audio id="bgm" src="assets/login/bgm.mp3?v=231" loop preload="auto"></audio>
 <div class="bar top"></div><div class="bar bot"></div>
 <div class="quote"><span id="qt"></span><span class="c"></span></div>
 <canvas id="burn"></canvas>
@@ -395,7 +395,7 @@ function loop(now){
     cx.globalAlpha=Math.min(1,l.v);cx.drawImage(sp,l.sx,l.sy,l.w,l.h,ox+l.x*s,oy+l.y*s,l.w*s,l.h*s)}
   cx.globalAlpha=1;requestAnimationFrame(loop);
 }
-sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=229';
+sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=231';
 })();
 </script>
 <script>
@@ -531,7 +531,7 @@ requestAnimationFrame(loop);
 const Q='Beyond the Mist, The Gate Awaits.',el=document.getElementById('qt');
 let opened=false,tm;
 function type(i){el.textContent=Q.slice(0,i);
-  if(i<Q.length){const ch=Q[i-1];tm=setTimeout(()=>type(i+1),ch===','?240:70+Math.random()*56)}
+  if(i<Q.length){const ch=Q[i-1];tm=setTimeout(()=>type(i+1),ch===','?180:45+Math.random()*35)}
   else tm=setTimeout(()=>{if(!burnQuote(open)){document.body.classList.add('qOut');tm=setTimeout(open,150)}},1500)}
 function open(){if(opened)return;opened=true;clearTimeout(tm);
   document.body.classList.add('open','formOn');
