@@ -17,15 +17,15 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
-<link rel="preload" as="image" href="assets/login/bg.webp?v=234">
+<link rel="preload" as="image" href="assets/login/bg.webp?v=235">
 <script src="assets/supabase-2.117.2.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
 <!-- ═══════════════════════════════════════════════════════════════
-     index.html — 로그인 전용 (v225 새로 만듦 · v226 효과 추가 · v227 망토·깃발 그림 내장)
+     index.html — 로그인 전용 (v225 새로 만듦 · v226 효과 추가 · v227 망토·깃발 그림 내장 · v235 폰 폼 성·기사 사이로)
      장면: 안개 낀 마을로 들어서는 기사 (assets/login/, 원본 좌표 2880×1632 기준)
      효과: 까마귀(성 둘레·산 뒤·먼 탑) · 망토/깃발 휘날림(WebGL) · 창문 불빛 · 성 굴뚝 연기 · 재 흩날림 · 시네마틱 오프닝(문구가 불타 사라짐)
-     폼: 판때기 없는 게임 타이틀식 (PC 왼쪽 · 폰 아래)
+     폼: 판때기 없는 게임 타이틀식 (PC 왼쪽 · 폰은 성 밑동~기사 머리 사이에 자동 배치)
      ═══════════════════════════════════════════════════════════════ -->
 <style>
 html,body{margin:0;height:100%;background:#07090d;overflow:hidden}
@@ -36,7 +36,7 @@ body{height:100vh;height:100dvh}
 #scene{position:fixed;inset:0;transform-origin:52% 38%;animation:push 9.5s cubic-bezier(.15,.6,.25,1) both}
 @keyframes push{from{transform:scale(1.07)}to{transform:scale(1)}}
 /* 높이에 맞춰 그림 전체가 보이게 → 화면이 더 넓으면 양옆은 흐린 그림으로 채움 */
-.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=234) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
+.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=235) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
 #bgimg{position:fixed;display:block;pointer-events:none;--e:0px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent)}
@@ -144,22 +144,29 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 .title .go:disabled{opacity:.6;cursor:wait}
 .title .err{min-height:1.3em;margin-top:1.2em;font:13px Georgia,serif;color:#ff9c78;text-shadow:0 1px 3px #000}
 
-/* ── 📱 폰 (폭 760 이하): 아래 돌바닥 위 · 입력 글씨 16px(아이폰 확대 방지) · 자간 줄임 · 누르는 칸 44px ── */
+/* ── 📱 폰 (폭 760 이하): 성 밑동 ~ 기사 머리 사이(마을 자리)에 작게 → 성·기사 둘 다 보이게 (v235)
+   세로 위치는 아래 placeForm()이 그림 좌표로 계산 · 긴 문장 숨김 · 아이디/비번 칸 나란히 한 줄
+   입력 글씨 16px(아이폰 확대 방지) · 누르는 칸 44px ── */
 @media (max-width:760px){
   .bar{height:8vh}.quote{font-size:22px}
-  .tShade{background:linear-gradient(0deg,rgba(4,6,10,.88) 0%,rgba(4,6,10,.62) 38%,rgba(4,6,10,0) 62%)}
-  .title{left:50%;top:auto;bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px));transform:translateX(-50%);width:min(88vw,380px)}
-  .title .lore{width:auto;font-size:13.5px;margin-bottom:1.2em}
-  .title .orn{margin:.7em 0 .6em}.title .sub{margin-bottom:1.4em;letter-spacing:.26em}
-  .title h1{letter-spacing:.09em}.title h1 span{letter-spacing:.44em}
-  .title .fld{margin-bottom:1.4em}
-  .title .fld input{font-size:16px;padding:1.6em 2.4em .5em 0}
-  .title .fld label{letter-spacing:.2em}
-  .title .fld input:focus+label,.title .fld input:not(:placeholder-shown)+label{bottom:2.9em;font-size:9.5px}
-  .title .eye{padding:10px;bottom:0}
-  .title .row{margin-top:1.4em}
-  .title .seal{min-height:44px;letter-spacing:.16em;font-size:10px}
+  .tShade{background:radial-gradient(ellipse 78% 24% at 50% var(--fy,40%),rgba(3,5,8,.66),rgba(3,5,8,.32) 55%,rgba(3,5,8,0) 100%)}
+  .title{left:50%;top:30%;bottom:auto;transform:translateX(-50%);width:min(92vw,400px);
+    display:grid;grid-template-columns:1fr 1fr;column-gap:16px}
+  .title>*{grid-column:1/-1}
+  .title .lore{display:none}
+  .title h1{font-size:25px;letter-spacing:.09em}.title h1 span{letter-spacing:.44em;margin-top:.45em}
+  .title .orn{margin:.55em 0 .5em}.title .sub{font-size:9px;margin-bottom:.6em;letter-spacing:.26em}
+  .title .fld{grid-column:auto;margin-bottom:0}
+  .title .fld input{font-size:16px;padding:1.2em 0 .35em 0}
+  .title #loginPassword{padding-right:2.2em}
+  .title .fld label{font-size:10.5px;letter-spacing:.18em;bottom:.55em}
+  .title .fld input:focus+label,.title .fld input:not(:placeholder-shown)+label{bottom:2.5em;font-size:8.5px}
+  .title .eye{padding:10px;right:-8px;bottom:-4px}
+  .title .row{margin-top:.25em}
+  .title .seal{min-height:44px;letter-spacing:.16em;font-size:9.5px}
   .title .go{min-height:44px;letter-spacing:.22em;font-size:12px}
+  .snd{margin-left:.1em}
+  .title .err{min-height:0;margin-top:0;font-size:12px}
 }
 @media (prefers-reduced-motion:reduce){
   #scene,.title h1 .nm,.title h1 .nm::after{animation:none!important}.fadeBlack{display:none}
@@ -188,12 +195,12 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 <body>
 <div id="scene">
   <div class="bgBlur"></div>
-  <img id="bgimg" src="assets/login/bg.webp?v=234" alt="">
+  <img id="bgimg" src="assets/login/bg.webp?v=235" alt="">
   <canvas id="fxFlag" class="fx"></canvas>
   <canvas id="fxCape" class="fx"></canvas>
   <canvas id="bBack" class="lay"></canvas>
-  <img id="mount" src="assets/login/mount.webp?v=234" alt="">
-  <img id="castle" src="assets/login/castle.webp?v=234" alt="">
+  <img id="mount" src="assets/login/mount.webp?v=235" alt="">
+  <img id="castle" src="assets/login/castle.webp?v=235" alt="">
   <canvas id="smoke" class="lay"></canvas>
   <canvas id="lights" class="lay"></canvas>
   <canvas id="bFront" class="lay"></canvas>
@@ -219,7 +226,7 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 </form>
 
 <div class="fadeBlack"></div>
-<audio id="bgm" src="assets/login/bgm.mp3?v=234" loop preload="auto"></audio>
+<audio id="bgm" src="assets/login/bgm.mp3?v=235" loop preload="auto"></audio>
 <div class="bar top"></div><div class="bar bot"></div>
 <div class="quote"><span id="qt"></span><span class="c"></span></div>
 <canvas id="burn"></canvas>
@@ -232,6 +239,16 @@ function FIT(W,H){const IW=2880,IH=1632,s=H/IH,w=IW*s,ox=w<W?(W-w)/2:(W-w)*.4;re
   Object.assign(im.style,{left:F.ox+'px',top:'0px',width:2880*F.s+'px',height:H+'px'});
   im.style.setProperty('--e',Math.min(Math.max(F.ox,0),W*.05)+'px')}   // 양옆 빈틈만큼만 가장자리 흐림
   addEventListener('resize',f);f()})();
+/* 📱 폰: 폼을 성 밑동(원본 y≈535)과 기사 머리(원본 y≈930) 사이 가운데에 → 틈보다 크면 기사 머리 위로 붙이고 위로 늘림 (v235) */
+(()=>{const fm=document.getElementById('loginForm'),root=document.documentElement;
+  function placeForm(){
+    if(innerWidth>760){fm.style.top='';root.style.removeProperty('--fy');return}
+    const F=FIT(innerWidth,innerHeight),y1=F.oy+535*F.s,y2=F.oy+930*F.s,h=fm.offsetHeight;
+    let top=Math.min((y1+y2-h)/2,y2-h-6);top=Math.max(top,10);
+    fm.style.top=top+'px';root.style.setProperty('--fy',(top+h/2)+'px')}
+  addEventListener('resize',placeForm);placeForm();
+  if(document.fonts)document.fonts.ready.then(placeForm);
+  window.placeForm=placeForm})();
 </script>
 <script>
 /* 까마귀 연출 (좌표 = 원본 그림 2880×1632 기준)
@@ -396,7 +413,7 @@ function loop(now){
     cx.globalAlpha=Math.min(1,l.v);cx.drawImage(sp,l.sx,l.sy,l.w,l.h,ox+l.x*s,oy+l.y*s,l.w*s,l.h*s)}
   cx.globalAlpha=1;requestAnimationFrame(loop);
 }
-sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=234';
+sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=235';
 })();
 </script>
 <script>
