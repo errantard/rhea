@@ -158,7 +158,7 @@
            발광 레이어만 제거. 74px → 96px로 키움(기존 halo가 inset:-6px + 22px 블러로 차지하던
            시각적 반경과 비슷한 크기). */
         .brand-logo-wrap { position: relative; flex-shrink: 0; width: 96px; height: 96px; border-radius: 50%; }
-        .brand-logo { position: relative; z-index: 1; width: 96px; height: 96px; border-radius: 50%; object-fit: cover; object-position: 50% 42%; display: block; background: radial-gradient(circle, #1c2436 0%, var(--ink) 100%); filter: brightness(1.08) saturate(1.12); }
+        .brand-logo { position: relative; z-index: 1; width: 96px; height: 96px; object-fit: contain; display: block; filter: brightness(1.08) saturate(1.12); } /* v245: 방랑자 짐+칼 아이콘, 배경 없이 오려서 꽉 차게 (원형 자르기 없음) */
         .brand-name { font-family: 'Cinzel', 'Public Sans', serif; font-size: 26px; font-weight: 600; color: #F3E9C9; letter-spacing: 1px; white-space: nowrap; }
         .navbar-left-stack { display: flex; flex-direction: column; justify-content: center; gap: var(--sp-4); }
         .navbar-line-top { display: flex; align-items: center; gap: var(--sp-7); }
@@ -2129,7 +2129,7 @@
     <div class="navbar">
         <div class="navbar-left">
             <div class="brand-logo-wrap brand-home" onclick="goHomeRefresh()" title="처음 화면으로 새로고침" role="link" tabindex="0">
-                <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo.webp" alt="Rheavision Corp.">
+                <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo.webp?v=245" alt="Rheavision Corp.">
             </div>
             <div class="navbar-left-stack">
                 <!-- 2026-10-03 12차: 헤더 2줄 구조로 재설계 (claude/12차-헤더-탭구조-설계확정.md)
