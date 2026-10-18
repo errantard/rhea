@@ -17,12 +17,17 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
-<link rel="preload" as="image" href="assets/login/bg.webp?v=236">
+<link rel="preload" as="image" href="assets/login/bg.webp?v=237">
+<script>/* v237: 로그인 기록이 있으면 세션 확인 끝날 때까지 화면 숨김 → 로그인돼 있으면 로그인 화면 안 비치고 바로 대시보드로 */
+(function(){var t=null;try{t=localStorage.getItem('sb-ioqxulvuasjsabcvikug-auth-token')}catch(e){}
+  if(t){document.documentElement.classList.add('authWait');
+    setTimeout(function(){document.documentElement.classList.remove('authWait')},8000)}})();</script>
+<style>html.authWait body{visibility:hidden}</style>
 <script src="assets/supabase-2.117.2.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
 <!-- ═══════════════════════════════════════════════════════════════
-     index.html — 로그인 전용 (v225 새로 만듦 · v226 효과 추가 · v227 망토·깃발 그림 내장 · v235 폰 폼 성·기사 사이로)
+     index.html — 로그인 전용 (v225 새로 만듦 · v226 효과 추가 · v227 망토·깃발 그림 내장 · v235 폰 폼 성·기사 사이로 · v237 로그인돼 있으면 화면 안 비치고 바로 이동)
      장면: 안개 낀 마을로 들어서는 기사 (assets/login/, 원본 좌표 2880×1632 기준)
      효과: 까마귀(성 둘레·산 뒤·먼 탑) · 망토/깃발 휘날림(WebGL) · 창문 불빛 · 성 굴뚝 연기 · 재 흩날림 · 시네마틱 오프닝(문구가 불타 사라짐)
      폼: 판때기 없는 게임 타이틀식 (PC 왼쪽 · 폰은 성 밑동~기사 머리 사이에 자동 배치)
@@ -36,7 +41,7 @@ body{height:100vh;height:100dvh}
 #scene{position:fixed;inset:0;transform-origin:52% 38%;animation:push 9.5s cubic-bezier(.15,.6,.25,1) both}
 @keyframes push{from{transform:scale(1.07)}to{transform:scale(1)}}
 /* 높이에 맞춰 그림 전체가 보이게 → 화면이 더 넓으면 양옆은 흐린 그림으로 채움 */
-.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=236) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
+.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=237) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
 #bgimg{position:fixed;display:block;pointer-events:none;--e:0px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent)}
@@ -195,12 +200,12 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 <body>
 <div id="scene">
   <div class="bgBlur"></div>
-  <img id="bgimg" src="assets/login/bg.webp?v=236" alt="">
+  <img id="bgimg" src="assets/login/bg.webp?v=237" alt="">
   <canvas id="fxFlag" class="fx"></canvas>
   <canvas id="fxCape" class="fx"></canvas>
   <canvas id="bBack" class="lay"></canvas>
-  <img id="mount" src="assets/login/mount.webp?v=236" alt="">
-  <img id="castle" src="assets/login/castle.webp?v=236" alt="">
+  <img id="mount" src="assets/login/mount.webp?v=237" alt="">
+  <img id="castle" src="assets/login/castle.webp?v=237" alt="">
   <canvas id="smoke" class="lay"></canvas>
   <canvas id="lights" class="lay"></canvas>
   <canvas id="bFront" class="lay"></canvas>
@@ -226,7 +231,7 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 </form>
 
 <div class="fadeBlack"></div>
-<audio id="bgm" src="assets/login/bgm.mp3?v=236" loop preload="auto"></audio>
+<audio id="bgm" src="assets/login/bgm.mp3?v=237" loop preload="auto"></audio>
 <div class="bar top"></div><div class="bar bot"></div>
 <div class="quote"><span id="qt"></span><span class="c"></span></div>
 <canvas id="burn"></canvas>
@@ -413,7 +418,7 @@ function loop(now){
     cx.globalAlpha=Math.min(1,l.v);cx.drawImage(sp,l.sx,l.sy,l.w,l.h,ox+l.x*s,oy+l.y*s,l.w*s,l.h*s)}
   cx.globalAlpha=1;requestAnimationFrame(loop);
 }
-sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=236';
+sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=237';
 })();
 </script>
 <script>
@@ -655,8 +660,9 @@ async function handleLogin(event){
 }
 
 (async function checkExistingSession(){
-  const {data}=await sb.auth.getSession();
-  if(data&&data.session)location.replace('dashboard.html');
+  let s=null;try{const {data}=await sb.auth.getSession();s=data&&data.session}catch(e){console.error(e)}
+  if(s){location.replace('dashboard.html');return}
+  document.documentElement.classList.remove('authWait');   // v237: 로그인 안 돼 있으면 그때 화면 보이기
 })();
 
 /* 홈 화면 앱 설치용 서비스워커 (캐시 없음) */

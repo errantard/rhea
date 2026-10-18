@@ -22,6 +22,14 @@
     <link rel="apple-touch-icon-precomposed" sizes="180x180" href="assets/app-icon-180.png">
 <!-- 엑셀 처리(SheetJS) 라이브러리 CDN 추가 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>/* v237: 로그인 기록이 없으면 화면 그리기 전에 바로 로그인 화면으로 · 세션 확인 끝날 때까지 화면 숨김 (빈 대시보드 잠깐 비치는 것 방지)
+   (supabase가 이 브라우저에 저장해두는 로그인 기록 키 = sb-ioqxulvuasjsabcvikug-auth-token) */
+(function(){var t=null;try{t=localStorage.getItem('sb-ioqxulvuasjsabcvikug-auth-token')}catch(e){}
+  if(!t){location.replace('index.html');}
+  document.documentElement.classList.add('authWait');
+  setTimeout(function(){document.documentElement.classList.remove('authWait')},8000);   // 혹시 확인이 멈춰도 8초 뒤엔 보이게
+})();</script>
+<style>html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
     <!-- 디자인 유지 엑셀 내보내기용 ExcelJS + FileSaver -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -3461,15 +3469,17 @@ function showSyncStatus(msg, isError) {
            Supabase 쪽에서 거부됨. */
 
         async function bootDashboard() {
-            const { data } = await sb.auth.getSession();
+            let data = null;
+            try { ({ data } = await sb.auth.getSession()); } catch (e) { console.error(e); }
             if (!data || !data.session) {
-                location.replace('index.html');
+                location.replace('index.html');   // v237: 화면은 head에서 숨겨둔 채로 이동
                 return;
             }
             currentUserEmail = (data.session.user && data.session.user.email) || null;
             currentUserNickname = (data.session.user && data.session.user.user_metadata && data.session.user.user_metadata.nickname) || null;
             if (window.RheaRPG) RheaRPG.load(data.session.user); // 17차-4/5: 출석·무기 정보 (rpg/ 폴더)
             showDataLoadingOverlay();
+            document.documentElement.classList.remove('authWait');   // v237: 로그인 확인 끝 → 로딩 화면부터 보이게
             await initApp();
             if (window.RheaRPG) RheaRPG.checkIn(); // 17차-4/5: 하루 첫 접속이면 출석 +1 (기다리지 않음)
         }
