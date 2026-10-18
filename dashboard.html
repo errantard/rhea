@@ -101,30 +101,12 @@
             color: var(--amber);
         }
         #dataLoadingOverlay.hidden { display: none; }
-        /* v242: 로딩 기사 = 로그인 배경의 말 탄 방랑 기사 옆모습 (제미나이, 배경 오려냄 388×520)
-           말 걸음처럼 천천히 들썩 + 발밑 안개 한 줄이 뒤(왼쪽)로 흘러 앞으로 가는 느낌 · 검은 말이 남색에 묻히지 않게 뒤에 옅은 안개빛 */
-        .dl-stage { position: relative; width: 190px; aspect-ratio: 388 / 520; }
-        .dl-glow { position: absolute; inset: -14% -34% -4%; pointer-events: none;
-            background: radial-gradient(closest-side, rgba(126,152,190,0.22), rgba(126,152,190,0.07) 62%, transparent); }
-        .dl-knight { position: relative; display: block; width: 100%; height: auto; transform-origin: 50% 92%;
-            animation: dlRide 1.5s ease-in-out infinite;
-            filter: drop-shadow(0 0 1px rgba(176,196,226,0.45)) drop-shadow(0 8px 10px rgba(0,0,0,0.45)); }
-        .dl-fog { position: absolute; left: -30%; right: -30%; bottom: -3%; height: 19%; overflow: hidden; pointer-events: none;
-            -webkit-mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent);
-                    mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent); }
-        .dl-fog::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 200%; filter: blur(3px);
-            background-image:
-                radial-gradient(ellipse 34% 42% at 22% 62%, rgba(196,210,228,0.26), transparent 72%),
-                radial-gradient(ellipse 40% 34% at 62% 48%, rgba(196,210,228,0.18), transparent 72%),
-                radial-gradient(ellipse 28% 46% at 90% 68%, rgba(196,210,228,0.22), transparent 72%);
-            background-size: 25% 100%; background-repeat: repeat-x;
-            animation: dlFog 7s linear infinite; }
-        @keyframes dlRide {
-            0%, 50%, 100% { transform: translateY(0) rotate(0deg); }
-            25% { transform: translateY(-2.5px) rotate(-0.6deg); }
-            75% { transform: translateY(-2px) rotate(0.5deg); }
-        }
-        @keyframes dlFog { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        /* v244: 로딩 기사 = 귀여운 애니풍 방랑 기사(장발·빨간 망토·검은 말) 질주 4칸 연속 동작 (제미나이 4칸 시트 → 덩어리 단위로 오려 몸통 기준 정렬)
+           loading-knight.webp = 가로 4칸 스트립(칸당 402×400) · 상자 overflow로 한 칸만 보이고 img를 steps(4)로 넘김 + 상자 통통 */
+        .dl-run { width: 201px; height: 200px; overflow: hidden; animation: dlBob .5s ease-in-out infinite; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); }
+        .dl-knight { display: block; width: 804px; height: 200px; max-width: none; animation: dlGallop .5s steps(4) infinite; }
+        @keyframes dlGallop { to { transform: translateX(-100%); } }
+        @keyframes dlBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
         .dl-dots { display: flex; gap: 8px; }
         .dl-dots span {
             width: 9px; height: 9px; border-radius: 50%; background: var(--amber);
@@ -135,7 +117,7 @@
         .dl-text { font-size: 15px; letter-spacing: 0.2px; color: #F5EFE0; }
         @keyframes dlDot { 0%, 100% { opacity: 0.35; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } }
         @media (prefers-reduced-motion: reduce) {
-            .dl-knight, .dl-fog::before, .dl-dots span { animation: none; }
+            .dl-run, .dl-knight, .dl-dots span { animation: none; }
         }
 
         .header-fixed {
@@ -2136,9 +2118,9 @@
          디자인개선 4번: 로그인화면을 지우자마자 이 화면이 바로 덮어써서, Supabase에서 데이터를 받아오는 동안
          (현장 LTE처럼 느린 연결이면 1~2초 이상) 빈 대시보드 대신 이 화면이 보이게 함. -->
     <div id="dataLoadingOverlay" class="hidden">
-        <div class="dl-stage"><div class="dl-glow"></div><img class="dl-knight" src="assets/loading-knight.webp?v=242" alt="로딩 중"><div class="dl-fog"></div></div>
+        <div class="dl-run"><img class="dl-knight" src="assets/loading-knight.webp?v=244" alt="로딩 중"></div>
         <div class="dl-dots"><span></span><span></span><span></span></div>
-        <div class="dl-text" id="dataLoadingText">데이터 불러오는 중...</div>
+        <div class="dl-text" id="dataLoadingText">안개를 헤치고 가는 중...</div>
     </div>
     <div id="syncStatus"></div>
 
