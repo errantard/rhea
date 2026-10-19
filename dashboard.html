@@ -743,10 +743,10 @@
             background:
                 linear-gradient(90deg, rgba(8,16,28,0.94) 0%, rgba(8,16,28,0.88) 24%, rgba(8,16,28,0.5) 48%, rgba(8,16,28,0.12) 72%, rgba(8,16,28,0) 92%),
                 linear-gradient(180deg, rgba(8,14,24,0.20) 0%, rgba(8,14,24,0.10) 40%, rgba(6,10,18,0.40) 100%),
-                url('assets/detail-hero-camp.webp');
+                var(--hero-img, url('assets/detail-hero-camp.webp'));
             background-size: cover;
-            /* v243: 배경 = 안개 숲 모닥불 야영(방랑 기사·말, 제미나이 모닥3) · 배너가 약 6:1이라 세로는 가운데 1/3만 보임 → 기사 머리~불꽃 줄(72%)에 맞춤 */
-            background-position: center 72%;
+            /* v249: 배경은 열 때마다 DETAIL_HEROES 중 랜덤 1장 (방랑 기사 여정 스토리) · 배너가 약 6:1이라 세로는 일부만 보여서 그림마다 보여줄 높이(--hero-y)를 따로 정함 */
+            background-position: center var(--hero-y, 72%);
         }
         .detail-hero-glow {
             position: absolute; top: -70px; left: -70px; width: 240px; height: 240px; border-radius: 50%;
@@ -1516,7 +1516,7 @@
 
             /* ---------- 업체 상세보기+수정+AS이력 통합 팝업: 전체화면 + 세로 스택(정보 위, AS이력 아래) ---------- */
             .detail-modal-content { width: 100%; max-width: 100vw; height: 100%; max-height: 100vh; border-radius: 0; }
-            .detail-hero { padding: 16px 16px 14px; min-height: 0; cursor: default; background-position: center 72%; }
+            .detail-hero { padding: 16px 16px 14px; min-height: 0; cursor: default; }
             .detail-hero-topbar { flex-wrap: wrap; row-gap: 8px; margin-bottom: 10px; }
             .detail-hero-topbar-left { gap: 10px; }
             .detail-hero-group { gap: 7px; padding: 4px 14px 4px 4px; border-radius: 11px; }
@@ -2834,6 +2834,19 @@ function showSyncStatus(msg, isError) {
 
 // 로그인화면을 지운 직후~데이터 로딩 완료 전까지 "0개짜리 빈 화면"이 보이지 않도록,
         // 그 사이를 이 오버레이로 덮어씀 (디자인개선 4번, 2026-08-29 추가)
+        // v249: 업체 상세 상단 배경 = 방랑 기사 여정 스토리 중 랜덤 1장. 그림 추가는 여기 한 줄 [파일, 보여줄 높이%]
+        const DETAIL_HEROES = [
+            ['detail-hero-camp.webp', '72%'],     // 모닥불에서 지도 보기
+            ['detail-hero-ride.webp', '26%'],     // 급하게 떠나는 모습
+            ['detail-hero-village.webp', '20%']   // 마을에 들어선 모습
+        ];
+        function pickDetailHero() {
+            const el = document.getElementById('detailHeroDragHandle');
+            if (!el || !DETAIL_HEROES.length) return;
+            const h = DETAIL_HEROES[Math.floor(Math.random() * DETAIL_HEROES.length)];
+            el.style.setProperty('--hero-img', "url('assets/" + h[0] + "')");
+            el.style.setProperty('--hero-y', h[1]);
+        }
         const DATA_LOADING_MESSAGES = [
             '안개를 헤치고 가는 중...',
             '마을 장부를 펼치는 중...',
@@ -5749,6 +5762,7 @@ function generateUniqueId() {
 
             document.getElementById('detailDeleteBtn').style.display = isAdminUser() ? 'inline-block' : 'none';
 
+            pickDetailHero();
             document.getElementById('detailModal').style.display = 'flex';
             // 모달이 display:flex로 실제 레이아웃을 갖춘 "이후"에 측정해야 부모 폭(clientWidth)이 0으로 잡히는 걸 방지함(display:none 상태에서 측정하면 0으로 측정됨)
             autoSizeDetailPlaceName();
