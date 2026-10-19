@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
-<link rel="preload" as="image" href="assets/login/bg.webp?v=241">
+<link rel="preload" as="image" href="assets/login/bg.webp?v=247">
 <script>/* v237: 로그인 기록이 있으면 세션 확인 끝날 때까지 화면 숨김 → 로그인돼 있으면 로그인 화면 안 비치고 바로 대시보드로 */
 (function(){var t=null;try{t=localStorage.getItem('sb-ioqxulvuasjsabcvikug-auth-token')}catch(e){}
   if(t){document.documentElement.classList.add('authWait');
@@ -41,7 +41,7 @@ body{height:100vh;height:100dvh}
 #scene{position:fixed;inset:0;transform-origin:52% 38%;animation:push 9.5s cubic-bezier(.15,.6,.25,1) both}
 @keyframes push{from{transform:scale(1.07)}to{transform:scale(1)}}
 /* 높이에 맞춰 그림 전체가 보이게 → 화면이 더 넓으면 양옆은 흐린 그림으로 채움 */
-.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=241) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
+.bgBlur{position:fixed;inset:-40px;background:url(assets/login/bg.webp?v=247) center/cover no-repeat;filter:blur(28px) brightness(.42) saturate(.8)}
 #bgimg{position:fixed;display:block;pointer-events:none;--e:0px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 var(--e),#000 calc(100% - var(--e)),transparent)}
@@ -131,9 +131,10 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
   70%{left:86%;transform:translate(0,0) scale(1);opacity:.95}100%{left:94%;transform:translate(6px,-16px) scale(.3);opacity:0}}
 .title .fld label{position:absolute;left:0;bottom:.7em;pointer-events:none;font-size:clamp(11px,.7vw,13.5px);letter-spacing:.3em;color:rgba(232,213,170,.72);transition:.25s}
 .title .fld input:focus+label,.title .fld input:not(:placeholder-shown)+label{bottom:3.3em;font-size:clamp(8.5px,.52vw,10px);color:rgba(220,190,135,.75)}
-/* 브라우저 자동완성이 칸을 흰/노랗게 칠하는 것 막기 */
-.title input:-webkit-autofill,.title input:-webkit-autofill:hover,.title input:-webkit-autofill:focus{
-  -webkit-text-fill-color:#f3e7c9!important;-webkit-box-shadow:0 0 0 1000px transparent inset!important;caret-color:#f3e7c9;transition:background-color 5000s}
+/* 브라우저 자동완성이 칸을 회색/노랗게 칠하는 것 막기 — v247: 예전 5000s(약 83분)는 시간이 지나면 회색 상자가 나타났음 → 칠하는 순간을 사실상 영원히 미룸 */
+.title input:-webkit-autofill,.title input:-webkit-autofill:hover,.title input:-webkit-autofill:focus,.title input:-webkit-autofill:active,.title input:autofill{
+  -webkit-text-fill-color:#f3e7c9!important;-webkit-box-shadow:0 0 0 1000px transparent inset!important;caret-color:#f3e7c9;
+  transition:background-color 0s 2147483s,color 0s 2147483s!important}
 .title .eye{position:absolute;right:0;bottom:.45em;background:none;border:0;padding:4px;cursor:pointer;color:rgba(232,213,170,.45)}
 .title .eye:hover{color:#f0cf8e}.title .eye svg{width:1.1em;height:1.1em;display:block}
 .title .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2.2em}
@@ -200,12 +201,12 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 <body>
 <div id="scene">
   <div class="bgBlur"></div>
-  <img id="bgimg" src="assets/login/bg.webp?v=241" alt="">
+  <img id="bgimg" src="assets/login/bg.webp?v=247" alt="">
   <canvas id="fxFlag" class="fx"></canvas>
   <canvas id="fxCape" class="fx"></canvas>
   <canvas id="bBack" class="lay"></canvas>
-  <img id="mount" src="assets/login/mount.webp?v=241" alt="">
-  <img id="castle" src="assets/login/castle.webp?v=241" alt="">
+  <img id="mount" src="assets/login/mount.webp?v=247" alt="">
+  <img id="castle" src="assets/login/castle.webp?v=247" alt="">
   <canvas id="smoke" class="lay"></canvas>
   <canvas id="lights" class="lay"></canvas>
   <canvas id="cat" class="lay"></canvas>
@@ -232,7 +233,7 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 </form>
 
 <div class="fadeBlack"></div>
-<audio id="bgm" src="assets/login/bgm.mp3?v=241" loop preload="auto"></audio>
+<audio id="bgm" src="assets/login/bgm.mp3?v=247" loop preload="auto"></audio>
 <div class="bar top"></div><div class="bar bot"></div>
 <div class="quote"><span id="qt"></span><span class="c"></span></div>
 <canvas id="burn"></canvas>
@@ -429,7 +430,7 @@ function loop(now){
     const k=1-l.n;if(k>.05){cx.globalCompositeOperation='lighter';cx.globalAlpha=.5*k;cx.drawImage(cL,l.sx,l.sy,l.w,l.h,dx,dy,dw,dh);cx.globalCompositeOperation='source-over'}}
   cx.globalAlpha=1;requestAnimationFrame(loop);
 }
-sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=241';
+sp.onload=()=>requestAnimationFrame(loop);sp.src='assets/login/lights.webp?v=247';
 })();
 </script>
 <script>
