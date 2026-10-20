@@ -2104,6 +2104,21 @@
             .detail-hero.has-stage .detail-hero-titlewrap { margin-right: 0; }
             .detail-stage .ds-chip { font-size: 12.5px; padding: 5px 11px 5px 9px; }
         }
+        /* ===== 25차: 검색 안내줄 [전체에서 보기 ⏎] — 금색 주버튼 + 엔터 키 표시 ===== */
+        .hidden-by-filter-row .hbf-btns, .mc-hidden .hbf-btns { display: inline-flex; gap: 6px; flex-shrink: 0; }
+        .hidden-by-filter-row button.hbf-wide, .mc-hidden button.hbf-wide {
+            display: inline-flex; align-items: center; gap: 6px;
+            border: 1px solid #C9A04A; color: #1A1206; background: linear-gradient(180deg, #F3D68C, #D2AA55);
+            box-shadow: 0 2px 6px rgba(190,150,70,.3), inset 0 1px 0 rgba(255,255,255,.6); }
+        .hidden-by-filter-row button.hbf-wide:hover { background: linear-gradient(180deg, #FBE3A3, #E0B963); }
+        .hbf-kbd { font: 700 10px 'IBM Plex Mono', monospace; line-height: 1.3; padding: 1px 5px; border-radius: 4px;
+            background: rgba(26,18,6,.10); border: 1px solid rgba(26,18,6,.28); }
+        .hbf-q { color: #3B2A0E; font-weight: 800; }
+        @media (hover: none), (max-width: 880px) { .hbf-kbd { display: none; } }
+        @media (max-width: 880px) {
+            .mc-hidden { flex-wrap: wrap; }
+            .mc-hidden button.hbf-wide { background: linear-gradient(180deg, #F3D68C, #D2AA55); color: #1A1206; border: 1px solid #C9A04A; }
+        }
     </style>
     <!-- 17차-5: 모험가(RPG) 모듈 — 업무 기능과 분리. 없어도 업체관리는 정상 -->
     <link rel="stylesheet" href="rpg/rpg.css?v=224">
@@ -3447,6 +3462,7 @@ function showSyncStatus(msg, isError) {
                 updateBackupNotice();
                 maybeOfferGroupMigration();
                 document.getElementById('searchInput').addEventListener('input', renderTable);
+                document.getElementById('searchInput').addEventListener('keydown', handleSearchEnter); // 25차: 엔터 = [전체에서 보기]
                 document.getElementById('filterRegion').addEventListener('change', renderTable);
                 document.getElementById('filterStatus').addEventListener('change', renderTable);
                 document.getElementById('sortSelect').addEventListener('change', () => {
@@ -4342,6 +4358,66 @@ function generateUniqueId() {
             });
         }
 
+        /* ===== 25차: 검색어·지역·상태 판정을 한 곳으로 =====
+           renderTable()과 "전체로 넓히면 몇 곳 더?" 계산이 반드시 같은 기준을 쓰게 하려고 분리.
+           (따로 복사해두면 나중에 검색 칸 하나 추가할 때 한쪽만 고쳐져서 숫자가 어긋남) */
+        function matchesTextFilters(item, f) {
+            if (f.search) {
+                const fields = [
+                    item.regionSi, item.regionGu, item.placeName, item.installAddress,
+                    item.installLocation, item.orgDept, item.orgName, item.orgTitle,
+                    item.orgContact, item.orgEmail, item.managerContact, item.managerEmail, item.managerNote,
+                    item.kioId, item.kioAdminId, item.reaCode,
+                    item.deviceModel, item.deviceType, (item.devices || []).map(d => [d.model, d.type].join(' ')).join(' '), // 15차
+                    (item.memoList || []).map(m => m.text).join(' ')
+                ];
+                if (!fields.filter(Boolean).join(' ').toLowerCase().includes(f.search)) return false;
+            }
+            if (f.region && !((item.regionSi || '').includes(f.region) || (item.regionGu || '').includes(f.region))) return false;
+            if (f.status && item.status !== f.status) return false;
+            return true;
+        }
+
+        /* ===== 25차: [전체에서 보기 ⏎] =====
+           지금 보기가 좁혀져 있을 때 "전체"로 넓히면 검색어로 더 찾을 수 있는 곳 수.
+           넓힌 보기 = setDivision('all') 결과와 똑같은 조건(구분 전체·그룹 전체·임대단계/신규/종료/AS 해제).
+           별도 "전체검색 모드" 상태를 만들지 않고 기존 setDivision('all')만 부르므로 깃발·배너 불이 항상 맞음 */
+        const WIDE_VIEW_OPTS = { division: 'all', group: ALL_GROUP_KEY, stage: null, ended: false, nw: false, as: false };
+        let lastWiderCount = 0; // 안내줄에 버튼이 떠 있는지 = 엔터가 먹히는지 (renderTable이 매번 갱신)
+        function isWideView() {
+            return currentDivision === 'all' && currentGroup === ALL_GROUP_KEY && !leaseStage && !newOnly && !endedOnly && !asOnly;
+        }
+        function countWiderMatches(tf, visibleItems) {
+            if ((!tf.search && !tf.region) || isWideView()) return 0;
+            const seen = new Set(visibleItems.map(i => i.id));
+            return getAllGroupsFlatData().filter(i => !seen.has(i.id) && passesHeaderFilters(i, WIDE_VIEW_OPTS) && matchesTextFilters(i, tf)).length;
+        }
+        // 지금 보기 이름 (안내 문구용)
+        function currentViewLabel() {
+            if (asOnly) return 'AS 요청';
+            if (newOnly) return '신규';
+            if (endedOnly) return '종료 보관소';
+            if (leaseStage) return ({ upcoming: '예정', ongoing: '임대중', expiring: '종료임박', awaiting: '회수대기' })[leaseStage] || '임대';
+            if (currentGroup && currentGroup !== ALL_GROUP_KEY) return groupNames[currentGroup] || '이 그룹';
+            if (currentDivision === 'sale') return '판매';
+            if (currentDivision === 'lease') return '임대';
+            return '지금 보기';
+        }
+        // 버튼·엔터 공용 — 검색어·지역필터는 그대로, 보기만 전체로 (= 전체 깃발 클릭과 같은 경로)
+        function widenSearchToAll() {
+            setDivision('all');
+            const c = document.querySelector('.container');
+            if (c) c.scrollTop = 0;
+        }
+        // 검색창 엔터: 버튼이 떠 있을 때만 / 한글 조합 중 엔터는 무시(두 번 실행·마지막 글자 빠짐 방지)
+        function handleSearchEnter(e) {
+            if (e.key !== 'Enter') return;
+            if (e.isComposing || e.keyCode === 229) return;
+            if (!lastWiderCount) return;
+            e.preventDefault();
+            widenSearchToAll();
+        }
+
         function renderTable() {
             const tableBody = document.getElementById('tableBody');
             const searchInput = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -4353,28 +4429,10 @@ function generateUniqueId() {
             tableBody.innerHTML = '';
             const currentData = getCurrentViewData();
 
+            const tf = { search: searchInput, region: filterRegion, status: filterStatus }; // 25차: 판정은 matchesTextFilters 한 곳에서
             let filteredData = currentData.filter((item) => {
                 if (!passesHeaderFilters(item)) return false; // 12차: 구분 탭·임대 단계·신규·종료 보기·AS 요청
-
-                const searchFields = [
-                    item.regionSi, item.regionGu, item.placeName, item.installAddress,
-                    item.installLocation, item.orgDept, item.orgName, item.orgTitle,
-                    item.orgContact, item.orgEmail, item.managerContact, item.managerEmail, item.managerNote,
-                    item.kioId, item.kioAdminId, item.reaCode,
-                    item.deviceModel, item.deviceType, (item.devices || []).map(d => [d.model, d.type].join(' ')).join(' ') // 15차
-                ];
-
-                const memoTexts = (item.memoList || []).map(m => m.text).join(' ');
-                searchFields.push(memoTexts);
-
-                const rowString = searchFields.filter(Boolean).join(' ').toLowerCase();
-                const searchMatch = searchInput === "" || rowString.includes(searchInput);
-                const regionMatch = filterRegion === "" || (item.regionSi || "").includes(filterRegion) || (item.regionGu || "").includes(filterRegion);
-                const statusMatch = filterStatus === "" || item.status === filterStatus;
-
-                const rentalMatch = true; // 12차: 임대 필터는 passesHeaderFilters로 옮김
-
-                return searchMatch && regionMatch && statusMatch && rentalMatch;
+                return matchesTextFilters(item, tf);
             });
 
             if (columnSort.key) {
@@ -4473,11 +4531,27 @@ function generateUniqueId() {
             // 13차-3: 위 숫자(깃발·여정·보관소)는 검색어/지역필터와 무관하게 세기 때문에, 검색어나 지역필터로
             // 일부가 숨겨졌으면 표 맨 아래에 알려줌 (예: 종료 보기 3인데 "경기" 필터 때문에 2곳만 보이는 경우)
             const hiddenByText = (searchInput || filterRegion) ? currentData.filter(i => passesHeaderFilters(i)).length - filteredData.length : 0;
-            if (hiddenByText > 0) {
-                const why = [filterRegion ? `지역필터 "${escapeHtml(filterRegion)}"` : '', searchInput ? `검색어 "${escapeHtml(searchInput)}"` : ''].filter(Boolean).join(' · ');
+            // 25차: 전체로 넓히면 더 나오는 곳 → [전체에서 보기 ⏎] (검색창 엔터도 같은 동작)
+            const widerCount = countWiderMatches(tf, filteredData);
+            lastWiderCount = widerCount;
+            if (hiddenByText > 0 || widerCount > 0) {
+                const rawQ = document.getElementById('searchInput').value.trim();
+                const qTxt = rawQ ? `"${escapeHtml(rawQ)}"` : `지역 "${escapeHtml(filterRegion)}"`;
+                const label = escapeHtml(currentViewLabel());
+                let msg;
+                if (widerCount > 0) {
+                    msg = filteredData.length === 0
+                        ? `'${label}'엔 <span class="hbf-q">${qTxt}</span> 없어요 · 다른 곳에 <b>${widerCount}곳</b> 있어요`
+                        : `'${label}' 밖에도 <span class="hbf-q">${qTxt}</span> <b>${widerCount}곳</b> 더 있어요`;
+                } else {
+                    const why = [filterRegion ? `지역필터 "${escapeHtml(filterRegion)}"` : '', searchInput ? `검색어 "${escapeHtml(searchInput)}"` : ''].filter(Boolean).join(' · ');
+                    msg = `${why} 때문에 <b>${hiddenByText}곳</b>이 숨겨져 있어요`;
+                }
+                const btnWide = widerCount > 0 ? `<button type="button" class="hbf-wide" onclick="widenSearchToAll()" title="검색어는 그대로, 전체에서 찾기 (엔터)">전체에서 보기 <kbd class="hbf-kbd">⏎</kbd></button>` : '';
+                const btnClear = hiddenByText > 0 ? `<button type="button" onclick="clearTextFilters()">필터 풀고 모두 보기</button>` : '';
                 const tr = document.createElement('tr');
                 tr.className = 'hidden-by-filter-row';
-                tr.innerHTML = `<td colspan="99"><div class="hbf-inner"><span>🔎 ${why} 때문에 <b>${hiddenByText}곳</b>이 숨겨져 있어요</span><button type="button" onclick="clearTextFilters()">필터 풀고 모두 보기</button></div></td>`;
+                tr.innerHTML = `<td colspan="99"><div class="hbf-inner"><span>🔎 ${msg}</span><span class="hbf-btns">${btnWide}${btnClear}</span></div></td>`;
                 tableBody.appendChild(tr);
             }
 
@@ -4487,7 +4561,7 @@ function generateUniqueId() {
 
             // 모바일 카드 리스트도 같이 갱신 (PC 표 로직은 위에서 이미 끝났고, 이 아래는 순수 추가 기능이라
             // 여기서 에러가 나도 try/catch로 막아서 PC 화면(표)에는 절대 영향이 없게 함)
-            try { renderMobileCards(filteredData, hiddenByText); } catch (e) { console.error('모바일 카드 렌더링 실패:', e); }
+            try { renderMobileCards(filteredData, hiddenByText, widerCount); } catch (e) { console.error('모바일 카드 렌더링 실패:', e); }
 
             // 2026-09-23: 실시간 동기화 등으로 팝업이 열려있는 도중에도 renderTable()이 다시 불릴 수 있음 —
             // 표가 새로 그려지면 DOM이 통째로 교체되어 .detail-open-row 표시가 같이 사라지므로,
@@ -4720,13 +4794,14 @@ function generateUniqueId() {
             return `<span class="mc-tag t-lease">임대중 D-${dd}</span>`;
         }
 
-        function renderMobileCards(filteredData, hiddenByText) {
+        function renderMobileCards(filteredData, hiddenByText, widerCount) {
+            widerCount = widerCount || 0; // 25차
             const wrap = document.getElementById('mobileCardList');
             if (!wrap) return;
             const list = filteredData || [];
             const head = `<div class="mc-meta"><span><b>${list.length}곳</b>${endedOnly ? ' · 종료 업체' : ''}</span><span>${asOnly ? 'AS 요청만' : (leaseStage ? M_STAGE_LABEL[leaseStage] + '만' : '')}</span></div>`;
-            const hidden = hiddenByText > 0
-                ? `<div class="mc-hidden"><span>🔎 검색·지역필터로 <b>${hiddenByText}곳</b> 숨겨짐</span><button type="button" onclick="clearTextFilters()">모두 보기</button></div>` : '';
+            const hidden = (hiddenByText > 0 || widerCount > 0) // 25차: 다른 곳에 더 있으면 [전체에서 보기]
+                ? `<div class="mc-hidden"><span>🔎 ${widerCount > 0 ? `다른 곳에 <b>${widerCount}곳</b> 더 있어요` : `검색·지역필터로 <b>${hiddenByText}곳</b> 숨겨짐`}</span><span class="hbf-btns">${widerCount > 0 ? `<button type="button" class="hbf-wide" onclick="widenSearchToAll()">전체에서 보기</button>` : ''}${hiddenByText > 0 ? `<button type="button" onclick="clearTextFilters()">모두 보기</button>` : ''}</span></div>` : '';
             if (!list.length) {
                 wrap.innerHTML = head + hidden + `<div class="mc-empty">표시할 업체가 없습니다.</div>`;
                 return;
