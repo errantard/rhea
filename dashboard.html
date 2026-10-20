@@ -2105,8 +2105,8 @@
             .detail-stage .ds-chip { font-size: 12.5px; padding: 5px 11px 5px 9px; }
         }
 
-        /* ===== 26차 (2026-10-21): 헤더 로고 교체 — 룬 링 + 흰 말 + 칼 (assets/nav-logo-v2.webp, 배경 투명)
-           예전 로고(nav-logo.webp)는 파일 그대로 둠 → 되돌리려면 위 img src만 nav-logo.webp로 바꾸면 끝.
+        /* ===== 26차 (2026-10-21): 헤더 로고 교체 — 룬 링 + 흰 말 + 칼 (assets/nav-logo.webp, 배경 투명)
+           파일 이름은 그대로 두고 그림만 바꿈 (v2 같은 새 이름 안 만듦). ?v=260은 브라우저가 옛 그림을 기억하지 않게 하는 꼬리표
            새 로고는 밝은 크림·브론즈라 예전 금빛 그림자(drop-shadow)는 빼고, PC에서만 조금 키움(62→72px). 폰(880px 이하)은 기존 34px 그대로 */
         .brand-logo { filter: none; }
         @media (min-width: 881px) {
@@ -2138,7 +2138,7 @@
     <div class="navbar">
         <div class="navbar-left">
             <div class="brand-logo-wrap brand-home" onclick="goHomeRefresh()" title="처음 화면으로 새로고침" role="link" tabindex="0">
-                <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo-v2.webp?v=260" alt="Rheavision Corp.">
+                <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo.webp?v=260" alt="Rheavision Corp.">
             </div>
             <div class="navbar-left-stack">
                 <!-- 2026-10-03 12차: 헤더 2줄 구조로 재설계 (claude/12차-헤더-탭구조-설계확정.md)
