@@ -925,7 +925,12 @@
         .rx-return { flex: 0 0 auto; height: 28px; margin-bottom: 1px; padding: 0 10px; border-radius: 8px; border: 1px solid #9DBEDF; background: #EEF5FC; color: #2F6FB0; font: 800 11.5px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
         .rx-return:hover { background: #2F6FB0; color: #fff; }
         .dev-router.returned .dfield { opacity: .45; }
-        .dev-router.returned .rx-return { border-color: #d6d0c2; background: #F3EEE4; color: #8a8578; }
+        .rx-retwrap { display: contents; }
+        .rx-retbox { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px; height: 28px; margin-bottom: 1px; padding: 0 1px 0 6px; border-radius: 8px; border: 1px solid #d6d0c2; background: #F3EEE4; }
+        .rx-retbox b { font-size: 11px; font-weight: 800; color: #8a8578; }
+        .rx-retbox input { border: 0; background: transparent; width: 104px; font: 700 12px inherit; font-family: inherit; color: #5c574b; padding: 0; }
+        .rx-unret { border: 0; background: none; cursor: pointer; color: #8a8578; font-size: 13px; padding: 2px 3px; border-radius: 5px; }
+        .rx-unret:hover { background: rgba(0,0,0,.06); color: #4a463a; }
         /* v253: 라우터 표시 = 기기정보 칸 모델명 앞 작은 📶 (글씨 없음 · 마우스 올리면 "라우터 · 3개월째 · 무상") · 급하면 주황 점 */
         .rt-ic { position: relative; display: inline-block; margin-right: 5px; font-size: 11px; line-height: 1; opacity: .75; cursor: help; vertical-align: 0; }
         .rt-ic:hover { opacity: 1; }
@@ -4668,13 +4673,13 @@ function generateUniqueId() {
         }
         function routerLineHtml(d) {
             const tm = String(d.period || '').match(/^(\d+)(개월|년)$/);
-            return `<div class="dev-line dev-extra dev-router ${d.returned ? 'returned' : ''}" data-returned="${escapeHtml(d.returned || '')}">
+            return `<div class="dev-line dev-extra dev-router ${d.returned ? 'returned' : ''}">
                 <span class="dev-num" title="라우터">📶</span>
                 <div class="dfield rx-startcol"><label>제공일</label><input type="date" class="rx-start" value="${escapeHtml(d.start || '')}" onchange="routerCalcEnd(this)"></div>
                 <div class="dfield rx-term"><label title="숫자 넣으면 종료일 자동 계산 · 비우면 종료일 직접 입력">기간</label><div class="rx-termbox"><input type="number" class="rx-tn" min="1" step="1" placeholder="-" value="${tm ? tm[1] : ''}" oninput="routerCalcEnd(this)"><select class="rx-tu" onchange="routerCalcEnd(this)"><option value="개월">개월</option><option value="년" ${tm && tm[2] === '년' ? 'selected' : ''}>년</option></select></div></div>
                 <div class="dfield rx-endcol"><label title="기간 넣으면 자동 계산 · 직접 고치기 가능">임대종료</label><input type="date" class="rx-end" value="${escapeHtml(d.end || '')}"></div>
                 <div class="dfield rx-feecol"><label title="월 임대료">임대료</label><select class="rx-fee">${rxFeeOptions(d.fee)}</select></div>
-                <button type="button" class="rx-return" onclick="toggleRouterReturn(this)" title="${d.returned ? '누르면 반납 취소' : '실제로 돌려받았을 때 누르기'}">${d.returned ? `✓ ${escapeHtml(d.returned.slice(2).replace(/-/g, '.'))}` : '반납'}</button>
+                <span class="rx-retwrap">${rxReturnHtml(d.returned)}</span>
                 <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 줄 지우기 (기록 없이 삭제 · 돌려받았으면 [반납]을 누르세요)" aria-label="줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>`;
         }
@@ -4688,17 +4693,16 @@ function generateUniqueId() {
             if (!term || !start) return;
             line.querySelector('.rx-end').value = calcRentalEndDate(start, term);
         }
-        function toggleRouterReturn(btn) {
-            const line = btn.closest('.dev-router');
-            if (line.dataset.returned) { line.dataset.returned = ''; }
-            else {
-                if (!confirm('이 라우터를 반납 처리할까요?\n(오늘 날짜로 기록 · [저장]을 눌러야 반영돼요)')) return;
-                line.dataset.returned = formatDateYMD(todayZero());
-            }
-            const r = line.dataset.returned;
-            line.classList.toggle('returned', !!r);
-            btn.textContent = r ? `✓ ${r.slice(2).replace(/-/g, '.')}` : '반납';
-            btn.title = r ? '누르면 반납 취소' : '실제로 돌려받았을 때 누르기';
+        // v260: [반납] 누르면 그 자리가 반납일 달력칸(오늘로 시작, 언제든 고치기) + ↩ 반납 취소 · [저장] 눌러야 반영
+        function rxReturnHtml(ret) {
+            return ret
+                ? `<span class="rx-retbox" title="반납일 (눌러서 고치기)"><b>✓</b><input type="date" class="rx-ret" value="${escapeHtml(ret)}"><button type="button" class="rx-unret" onclick="setRouterReturn(this, '')" title="반납 취소" aria-label="반납 취소">↩</button></span>`
+                : `<button type="button" class="rx-return" onclick="setRouterReturn(this, formatDateYMD(todayZero()))" title="실제로 돌려받았을 때 누르기 (날짜는 바로 고칠 수 있어요)">반납</button>`;
+        }
+        function setRouterReturn(el, ret) {
+            const line = el.closest('.dev-router');
+            line.classList.toggle('returned', !!ret);
+            line.querySelector('.rx-retwrap').innerHTML = rxReturnHtml(ret);
         }
         function renderExtraDevices(list) {
             const box = document.getElementById('detailExtraDevices');
@@ -4714,7 +4718,7 @@ function generateUniqueId() {
                 end: line.querySelector('.rx-end').value,
                 period: routerTerm(line),
                 fee: line.querySelector('.rx-fee').value || 'free',
-                returned: line.dataset.returned || ''
+                returned: (line.querySelector('.rx-ret') || {}).value || ''
             } : {
                 model: line.querySelector('.dx-model').value.trim(),
                 type: line.querySelector('.dx-type').value.trim(),
