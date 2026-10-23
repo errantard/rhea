@@ -2169,6 +2169,7 @@
         /* ===== 26차 (2026-10-21): 헤더 로고 교체 — 룬 링 + 흰 말 + 칼 (assets/nav-logo.webp, 배경 투명)
            파일 이름은 그대로 두고 그림만 바꿈 (v2 같은 새 이름 안 만듦). ?v=260은 브라우저가 옛 그림을 기억하지 않게 하는 꼬리표
            새 로고는 밝은 크림·브론즈라 예전 금빛 그림자(drop-shadow)는 빼고, PC에서만 조금 키움(62→72px). 폰(880px 이하)은 기존 34px 그대로 */
+        /* v256 (2026-10-24): 남색 원판 플랫 버전으로 교체 — 원판이 받침이 돼서 작아도 또렷 (플로우 초록배경 2K 원본을 크로마키로 오림, 288px) · 옛 것 = Claude outputs\v255_백업\nav-logo.webp */
         .brand-logo { filter: none; }
         @media (min-width: 881px) {
             .brand-logo-wrap, .brand-logo { width: 72px; height: 72px; }
@@ -2214,7 +2215,7 @@
     <div class="navbar">
         <div class="navbar-left">
             <div class="brand-logo-wrap brand-home" onclick="goHomeRefresh()" title="처음 화면으로 새로고침" role="link" tabindex="0">
-                <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo.webp?v=260" alt="Rheavision Corp.">
+                <img id="navBrandLogo" class="brand-logo" src="assets/nav-logo.webp?v=261" alt="Rheavision Corp.">
             </div>
             <div class="navbar-left-stack">
                 <!-- 2026-10-03 12차: 헤더 2줄 구조로 재설계 (claude/12차-헤더-탭구조-설계확정.md)
@@ -2924,7 +2925,8 @@ function showSyncStatus(msg, isError) {
         const DETAIL_HEROES = [
             ['detail-hero-camp.webp', '72%'],     // 모닥불에서 지도 보기
             ['detail-hero-ride.webp', '26%'],     // 급하게 떠나는 모습
-            ['detail-hero-village.webp', '20%']   // 마을에 들어선 모습
+            ['detail-hero-village.webp', '20%'],  // 마을에 들어선 모습
+            ['detail-hero-lantern.webp', '46%']   // v257: 골목 벽의 부서진 구멍을 랜턴으로 살펴봄 (괴이한 현상 추적)
         ];
         function pickDetailHero() {
             const el = document.getElementById('detailHeroDragHandle');
