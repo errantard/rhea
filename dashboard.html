@@ -908,29 +908,36 @@
         .dev-add-menu button { border: 0; background: none; text-align: left; padding: 7px 10px; border-radius: 7px; font: 700 12.5px inherit; font-family: inherit; color: #3a3830; cursor: pointer; white-space: nowrap; }
         .dev-add-menu button:hover { background: #F4EFE3; }
         .dev-router .dev-num { background: #E6F0FA; color: #2F6FB0; font-size: 13px; }
-        /* 라우터 줄 = 2단: [📶 제공일 · 임대종료 · ×] / [임대료 · 반납] */
         .dev-router { flex-wrap: nowrap; }
-        /* v258: 라우터 한 줄 — 제공일(달력) · 기간 · 종료(짧은 글자) · 임대료(선택 무상/1만/2만) · 반납 · × */
+        /* v258: 라우터 한 줄 — 제공일 · 기간 · 임대종료 · 임대료(무상/1만/2만) · 회수(→입고) · × */
         .dev-router { gap: 6px; }
         .dev-router .dfield { flex: 0 0 auto; min-width: 0; }
-        .dev-router .dfield.rx-startcol, .dev-router .dfield.rx-endcol { flex: 1 1 0; }
-        .dev-router .rx-end { min-width: 0; }
-        .dev-router .rx-start { min-width: 0; }
+        /* v261: 날짜칸은 딱 맞게 고정 · 달력 아이콘 작게 · 남는 폭은 임대료 칸으로 */
+        .dev-router .rx-start, .dev-router .rx-end { width: 112px; min-width: 0; }
+        .dev-router input[type="date"]::-webkit-calendar-picker-indicator { width: 11px; height: 11px; padding: 0; margin-left: 2px; }
+        .dev-router .dfield.rx-feecol { flex: 1 1 0; }
+        .dev-router .rx-fee { width: 100%; }
         .rx-termbox { display: flex; gap: 2px; align-items: center; }
-        .rx-termbox input { width: 28px; flex: none; min-width: 0; text-align: center; }
+        .rx-termbox input { width: 22px; flex: none; min-width: 0; text-align: center; }
         .dev-router input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         .dev-router input[type="number"]::-webkit-inner-spin-button, .dev-router input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .rx-termbox select { width: auto; flex: none; }
-        .dev-router .rx-fee { width: auto; }
         .rx-return { flex: 0 0 auto; height: 28px; margin-bottom: 1px; padding: 0 10px; border-radius: 8px; border: 1px solid #9DBEDF; background: #EEF5FC; color: #2F6FB0; font: 800 11.5px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
         .rx-return:hover { background: #2F6FB0; color: #fff; }
-        .dev-router.returned .dfield { opacity: .45; }
-        .rx-retwrap { display: contents; }
-        .rx-retbox { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px; height: 28px; margin-bottom: 1px; padding: 0 1px 0 6px; border-radius: 8px; border: 1px solid #d6d0c2; background: #F3EEE4; }
-        .rx-retbox b { font-size: 11px; font-weight: 800; color: #8a8578; }
-        .rx-retbox input { border: 0; background: transparent; width: 104px; font: 700 12px inherit; font-family: inherit; color: #5c574b; padding: 0; }
-        .rx-unret { border: 0; background: none; cursor: pointer; color: #8a8578; font-size: 13px; padding: 2px 3px; border-radius: 5px; }
-        .rx-unret:hover { background: rgba(0,0,0,.06); color: #4a463a; }
+        .dev-router.returned .dfield { opacity: .45; } /* 입고된 줄 = 회색 (비활성 느낌) */
+        .rx-retwrap { position: relative; flex: 0 0 auto; display: inline-flex; }
+        .rx-return.done { padding: 0 14px; border-color: #d6d0c2; background: #F3EEE4; color: #8a8578; cursor: default; } /* v261: 입고 = 회색 */
+        .rx-return.done:hover { background: #ECE5D7; color: #6b6658; }
+        /* 입고 말풍선: 마우스 올리면 바로 · 날짜 고르는 동안(focus)도 유지 · 아래 투명 띠로 버튼↔말풍선 사이 끊김 방지 */
+        .rx-retpop { position: absolute; right: -6px; bottom: calc(100% + 8px); z-index: 30; display: none; align-items: center; gap: 8px; white-space: nowrap;
+            padding: 8px 10px; border-radius: 10px; background: #2b2a26; color: #f2ead8; box-shadow: 0 6px 18px rgba(0,0,0,.28); }
+        .rx-retpop::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 10px; }
+        .rx-retpop::before { content: ''; position: absolute; right: 26px; bottom: -5px; width: 10px; height: 10px; background: #2b2a26; transform: rotate(45deg); }
+        .rx-retwrap:hover .rx-retpop, .rx-retwrap:focus-within .rx-retpop { display: flex; }
+        .rx-retpop b { font-size: 11.5px; font-weight: 800; color: #d9c9a3; }
+        .rx-retpop input { width: 118px; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; background: rgba(255,255,255,.08); color: #fff; font: 700 12.5px inherit; font-family: inherit; padding: 3px 6px; color-scheme: dark; }
+        .rx-unret { border: 0; background: rgba(255,255,255,.1); cursor: pointer; color: #e6dcc6; font: 700 11px inherit; font-family: inherit; padding: 4px 8px; border-radius: 6px; }
+        .rx-unret:hover { background: rgba(255,255,255,.2); color: #fff; }
         /* v253: 라우터 표시 = 기기정보 칸 모델명 앞 작은 📶 (글씨 없음 · 마우스 올리면 "라우터 · 3개월째 · 무상") · 급하면 주황 점 */
         .rt-ic { position: relative; display: inline-block; margin-right: 5px; font-size: 11px; line-height: 1; opacity: .75; cursor: help; vertical-align: 0; }
         .rt-ic:hover { opacity: 1; }
@@ -945,7 +952,7 @@
         .tome .tm-warn + .tm-warn { margin-left: 3px; }
         .tome.tome-router.active { border-color: #9CC6F0; background: linear-gradient(180deg, rgba(90,150,220,.5), rgba(90,150,220,.2)); color: #fff; box-shadow: 0 0 14px rgba(110,170,235,.35); }
         .dev-more { display: inline-block; margin-right: 6px; font-size: 10.5px; font-weight: 800; color: #2a6532; background: #E9F4EA; border-radius: 5px; padding: 1px 6px; vertical-align: 1px; white-space: nowrap; }
-        @media (min-width: 881px) and (max-width: 1159px) { /* v258: 상세창이 1100보다 좁아지는 화면 — 임대료·반납만 둘째 줄로 */
+        @media (min-width: 881px) and (max-width: 1159px) { /* v258: 상세창이 1100보다 좁아지는 화면 — 임대료·회수만 둘째 줄로 */
             .dev-router { flex-wrap: wrap; row-gap: 6px; }
             .dev-router .dfield.rx-startcol, .dev-router .dfield.rx-endcol { flex: 1 1 118px; min-width: 118px; }
             .dev-router .dfield.rx-feecol { margin-left: 30px; }
@@ -967,9 +974,11 @@
             .dev-line .dev-add-wrap .dev-add { position: static; }
             .dev-router { flex-wrap: wrap; row-gap: 6px; }
             .dev-router .dfield.rx-startcol { flex: 0 0 calc(100% - 80px); margin-right: 40px; }
+            .dev-router .rx-start, .dev-router .rx-end { width: 100%; }
+            .rx-retpop { gap: 6px; padding: 6px 8px; } .rx-retpop b { display: none; } /* 폰: 말풍선 좁게 (눌러서 열기) */
             .dev-router .dfield.rx-term { margin-left: 40px; }
             .dev-router .dfield.rx-endcol { flex: 1 1 60px; }
-            .dev-router .dfield.rx-feecol { margin-left: 40px; flex: 1 0 45%; } /* 폰: 임대료·반납은 셋째 줄 */
+            .dev-router .dfield.rx-feecol { margin-left: 40px; flex: 1 0 45%; } /* 폰: 임대료·회수는 셋째 줄 */
         }
         .drental-row { display: none; }
         .drental-row.show { display: flex; }
@@ -3790,7 +3799,7 @@ function showSyncStatus(msg, isError) {
                     : (overItems.length ? sec('⛔ 종료 지남', overItems.length, 'over') + overItems.map(row).join('') : '')
                       + (warnItems.length ? sec('⚠ 만료 예정', warnItems.length, true) + warnItems.map(row).join('') : '')
                       + (okItems.length ? (overItems.length || warnItems.length ? sec('제공중', okItems.length, false) : '') + okItems.map(row).join('') : '');
-                return { head: `📶 라우터 나간 곳 (${items.length})`, warn: overItems.length + warnItems.length > 0, body, foot: '업체를 누르면 상세 · 칩을 누르면 표에서 모아보기 · 반납은 상세 기기 칸에서' };
+                return { head: `📶 라우터 나간 곳 (${items.length})`, warn: overItems.length + warnItems.length > 0, body, foot: '업체를 누르면 상세 · 칩을 누르면 표에서 모아보기 · 회수는 상세 기기 칸에서' };
             }
             const items = all.filter(i => passesHeaderFilters(i, { division: 'lease', group: ALL_GROUP_KEY, stage: kind, ended: false, nw: false, as: false }));
             const t = todayZero();
@@ -4663,7 +4672,7 @@ function generateUniqueId() {
                 <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 기기 줄 지우기" aria-label="기기 줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>`;
         }
-        // v252: 라우터 줄 · v258: 한 줄로 — 제공일 · 기간(N개월/N년) · 임대종료(자동, 고치기 가능) · 임대료(무상/1만/2만) · 반납 · ×
+        // v252: 라우터 줄 · v258: 한 줄로 — 제공일 · 기간(N개월/N년) · 임대종료(자동, 고치기 가능) · 임대료(무상/1만/2만) · 회수(→입고) · ×
         // v258: 임대료 선택 — 무상 / 1만 / 2만 (월). 목록은 RX_FEES 한 곳
         const RX_FEES = ['free', '10000', '20000'];
         function rxFeeLabel(f) { return f === 'free' ? '무상' : `${Number(f) / 10000}만`; }
@@ -4680,7 +4689,7 @@ function generateUniqueId() {
                 <div class="dfield rx-endcol"><label title="기간 넣으면 자동 계산 · 직접 고치기 가능">임대종료</label><input type="date" class="rx-end" value="${escapeHtml(d.end || '')}"></div>
                 <div class="dfield rx-feecol"><label title="월 임대료">임대료</label><select class="rx-fee">${rxFeeOptions(d.fee)}</select></div>
                 <span class="rx-retwrap">${rxReturnHtml(d.returned)}</span>
-                <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 줄 지우기 (기록 없이 삭제 · 돌려받았으면 [반납]을 누르세요)" aria-label="줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+                <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 줄 지우기 (기록 없이 삭제 · 돌려받았으면 [회수]를 누르세요)" aria-label="줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>`;
         }
         // v258: 제공일 + 기간 → 종료 자동 (기간 비우면 안 건드림 = 직접 입력)
@@ -4693,11 +4702,11 @@ function generateUniqueId() {
             if (!term || !start) return;
             line.querySelector('.rx-end').value = calcRentalEndDate(start, term);
         }
-        // v260: [반납] 누르면 그 자리가 반납일 달력칸(오늘로 시작, 언제든 고치기) + ↩ 반납 취소 · [저장] 눌러야 반영
+        // v261: [회수] 누르면 버튼이 회색 [입고]로 (줄도 회색) · 입고에 마우스 올리면 말풍선 "기기 회수일 [날짜칸]" — 날짜 고치기 · 회수 취소 · [저장] 눌러야 반영
         function rxReturnHtml(ret) {
             return ret
-                ? `<span class="rx-retbox" title="반납일 (눌러서 고치기)"><b>✓</b><input type="date" class="rx-ret" value="${escapeHtml(ret)}"><button type="button" class="rx-unret" onclick="setRouterReturn(this, '')" title="반납 취소" aria-label="반납 취소">↩</button></span>`
-                : `<button type="button" class="rx-return" onclick="setRouterReturn(this, formatDateYMD(todayZero()))" title="실제로 돌려받았을 때 누르기 (날짜는 바로 고칠 수 있어요)">반납</button>`;
+                ? `<button type="button" class="rx-return done" onclick="this.focus()" aria-label="입고 (회수일 ${escapeHtml(ret)})">입고</button><span class="rx-retpop"><b>기기 회수일</b><input type="date" class="rx-ret" value="${escapeHtml(ret)}"><button type="button" class="rx-unret" onclick="setRouterReturn(this, '')">회수 취소</button></span>`
+                : `<button type="button" class="rx-return" onclick="setRouterReturn(this, formatDateYMD(todayZero()))" title="돌려받았을 때 누르기 (오늘 날짜로 입고 · 날짜는 입고에 마우스 올려서 고치기)">회수</button>`;
         }
         function setRouterReturn(el, ret) {
             const line = el.closest('.dev-router');
@@ -4781,7 +4790,7 @@ function generateUniqueId() {
         function removeExtraDevice(btn) {
             const line = btn.closest('.dev-extra');
             const filled = Array.from(line.querySelectorAll('input')).some(x => x.value);
-            const msg = line.classList.contains('dev-router') ? '이 라우터 줄을 기록 없이 지울까요?\n(돌려받은 거면 [반납]을 누르면 기록이 남아요 · 저장을 눌러야 반영)' : '이 기기 줄을 지울까요? (저장을 눌러야 실제로 반영돼요)';
+            const msg = line.classList.contains('dev-router') ? '이 라우터 줄을 기록 없이 지울까요?\n(돌려받은 거면 [회수]를 누르면 기록이 남아요 · 저장을 눌러야 반영)' : '이 기기 줄을 지울까요? (저장을 눌러야 실제로 반영돼요)';
             if (filled && !confirm(msg)) return;
             line.remove();
             renumberDevices();
