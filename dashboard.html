@@ -909,7 +909,7 @@
         .dev-add-menu button:hover { background: #F4EFE3; }
         .dev-router .dev-num { background: #E6F0FA; color: #2F6FB0; font-size: 13px; }
         .dev-router { flex-wrap: nowrap; }
-        /* v258: 라우터 한 줄 — 제공일 · 기간 · 임대종료 · 임대료(무상/1만/2만) · 회수(→입고) · × */
+        /* v258: 라우터 한 줄 — 제공일 · 기간 · 임대종료 · 임대료(무상/1만/2만) · 회수(→종료) · × */
         .dev-router { gap: 6px; }
         .dev-router .dfield { flex: 0 0 auto; min-width: 0; }
         /* v261: 날짜칸은 딱 맞게 고정 · 달력 아이콘 작게 · 남는 폭은 임대료 칸으로 */
@@ -924,11 +924,11 @@
         .rx-termbox select { width: auto; flex: none; }
         .rx-return { flex: 0 0 auto; height: 28px; margin-bottom: 1px; padding: 0 10px; border-radius: 8px; border: 1px solid #9DBEDF; background: #EEF5FC; color: #2F6FB0; font: 800 11.5px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
         .rx-return:hover { background: #2F6FB0; color: #fff; }
-        .dev-router.returned .dfield { opacity: .45; } /* 입고된 줄 = 회색 (비활성 느낌) */
+        .dev-router.returned .dfield { opacity: .45; } /* 회수 끝난 줄 = 회색 (비활성 느낌) */
         .rx-retwrap { position: relative; flex: 0 0 auto; display: inline-flex; }
-        .rx-return.done { padding: 0 14px; border-color: #d6d0c2; background: #F3EEE4; color: #8a8578; cursor: default; } /* v261: 입고 = 회색 */
+        .rx-return.done { padding: 0 14px; border-color: #d6d0c2; background: #F3EEE4; color: #8a8578; cursor: default; } /* v261: 회수 끝(종료) = 회색 */
         .rx-return.done:hover { background: #ECE5D7; color: #6b6658; }
-        /* 입고 말풍선: 마우스 올리면 바로 · 날짜 고르는 동안(focus)도 유지 · 아래 투명 띠로 버튼↔말풍선 사이 끊김 방지 */
+        /* 종료 말풍선: 마우스 올리면 바로 · 날짜 고르는 동안(focus)도 유지 · 아래 투명 띠로 버튼↔말풍선 사이 끊김 방지 */
         .rx-retpop { position: absolute; right: -6px; bottom: calc(100% + 8px); z-index: 30; display: none; align-items: center; gap: 8px; white-space: nowrap;
             padding: 8px 10px; border-radius: 10px; background: #2b2a26; color: #f2ead8; box-shadow: 0 6px 18px rgba(0,0,0,.28); }
         .rx-retpop::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 10px; }
@@ -4672,7 +4672,7 @@ function generateUniqueId() {
                 <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 기기 줄 지우기" aria-label="기기 줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>`;
         }
-        // v252: 라우터 줄 · v258: 한 줄로 — 제공일 · 기간(N개월/N년) · 임대종료(자동, 고치기 가능) · 임대료(무상/1만/2만) · 회수(→입고) · ×
+        // v252: 라우터 줄 · v258: 한 줄로 — 제공일 · 기간(N개월/N년) · 임대종료(자동, 고치기 가능) · 임대료(무상/1만/2만) · 회수(→종료) · ×
         // v258: 임대료 선택 — 무상 / 1만 / 2만 (월). 목록은 RX_FEES 한 곳
         const RX_FEES = ['free', '10000', '20000'];
         function rxFeeLabel(f) { return f === 'free' ? '무상' : `${Number(f) / 10000}만`; }
@@ -4702,11 +4702,11 @@ function generateUniqueId() {
             if (!term || !start) return;
             line.querySelector('.rx-end').value = calcRentalEndDate(start, term);
         }
-        // v261: [회수] 누르면 버튼이 회색 [입고]로 (줄도 회색) · 입고에 마우스 올리면 말풍선 "기기 회수일 [날짜칸]" — 날짜 고치기 · 회수 취소 · [저장] 눌러야 반영
+        // v261: [회수] 누르면 버튼이 회색 [종료]로 (v262: 입고 → 종료) (줄도 회색) · 종료에 마우스 올리면 말풍선 "기기 회수일 [날짜칸]" — 날짜 고치기 · 회수 취소 · [저장] 눌러야 반영
         function rxReturnHtml(ret) {
             return ret
-                ? `<button type="button" class="rx-return done" onclick="this.focus()" aria-label="입고 (회수일 ${escapeHtml(ret)})">입고</button><span class="rx-retpop"><b>기기 회수일</b><input type="date" class="rx-ret" value="${escapeHtml(ret)}"><button type="button" class="rx-unret" onclick="setRouterReturn(this, '')">회수 취소</button></span>`
-                : `<button type="button" class="rx-return" onclick="setRouterReturn(this, formatDateYMD(todayZero()))" title="돌려받았을 때 누르기 (오늘 날짜로 입고 · 날짜는 입고에 마우스 올려서 고치기)">회수</button>`;
+                ? `<button type="button" class="rx-return done" onclick="this.focus()" aria-label="종료 (회수일 ${escapeHtml(ret)})">종료</button><span class="rx-retpop"><b>기기 회수일</b><input type="date" class="rx-ret" value="${escapeHtml(ret)}"><button type="button" class="rx-unret" onclick="setRouterReturn(this, '')">회수 취소</button></span>`
+                : `<button type="button" class="rx-return" onclick="setRouterReturn(this, formatDateYMD(todayZero()))" title="돌려받았을 때 누르기 (오늘 날짜로 회수 · 날짜는 종료에 마우스 올려서 고치기)">회수</button>`;
         }
         function setRouterReturn(el, ret) {
             const line = el.closest('.dev-router');
