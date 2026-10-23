@@ -674,6 +674,7 @@
             min-width: 130px;
             max-width: 130px;
         }
+        td.device-group { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* v253: 긴 모델명이 옆 칸으로 넘치지 않게 (…) — 전체는 마우스 올리면 */
 
         .email-display {
             white-space: normal;
@@ -959,10 +960,16 @@
         .rx-return:hover { background: #2F6FB0; color: #fff; }
         .dev-router.returned .dfield { opacity: .45; }
         .dev-router.returned .rx-return { border-color: #d6d0c2; background: #F3EEE4; color: #8a8578; }
-        .rt-badge { display: inline-block; margin-left: 6px; font: 800 10px 'Public Sans', sans-serif; color: #2F6FB0; background: #E6F0FA; border: 1px solid #BCD5EE; border-radius: 5px; padding: 0 5px; vertical-align: 1px; white-space: nowrap; }
-        .rt-badge.warn { color: #A85A12; background: #FDEEDC; border-color: #F0C089; }
+        /* v253: 라우터 표시 = 기기정보 칸 모델명 앞 작은 📶 (글씨 없음 · 마우스 올리면 "라우터 · 3개월째 · 무상") · 급하면 주황 점 */
+        .rt-ic { position: relative; display: inline-block; margin-right: 5px; font-size: 11px; line-height: 1; opacity: .75; cursor: help; vertical-align: 0; }
+        .rt-ic:hover { opacity: 1; }
+        .rt-ic.warn { opacity: 1; }
+        .rt-ic.warn::after { content: ''; position: absolute; right: -3px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #E8892B; box-shadow: 0 0 0 1.5px #fff; }
+        .place-name-link + .rt-ic, .mc-name .rt-ic { margin: 0 0 0 6px; }
+        .rt-ic + .new-badge { margin-left: 5px; }
         .tome.tome-router { border-color: rgba(120,170,225,.5); color: #D6E7F8; }
         .tome.tome-router.warn { border-color: rgba(240,170,90,.75); }
+        .tome .tm-warn { font-size: 11px; font-weight: 800; color: #fff; background: #E0822A; border-radius: 999px; padding: 2px 7px; margin-left: -2px; }
         .tome.tome-router.active { border-color: #9CC6F0; background: linear-gradient(180deg, rgba(90,150,220,.5), rgba(90,150,220,.2)); color: #fff; box-shadow: 0 0 14px rgba(110,170,235,.35); }
         .dev-more { display: inline-block; margin-right: 6px; font-size: 10.5px; font-weight: 800; color: #2a6532; background: #E9F4EA; border-radius: 5px; padding: 1px 6px; vertical-align: 1px; white-space: nowrap; }
         @media (max-width: 880px) {
@@ -3772,7 +3779,8 @@ function showSyncStatus(msg, isError) {
             const rtChip = document.getElementById('hfRouterChip');
             if (rtChip) {
                 const rtItems = all.filter(i => activeRouters(i).length);
-                rtChip.innerHTML = `<span aria-hidden="true">📶</span>라우터<span class="tm-n">${rtItems.length}</span>`;
+                const rtWarn = rtItems.filter(i => routerSummary(i).warn).length;
+                rtChip.innerHTML = `<span aria-hidden="true">📶</span>라우터<span class="tm-n">${rtItems.length}</span>${rtWarn ? `<span class="tm-warn">임박 ${rtWarn}</span>` : ''}`;
                 rtChip.classList.toggle('active', routerOnly);
                 rtChip.classList.toggle('is-zero', !routerOnly && rtItems.length === 0);
                 rtChip.classList.toggle('warn', rtItems.some(i => routerSummary(i).warn));
@@ -4581,7 +4589,7 @@ function generateUniqueId() {
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
                     </td>
                     <td class="sticky-col-2 region-group">${escapeHtml(siVal)} ${escapeHtml(guVal)}</td>
-                    <td class="sticky-col-3 region-group" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기"><b class="place-name-link">${escapeHtml(item.placeName || '-')}</b>${isNewSaleItem(item) ? '<span class="new-badge" title="설치 2개월 이내">NEW</span>' : ''}${routerBadgeHtml(item)}</td>
+                    <td class="sticky-col-3 region-group" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기"><b class="place-name-link">${escapeHtml(item.placeName || '-')}</b>${nameBadgesHtml(item)}</td>
                     <td class="address-group">${escapeHtml(item.installAddress || '-')}</td>
                     <td class="address-group">
                         <div class="location-cell" title="${escapeHtml(locationVal)}" onclick="openLocationModal('${item.id}')">
@@ -4674,7 +4682,7 @@ function generateUniqueId() {
         function devField(key) { return { deviceModel: 'model', deviceType: 'type', deviceOption: 'date' }[key]; }
         /* v252: 기기 종류 — devices 목록 한 줄마다 kind (없으면 키오스크). 새 장비는 여기 한 줄 + 줄 모양(…LineHtml)·읽기만 추가
            키오스크 {model, type, date} · 라우터 {kind:'router', start(제공일), end(임대종료), fee('free' 또는 월 금액), returned(반납일)} */
-        const DEVICE_KINDS = { kiosk: { label: '키오스크' }, router: { label: '라우터', icon: '📶' } };
+        const DEVICE_KINDS = { kiosk: { label: '키오스크', icon: '🖥️' }, router: { label: '라우터', icon: '📶' } }; // v253: 키오스크도 아이콘
         function devKind(d) { return (d && d.kind) || 'kiosk'; }
         function devFilled(d) {
             if (!d) return false;
@@ -4698,16 +4706,23 @@ function generateUniqueId() {
             const days = daysBetween(t, s);
             if (days < 0) return { label: `제공 D-${-days}`, warn: false, rank: 3 };
             const months = (t.getFullYear() - s.getFullYear()) * 12 + t.getMonth() - s.getMonth() - (t.getDate() < s.getDate() ? 1 : 0);
-            return { label: months < 1 ? `${days}일째` : `${months}개월째`, warn: false, rank: 2 };
+            return { label: days === 0 ? '오늘 제공' : months < 1 ? `${days}일째` : `${months}개월째`, warn: false, rank: 2 };
         }
         function routerSummary(item) { // 여러 대면 제일 급한 것 기준
             const list = activeRouters(item).map(r => Object.assign({ router: r }, routerState(r))).sort((a, b) => a.rank - b.rank);
             return list[0] ? Object.assign({ count: list.length }, list[0]) : { count: 0, label: '', warn: false };
         }
-        function routerBadgeHtml(item) {
+        // v254: 장소명 뒤 작은 표시들 — 이 배열 순서대로 붙음 (새 표시 = 한 줄 추가). 지금: 📶 라우터 → NEW
+        const NAME_BADGES = [
+            (item) => routerBadgeHtml(item),
+            (item) => isNewSaleItem(item) ? '<span class="new-badge" title="설치 2개월 이내">NEW</span>' : ''
+        ];
+        function nameBadgesHtml(item) { return NAME_BADGES.map(f => f(item)).join(''); }
+        function routerBadgeHtml(item) { // v253: 글씨 없이 📶만 — 자세한 건 마우스 올리면 (title)
             const s = routerSummary(item);
             if (!s.count) return '';
-            return `<span class="rt-badge ${s.warn ? 'warn' : ''}" title="라우터 ${s.count}대 나가 있음 · ${escapeHtml(routerFeeText(s.router.fee))}">📶 ${s.count > 1 ? s.count + '대 · ' : ''}${escapeHtml(s.label)}</span>`;
+            const tip = `라우터${s.count > 1 ? ' ' + s.count + '대' : ''} · ${s.label} · ${routerFeeText(s.router.fee)}`;
+            return `<span class="rt-ic ${s.warn ? 'warn' : ''}" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">📶</span>`;
         }
         function deviceListText(item) {
             const list = allDevices(item);
@@ -4982,7 +4997,7 @@ function generateUniqueId() {
                 <div class="mc-card ${isAs ? 'is-as' : ''} ${isWait ? 'is-wait' : ''} ${isEndedItem(item) ? 'is-ended' : ''}">
                     <div class="mc-top">
                         ${isAs ? '<span class="mc-seal" title="AS 요청">!</span>' : ''}
-                        <div class="mc-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}${isNewSaleItem(item) ? '<span class="new-badge">NEW</span>' : ''}${routerBadgeHtml(item)}</div>
+                        <div class="mc-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}${nameBadgesHtml(item)}</div>
                         ${mCardTag(item)}
                     </div>
                     <div class="mc-sub2">${escapeHtml(sub || '-')}</div>
