@@ -1379,6 +1379,11 @@
         .hf-pop-head.warn { color: #FF9F8A; }
         .hf-pop-head .st-ic { width: 16px; height: 16px; flex-shrink: 0; }
         .hf-pop-list { overflow-y: auto; padding: 0 8px 4px; }
+        .hf-pop-sec { display: flex; align-items: center; gap: 6px; padding: 8px 8px 4px; font-size: 11px; font-weight: 800; letter-spacing: .3px; color: rgba(230,236,245,.6); }
+        .hf-pop-sec b { font-weight: 800; color: rgba(230,236,245,.85); }
+        .hf-pop-sec.warn { color: #FFB27A; } .hf-pop-sec.warn b { color: #FFB27A; }
+        .hf-pop-sec + .hf-pop-row { border-top: 0; }
+        .hf-pop-row + .hf-pop-sec { margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
         .hf-pop-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer; }
         .hf-pop-row + .hf-pop-row { border-top: 1px solid rgba(255,255,255,0.06); }
         .hf-pop-row:hover { background: rgba(255,255,255,0.06); }
@@ -2278,7 +2283,7 @@
             <div class="vault">
                 <button type="button" class="tome tome-new" id="hfNewChip" onclick="toggleNewFilter()" title="설치 2개월 이내 판매 업체만 보기"></button>
                 <button type="button" class="tome tome-ended" id="hfEndedChip" onclick="toggleEndedFilter()" title="종료된 업체만 보기 (다시 누르면 해제)"></button>
-                <button type="button" class="tome tome-router" id="hfRouterChip" onclick="toggleRouterFilter()" title="라우터가 나가 있는 업체만 보기 (반납 안 된 것 · 다시 누르면 해제)"></button>
+                <button type="button" class="tome tome-router" id="hfRouterChip" onclick="toggleRouterFilter()" aria-label="라우터가 나가 있는 업체만 보기"></button>
             </div>
         </div>
     </section>
@@ -3839,15 +3844,23 @@ function showSyncStatus(msg, isError) {
                 return { head: `🔧 AS 요청 업체 (${items.length})`, warn: true, body: list || '<div class="hf-pop-empty">AS 요청이 없어요 ✓</div>', foot: '업체를 누르면 상세 · 패널을 누르면 표에서 모아보기' };
             }
             if (kind === 'router') { // v252: 라우터 나간 곳 — 오래 나간 순
+                // v255: 두 묶음 — ⚠ 만료 예정(종료 30일 안·지남, 급한 순) / 제공중(오래 나간 순)
                 const items = all.filter(i => activeRouters(i).length);
                 const startOf = (i) => Math.min(...activeRouters(i).map(r => { const d = parseLooseDate(r.start); return d ? d.getTime() : Infinity; }));
-                items.sort((a, b) => startOf(a) - startOf(b));
-                const list = items.map(i => {
+                const endOf = (i) => { const d = parseLooseDate(routerSummary(i).router.end); return d ? d.getTime() : Infinity; };
+                const warnItems = items.filter(i => routerSummary(i).warn).sort((a, b) => endOf(a) - endOf(b));
+                const okItems = items.filter(i => !routerSummary(i).warn).sort((a, b) => startOf(a) - startOf(b));
+                const row = (i) => {
                     const s = routerSummary(i), r = s.router;
-                    const sub = escapeHtml([regionOf(i), `제공 ${r.start ? r.start.slice(2).replace(/-/g, '/') : '날짜없음'}`, routerFeeText(r.fee)].filter(Boolean).join(' · '));
+                    const dt = (v) => v.slice(2).replace(/-/g, '/');
+                    const sub = escapeHtml([regionOf(i), s.warn && r.end ? `종료 ${dt(r.end)}` : `제공 ${r.start ? dt(r.start) : '날짜없음'}`, routerFeeText(r.fee)].filter(Boolean).join(' · ')); // 만료 예정은 종료일, 나머지는 제공일
                     return rowHtml(i, sub, escapeHtml(s.label), s.warn, '');
-                }).join('');
-                return { head: `📶 라우터 나간 곳 (${items.length})`, warn: items.some(i => routerSummary(i).warn), body: list || '<div class="hf-pop-empty">나가 있는 라우터가 없어요 ✓</div>', foot: '업체를 누르면 상세 · 칩을 누르면 표에서 모아보기 · 반납은 상세 기기 칸에서' };
+                };
+                const sec = (t, n, warn) => `<div class="hf-pop-sec ${warn ? 'warn' : ''}">${t}<b>${n}</b></div>`;
+                const body = !items.length ? '<div class="hf-pop-empty">나가 있는 라우터가 없어요 ✓</div>'
+                    : (warnItems.length ? sec('⚠ 만료 예정', warnItems.length, true) + warnItems.map(row).join('') : '')
+                      + (okItems.length ? (warnItems.length ? sec('제공중', okItems.length, false) : '') + okItems.map(row).join('') : '');
+                return { head: `📶 라우터 나간 곳 (${items.length})`, warn: warnItems.length > 0, body, foot: '업체를 누르면 상세 · 칩을 누르면 표에서 모아보기 · 반납은 상세 기기 칸에서' };
             }
             const items = all.filter(i => passesHeaderFilters(i, { division: 'lease', group: ALL_GROUP_KEY, stage: kind, ended: false, nw: false, as: false }));
             const t = todayZero();
