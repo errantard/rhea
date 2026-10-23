@@ -936,6 +936,34 @@
         .code-view.show { display: flex; }
         .code-chip b { color: #2a6532; font-weight: 800; margin-right: 2px; }
         .code-chip b.warn { color: #C97A2E; }
+        /* v252: 라우터 줄 (기기 칸 + 메뉴의 "라우터") · 목록 📶 뱃지 · + 메뉴 */
+        .dev-add-wrap { position: relative; flex: 0 0 26px; display: inline-flex; margin-bottom: 2px; }
+        .dev-add-wrap .dev-add { margin-bottom: 0; }
+        .dev-add-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; display: none; flex-direction: column; min-width: 112px; padding: 5px;
+            background: #fff; border: 1px solid #E3D8BE; border-radius: 10px; box-shadow: 0 10px 24px rgba(60,50,30,.16); }
+        .dev-add-menu.open { display: flex; }
+        .dev-add-menu button { border: 0; background: none; text-align: left; padding: 7px 10px; border-radius: 7px; font: 700 12.5px inherit; font-family: inherit; color: #3a3830; cursor: pointer; white-space: nowrap; }
+        .dev-add-menu button:hover { background: #F4EFE3; }
+        .dev-router .dev-num { background: #E6F0FA; color: #2F6FB0; font-size: 13px; }
+        /* 라우터 줄 = 2단: [📶 제공일 · 임대종료 · ×] / [임대료 · 반납] */
+        .dev-router { flex-wrap: wrap; row-gap: 6px; }
+        .dev-router .rx-start, .dev-router .rx-end { min-width: 0; }
+        .dev-router .dfield.rx-d { flex: 1 1 0; }
+        .dev-router .rx-br { flex: 0 0 100%; height: 0; }
+        .dev-router .dfield.rx-feecol { flex: 0 1 220px; margin-left: 34px; }
+        .rx-feebox { display: flex; gap: 4px; align-items: center; }
+        .rx-feebox select { flex: 0 0 auto; width: auto; }
+        .rx-feebox input { min-width: 0; flex: 1 1 0; }
+        .rx-feebox.free input { display: none; }
+        .rx-return { flex: 0 0 auto; height: 28px; margin-bottom: 1px; padding: 0 10px; border-radius: 8px; border: 1px solid #9DBEDF; background: #EEF5FC; color: #2F6FB0; font: 800 11.5px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
+        .rx-return:hover { background: #2F6FB0; color: #fff; }
+        .dev-router.returned .dfield { opacity: .45; }
+        .dev-router.returned .rx-return { border-color: #d6d0c2; background: #F3EEE4; color: #8a8578; }
+        .rt-badge { display: inline-block; margin-left: 6px; font: 800 10px 'Public Sans', sans-serif; color: #2F6FB0; background: #E6F0FA; border: 1px solid #BCD5EE; border-radius: 5px; padding: 0 5px; vertical-align: 1px; white-space: nowrap; }
+        .rt-badge.warn { color: #A85A12; background: #FDEEDC; border-color: #F0C089; }
+        .tome.tome-router { border-color: rgba(120,170,225,.5); color: #D6E7F8; }
+        .tome.tome-router.warn { border-color: rgba(240,170,90,.75); }
+        .tome.tome-router.active { border-color: #9CC6F0; background: linear-gradient(180deg, rgba(90,150,220,.5), rgba(90,150,220,.2)); color: #fff; box-shadow: 0 0 14px rgba(110,170,235,.35); }
         .dev-more { display: inline-block; margin-right: 6px; font-size: 10.5px; font-weight: 800; color: #2a6532; background: #E9F4EA; border-radius: 5px; padding: 1px 6px; vertical-align: 1px; white-space: nowrap; }
         @media (max-width: 880px) {
             .dev-line { flex-wrap: wrap; row-gap: 6px; }
@@ -950,6 +978,11 @@
             .dev-line .dev-add { position: absolute; right: 0; top: 4px; }
             .dev-extra .dev-del { position: absolute; right: 0; top: 12px; }
             .dev-add, .dev-num, .dev-del { flex-basis: 32px; width: 32px; height: 32px; }
+            .dev-line .dev-add-wrap { position: absolute; right: 0; top: 4px; flex-basis: 32px; }
+            .dev-line .dev-add-wrap .dev-add { position: static; }
+            .dev-router .dfield.rx-d:nth-of-type(1) { margin-right: 40px; }
+            .dev-router .dfield.rx-d:nth-of-type(2) { flex: 0 0 calc(100% - 40px); margin-left: 40px; }
+            .dev-router .dfield.rx-feecol { margin-left: 40px; flex: 1 1 0; }
         }
         .drental-row { display: none; }
         .drental-row.show { display: flex; }
@@ -2238,6 +2271,7 @@
             <div class="vault">
                 <button type="button" class="tome tome-new" id="hfNewChip" onclick="toggleNewFilter()" title="설치 2개월 이내 판매 업체만 보기"></button>
                 <button type="button" class="tome tome-ended" id="hfEndedChip" onclick="toggleEndedFilter()" title="종료된 업체만 보기 (다시 누르면 해제)"></button>
+                <button type="button" class="tome tome-router" id="hfRouterChip" onclick="toggleRouterFilter()" title="라우터가 나가 있는 업체만 보기 (반납 안 된 것 · 다시 누르면 해제)"></button>
             </div>
         </div>
     </section>
@@ -2718,7 +2752,7 @@
                                 <div class="dfield dev-model"><label>모델명</label><input type="text" id="detailDeviceModel"></div><span class="dev-br"></span>
                                 <div class="dfield dev-opt"><label>옵션</label><input type="text" id="detailDeviceType"></div>
                                 <div class="dfield dev-date"><label>설치날짜</label><input type="date" id="detailDeviceOption" onchange="syncRentalStartFromDevice('detail')"></div>
-                                <button type="button" class="dev-add" onclick="addExtraDevice()" title="기기 추가 (설치날짜가 다른 기기를 한 줄씩)" aria-label="기기 추가"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                                <span class="dev-add-wrap"><span class="dev-add-menu" id="devAddMenu"></span><button type="button" class="dev-add" onclick="toggleDevAddMenu(event)" title="기기 추가 (키오스크 / 라우터)" aria-label="기기 추가"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></span>
                             </div>
                             <div id="detailExtraDevices"></div>
                         </div>
@@ -2937,6 +2971,7 @@ function showSyncStatus(msg, isError) {
         let newOnly = false;
         let endedOnly = false;
         let asOnly = false;
+        let routerOnly = false; // v252: 라우터 제공중만 보기
         let lastRenderedItems = []; // 지금 표에 보이는 업체 (다운로드 "지금 보이는 업체"용)
         let exportVisibleMode = false;
         const NEW_BADGE_MONTHS = 2; // 판매 업체 설치일(설치날짜 항목)로부터 이 개월 수 이내면 NEW 표시
@@ -3573,6 +3608,8 @@ function showSyncStatus(msg, isError) {
             const ended = ('ended' in o) ? o.ended : endedOnly;
             const nw = ('nw' in o) ? o.nw : newOnly;
             const as = ('as' in o) ? o.as : asOnly;
+            const rt = ('router' in o) ? o.router : (Object.keys(o).length ? false : routerOnly); // 숫자 계산(o 있음)엔 안 섞이게
+            if (rt) return activeRouters(item).length > 0; // v252: 라우터 보기 = 구분·그룹·종료 상관없이 반납 안 된 라우터가 있는 곳 전부
             // 12차-2: 그룹은 판매 업체에만 있음 (임대는 그룹 없이 "임대" 하나로 묶음) → 그룹을 고르면 판매 업체만
             if (grp && grp !== ALL_GROUP_KEY && (isLeaseItem(item) || item.groupId !== grp)) return false;
             if (!matchesDivision(item, div)) return false;
@@ -3597,7 +3634,7 @@ function showSyncStatus(msg, isError) {
         //  - 전체 탭: 모든 조건 초기화  - 판매 탭: 임대 단계 해제  - 임대 탭: 그룹·신규 해제
         //  - 그룹 칩 → 판매 탭으로 이동  - 임대 단계 → 임대 탭으로 이동
         // 13차-2: AS 요청 · 신규 · 종료 보기는 "특수 보기" — 다른 버튼(깃발·그룹·임대 단계)을 누르면 자동으로 풀림
-        function clearSpecialViews() { asOnly = false; newOnly = false; endedOnly = false; }
+        function clearSpecialViews() { asOnly = false; newOnly = false; endedOnly = false; routerOnly = false; }
 
         function setDivision(div) {
             currentDivision = div;
@@ -3632,13 +3669,13 @@ function showSyncStatus(msg, isError) {
 
         function toggleNewFilter() {
             newOnly = !newOnly;
-            if (newOnly) { currentDivision = 'sale'; leaseStage = null; endedOnly = false; asOnly = false; }
+            if (newOnly) { currentDivision = 'sale'; leaseStage = null; endedOnly = false; asOnly = false; routerOnly = false; }
             renderTable();
         }
 
         function toggleEndedFilter() {
             endedOnly = !endedOnly;
-            if (endedOnly) { leaseStage = null; newOnly = false; asOnly = false; }
+            if (endedOnly) { leaseStage = null; newOnly = false; asOnly = false; routerOnly = false; }
             renderTable();
         }
 
@@ -3646,7 +3683,14 @@ function showSyncStatus(msg, isError) {
             const panel = document.getElementById('asPanel');
             if (panel && panel.classList.contains('is-empty') && !asOnly) return;
             asOnly = !asOnly;
-            if (asOnly) { currentDivision = 'all'; currentGroup = ALL_GROUP_KEY; leaseStage = null; newOnly = false; endedOnly = false; }
+            if (asOnly) { currentDivision = 'all'; currentGroup = ALL_GROUP_KEY; leaseStage = null; newOnly = false; endedOnly = false; routerOnly = false; }
+            renderTable();
+        }
+
+        // v252: 📶 라우터 제공중 보기 (보관소 칩) — 구분·그룹·종료 상관없이 반납 안 된 라우터가 있는 업체 전부
+        function toggleRouterFilter() {
+            routerOnly = !routerOnly;
+            if (routerOnly) { currentDivision = 'all'; currentGroup = ALL_GROUP_KEY; leaseStage = null; newOnly = false; endedOnly = false; asOnly = false; }
             renderTable();
         }
 
@@ -3724,7 +3768,16 @@ function showSyncStatus(msg, isError) {
             endedChip.classList.toggle('active', endedOnly);
             // 16차-10: 신규·종료 보기가 켜져 있으면 보관소 구획도 판매 그룹/임대 여정처럼 위쪽 노란 줄로 표시 (켜졌는지 한눈에)
             const archiveBox = document.getElementById('hfArchiveBox');
-            if (archiveBox) archiveBox.classList.toggle('lit', !!(newOnly || endedOnly));
+            // v252: 📶 라우터 칩 — 나가 있는 업체 수 · 종료 임박/지남이 있으면 주황 테두리
+            const rtChip = document.getElementById('hfRouterChip');
+            if (rtChip) {
+                const rtItems = all.filter(i => activeRouters(i).length);
+                rtChip.innerHTML = `<span aria-hidden="true">📶</span>라우터<span class="tm-n">${rtItems.length}</span>`;
+                rtChip.classList.toggle('active', routerOnly);
+                rtChip.classList.toggle('is-zero', !routerOnly && rtItems.length === 0);
+                rtChip.classList.toggle('warn', rtItems.some(i => routerSummary(i).warn));
+            }
+            if (archiveBox) archiveBox.classList.toggle('lit', !!(newOnly || endedOnly || routerOnly));
         }
 
 
@@ -3777,6 +3830,17 @@ function showSyncStatus(msg, isError) {
                 }).join('');
                 return { head: `🔧 AS 요청 업체 (${items.length})`, warn: true, body: list || '<div class="hf-pop-empty">AS 요청이 없어요 ✓</div>', foot: '업체를 누르면 상세 · 패널을 누르면 표에서 모아보기' };
             }
+            if (kind === 'router') { // v252: 라우터 나간 곳 — 오래 나간 순
+                const items = all.filter(i => activeRouters(i).length);
+                const startOf = (i) => Math.min(...activeRouters(i).map(r => { const d = parseLooseDate(r.start); return d ? d.getTime() : Infinity; }));
+                items.sort((a, b) => startOf(a) - startOf(b));
+                const list = items.map(i => {
+                    const s = routerSummary(i), r = s.router;
+                    const sub = escapeHtml([regionOf(i), `제공 ${r.start ? r.start.slice(2).replace(/-/g, '/') : '날짜없음'}`, routerFeeText(r.fee)].filter(Boolean).join(' · '));
+                    return rowHtml(i, sub, escapeHtml(s.label), s.warn, '');
+                }).join('');
+                return { head: `📶 라우터 나간 곳 (${items.length})`, warn: items.some(i => routerSummary(i).warn), body: list || '<div class="hf-pop-empty">나가 있는 라우터가 없어요 ✓</div>', foot: '업체를 누르면 상세 · 칩을 누르면 표에서 모아보기 · 반납은 상세 기기 칸에서' };
+            }
             const items = all.filter(i => passesHeaderFilters(i, { division: 'lease', group: ALL_GROUP_KEY, stage: kind, ended: false, nw: false, as: false }));
             const t = todayZero();
             const endOf = (i) => getRentalEndDateObj(i);
@@ -3822,15 +3886,16 @@ function showSyncStatus(msg, isError) {
         document.addEventListener('mouseover', function(e) {
             const asEl = e.target.closest && e.target.closest('#asPanel');
             const stEl = e.target.closest && e.target.closest('#hfStageBox button[data-stage]');
-            const anchor = asEl || stEl;
+            const rtEl = e.target.closest && e.target.closest('#hfRouterChip');
+            const anchor = asEl || stEl || rtEl;
             if (!anchor) return;
             if (asEl && asEl.classList.contains('is-empty')) return;
             if (hfPopAnchor === anchor) { clearTimeout(hfPopTimer); return; }
             clearTimeout(hfPopTimer);
-            hfPopTimer = setTimeout(() => showPopover(anchor, asEl ? 'as' : stEl.dataset.stage), 160);
+            hfPopTimer = setTimeout(() => showPopover(anchor, asEl ? 'as' : rtEl ? 'router' : stEl.dataset.stage), 160);
         });
         document.addEventListener('mouseout', function(e) {
-            const from = e.target.closest && e.target.closest('#asPanel, #hfStageBox button[data-stage]');
+            const from = e.target.closest && e.target.closest('#asPanel, #hfStageBox button[data-stage], #hfRouterChip');
             if (!from) return;
             const to = e.relatedTarget;
             if (to && (from.contains(to) || (to.closest && to.closest('#hfPopover')))) return;
@@ -4386,7 +4451,7 @@ function generateUniqueId() {
                     item.installLocation, item.orgDept, item.orgName, item.orgTitle,
                     item.orgContact, item.orgEmail, item.managerContact, item.managerEmail, item.managerNote,
                     item.kioId, item.kioAdminId, item.reaCode,
-                    (item.devices || []).map(d => [d.model, d.type].join(' ')).join(' '), // v250: 기기 전부
+                    kioskDevices(item).map(d => [d.model, d.type].join(' ')).join(' '), activeRouters(item).length ? '라우터' : '', // v250: 기기 전부 · v252: 라우터 나간 곳은 '라우터'로도 검색
                     (item.memoList || []).map(m => m.text).join(' ')
                 ];
                 if (!fields.filter(Boolean).join(' ').toLowerCase().includes(f.search)) return false;
@@ -4516,7 +4581,7 @@ function generateUniqueId() {
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}', this.checked)">
                     </td>
                     <td class="sticky-col-2 region-group">${escapeHtml(siVal)} ${escapeHtml(guVal)}</td>
-                    <td class="sticky-col-3 region-group" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기"><b class="place-name-link">${escapeHtml(item.placeName || '-')}</b>${isNewSaleItem(item) ? '<span class="new-badge" title="설치 2개월 이내">NEW</span>' : ''}</td>
+                    <td class="sticky-col-3 region-group" onclick="openDetailModal('${item.id}')" title="클릭하여 업체 상세정보 보기"><b class="place-name-link">${escapeHtml(item.placeName || '-')}</b>${isNewSaleItem(item) ? '<span class="new-badge" title="설치 2개월 이내">NEW</span>' : ''}${routerBadgeHtml(item)}</td>
                     <td class="address-group">${escapeHtml(item.installAddress || '-')}</td>
                     <td class="address-group">
                         <div class="location-cell" title="${escapeHtml(locationVal)}" onclick="openLocationModal('${item.id}')">
@@ -4530,7 +4595,7 @@ function generateUniqueId() {
                     <td class="org-group copy-cell org-email-cell"><span class="email-display">${formatEmailForDisplay(item.orgEmail || '-')}</span></td>
                     <td class="manager-group">${escapeHtml(item.managerContact || '-')}</td>
                     <td class="manager-group copy-cell manager-email-cell"><span class="email-display">${formatEmailForDisplay(item.managerEmail || '-')}</span></td>
-                    <td class="device-group" title="${escapeHtml(deviceListText(item))}">${(item.devices || []).length > 1 ? `<span class="dev-more">${item.devices.length}대</span>` : ''}${escapeHtml(firstDevice(item).model || '-')}</td>
+                    <td class="device-group" title="${escapeHtml(deviceListText(item))}">${kioskDevices(item).length > 1 ? `<span class="dev-more">${kioskDevices(item).length}대</span>` : ''}${escapeHtml(firstDevice(item).model || '-')}</td>
                     <td class="device-group">${escapeHtml(firstDevice(item).type || '-')}</td>
                     <td class="device-group">${escapeHtml(firstDevice(item).date || '-')}</td>
                     <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.kioId || '-')}</span></td>
@@ -4607,10 +4672,43 @@ function generateUniqueId() {
         document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('brand-home')) { e.preventDefault(); goHomeRefresh(); } });
         // 표·엑셀 칸 이름 → 기기 목록 안 이름 (함수 선언이라 파일 어디서 불러도 안전)
         function devField(key) { return { deviceModel: 'model', deviceType: 'type', deviceOption: 'date' }[key]; }
-        function devFilled(d) { return !!(d && (d.model || d.type || d.date)); }
-        function cleanDevices(list) { return (list || []).filter(devFilled).map(d => ({ model: d.model || '', type: d.type || '', date: d.date || '' })); }
-        function allDevices(item) { return item.devices || []; }
-        function firstDevice(item) { return (item.devices || [])[0] || {}; }
+        /* v252: 기기 종류 — devices 목록 한 줄마다 kind (없으면 키오스크). 새 장비는 여기 한 줄 + 줄 모양(…LineHtml)·읽기만 추가
+           키오스크 {model, type, date} · 라우터 {kind:'router', start(제공일), end(임대종료), fee('free' 또는 월 금액), returned(반납일)} */
+        const DEVICE_KINDS = { kiosk: { label: '키오스크' }, router: { label: '라우터', icon: '📶' } };
+        function devKind(d) { return (d && d.kind) || 'kiosk'; }
+        function devFilled(d) {
+            if (!d) return false;
+            return devKind(d) === 'router' ? !!(d.start || d.end || d.returned) : !!(d.model || d.type || d.date);
+        }
+        function cleanDevices(list) {
+            return (list || []).filter(devFilled).map(d => devKind(d) === 'router'
+                ? { kind: 'router', start: d.start || '', end: d.end || '', fee: d.fee || 'free', returned: d.returned || '' }
+                : { model: d.model || '', type: d.type || '', date: d.date || '' });
+        }
+        function kioskDevices(item) { return (item.devices || []).filter(d => devKind(d) === 'kiosk'); }
+        function allDevices(item) { return kioskDevices(item); } // 표·엑셀·NEW 판정은 키오스크만 (라우터는 설치 대수에서 뺌)
+        function firstDevice(item) { return kioskDevices(item)[0] || {}; }
+        function activeRouters(item) { return (item.devices || []).filter(d => devKind(d) === 'router' && !d.returned); }
+        function routerFeeText(fee) { return (!fee || fee === 'free') ? '무상' : `월 ${Number(fee).toLocaleString('ko-KR')}원`; }
+        // 라우터 한 대 상태 → 뱃지 글자 · 주황 여부 (임대종료가 30일 안이거나 지났으면 주황)
+        function routerState(r) {
+            const t = todayZero(), s = parseLooseDate(r.start), e = parseLooseDate(r.end);
+            if (e) { const dd = daysBetween(e, t); if (dd < 0) return { label: `종료 ${-dd}일 지남`, warn: true, rank: 0 }; if (dd <= 30) return { label: `종료 D-${dd}`, warn: true, rank: 1 }; }
+            if (!s) return { label: '제공중', warn: false, rank: 3 };
+            const days = daysBetween(t, s);
+            if (days < 0) return { label: `제공 D-${-days}`, warn: false, rank: 3 };
+            const months = (t.getFullYear() - s.getFullYear()) * 12 + t.getMonth() - s.getMonth() - (t.getDate() < s.getDate() ? 1 : 0);
+            return { label: months < 1 ? `${days}일째` : `${months}개월째`, warn: false, rank: 2 };
+        }
+        function routerSummary(item) { // 여러 대면 제일 급한 것 기준
+            const list = activeRouters(item).map(r => Object.assign({ router: r }, routerState(r))).sort((a, b) => a.rank - b.rank);
+            return list[0] ? Object.assign({ count: list.length }, list[0]) : { count: 0, label: '', warn: false };
+        }
+        function routerBadgeHtml(item) {
+            const s = routerSummary(item);
+            if (!s.count) return '';
+            return `<span class="rt-badge ${s.warn ? 'warn' : ''}" title="라우터 ${s.count}대 나가 있음 · ${escapeHtml(routerFeeText(s.router.fee))}">📶 ${s.count > 1 ? s.count + '대 · ' : ''}${escapeHtml(s.label)}</span>`;
+        }
         function deviceListText(item) {
             const list = allDevices(item);
             if (list.length < 2) return '';
@@ -4631,24 +4729,56 @@ function generateUniqueId() {
                 <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 기기 줄 지우기" aria-label="기기 줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>`;
         }
+        // v252: 라우터 줄 — 제공일 · 임대종료 · 임대료(무상/유료+월 금액) · [반납] 버튼 (누르면 오늘 날짜로 반납, 저장해야 반영)
+        function routerLineHtml(d) {
+            const paid = d.fee && d.fee !== 'free';
+            return `<div class="dev-line dev-extra dev-router ${d.returned ? 'returned' : ''}" data-returned="${escapeHtml(d.returned || '')}">
+                <span class="dev-num" title="라우터">📶</span>
+                <div class="dfield rx-d"><label>제공일</label><input type="date" class="rx-start" value="${escapeHtml(d.start || '')}"></div>
+                <div class="dfield rx-d"><label>임대종료</label><input type="date" class="rx-end" value="${escapeHtml(d.end || '')}"></div>
+                <button type="button" class="dev-del" onclick="removeExtraDevice(this)" title="이 줄 지우기 (기록 없이 삭제 · 돌려받았으면 [반납]을 누르세요)" aria-label="줄 지우기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+                <span class="rx-br"></span>
+                <div class="dfield rx-feecol"><label>임대료</label><div class="rx-feebox ${paid ? '' : 'free'}"><select class="rx-feetype" onchange="this.parentNode.classList.toggle('free', this.value === 'free'); if (this.value === 'paid') { const n = this.nextElementSibling; if (!n.value) n.value = 10000; n.focus(); }"><option value="free" ${paid ? '' : 'selected'}>무상</option><option value="paid" ${paid ? 'selected' : ''}>유료</option></select><input type="number" class="rx-fee" min="0" step="1000" placeholder="월 금액" value="${paid ? escapeHtml(String(d.fee)) : ''}" title="월 임대료 (원)"></div></div>
+                <button type="button" class="rx-return" onclick="toggleRouterReturn(this)" title="${d.returned ? '누르면 반납 취소' : '실제로 돌려받았을 때 누르기'}">${d.returned ? `✓ 반납됨 ${escapeHtml(d.returned.slice(2).replace(/-/g, '/'))}` : '반납'}</button>
+            </div>`;
+        }
+        function toggleRouterReturn(btn) {
+            const line = btn.closest('.dev-router');
+            if (line.dataset.returned) { line.dataset.returned = ''; }
+            else {
+                if (!confirm('이 라우터를 반납 처리할까요?\n(오늘 날짜로 기록 · [저장]을 눌러야 반영돼요)')) return;
+                line.dataset.returned = formatDateYMD(todayZero());
+            }
+            const r = line.dataset.returned;
+            line.classList.toggle('returned', !!r);
+            btn.textContent = r ? `✓ 반납됨 ${r.slice(2).replace(/-/g, '/')}` : '반납';
+            btn.title = r ? '누르면 반납 취소' : '실제로 돌려받았을 때 누르기';
+        }
         function renderExtraDevices(list) {
             const box = document.getElementById('detailExtraDevices');
             if (!box) return;
-            box.innerHTML = (list || []).map((d, i) => extraDeviceLineHtml(d, i)).join('');
+            const ks = (list || []).filter(d => devKind(d) === 'kiosk'), rs = (list || []).filter(d => devKind(d) === 'router');
+            box.innerHTML = ks.map((d, i) => extraDeviceLineHtml(d, i)).join('') + rs.map(routerLineHtml).join(''); // 키오스크 먼저, 라우터는 아래
             renumberDevices();
         }
         function readExtraDevices() {
-            return Array.from(document.querySelectorAll('#detailExtraDevices .dev-extra')).map(line => ({
+            return Array.from(document.querySelectorAll('#detailExtraDevices .dev-extra')).map(line => line.classList.contains('dev-router') ? {
+                kind: 'router',
+                start: line.querySelector('.rx-start').value,
+                end: line.querySelector('.rx-end').value,
+                fee: line.querySelector('.rx-feetype').value === 'paid' && Number(line.querySelector('.rx-fee').value) > 0 ? String(Number(line.querySelector('.rx-fee').value)) : 'free',
+                returned: line.dataset.returned || ''
+            } : {
                 model: line.querySelector('.dx-model').value.trim(),
                 type: line.querySelector('.dx-type').value.trim(),
                 date: line.querySelector('.dx-date').value
-            })).filter(d => d.model || d.type || d.date);
+            }).filter(devFilled);
         }
         // 15차-2: 레아코드 번호 보기 — 기기가 2대 이상이면 평소엔 "①qr54 ②55"로 보이고, 칸을 누르면 원래 글자("qr54, 55")로.
         //  저장되는 값은 원래 글자 그대로(①② 기호는 화면에만). 코드 개수가 기기 수와 다르면 번호를 주황색으로
         //  키오에듀ID도 같은 방식 (대장님 요청)
         function renderReaCodeView() {
-            const devCount = 1 + document.querySelectorAll('#detailExtraDevices .dev-extra').length;
+            const devCount = 1 + document.querySelectorAll('#detailExtraDevices .dev-extra:not(.dev-router)').length; // 코드는 키오스크 대수 기준
             ['detailKioId', 'detailReaCode'].forEach(id => {
                 const inp = document.getElementById(id), view = document.getElementById(id + 'View');
                 if (!inp || !view) return;
@@ -4663,25 +4793,45 @@ function generateUniqueId() {
             });
         }
         function renumberDevices() {
-            const lines = document.querySelectorAll('#detailExtraDevices .dev-extra');
+            const lines = document.querySelectorAll('#detailExtraDevices .dev-extra:not(.dev-router)');
             lines.forEach((l, i) => { l.querySelector('.dev-num').textContent = DEV_NUMS[i + 1] || (i + 2); });
             // 15차-6: 기기가 2대 이상일 때만 왼쪽 번호 칸(①②…)을 보여줌
             const box = document.getElementById('detailDevFields');
             if (box) box.classList.toggle('has-extra', lines.length > 0);
             renderReaCodeView();
         }
-        function addExtraDevice() {
+        // v252: [+] → 작은 메뉴 (키오스크 / 라우터 …) — 메뉴 항목은 DEVICE_KINDS에서 만듦
+        function toggleDevAddMenu(ev) {
+            ev.stopPropagation();
+            const m = document.getElementById('devAddMenu');
+            if (!m.innerHTML) m.innerHTML = Object.entries(DEVICE_KINDS).map(([k, v]) => `<button type="button" onclick="event.stopPropagation(); closeDevAddMenu(); addExtraDevice('${k}')">${v.icon ? v.icon + ' ' : ''}${v.label}</button>`).join('');
+            m.classList.toggle('open');
+        }
+        function closeDevAddMenu() { const m = document.getElementById('devAddMenu'); if (m) m.classList.remove('open'); }
+        document.addEventListener('click', (e) => { if (!(e.target.closest && e.target.closest('.dev-add-wrap'))) closeDevAddMenu(); });
+        function addExtraDevice(kind) {
             const box = document.getElementById('detailExtraDevices');
-            const i = box.querySelectorAll('.dev-extra').length;
-            box.insertAdjacentHTML('beforeend', extraDeviceLineHtml({}, i));
+            if (kind === 'router') {
+                box.insertAdjacentHTML('beforeend', routerLineHtml({ kind: 'router', start: formatDateYMD(todayZero()), fee: 'free' }));
+                renumberDevices();
+                const st = box.lastElementChild && box.lastElementChild.querySelector('.rx-start');
+                if (st) st.focus();
+                return;
+            }
+            const firstRouter = box.querySelector('.dev-router');
+            const i = box.querySelectorAll('.dev-extra:not(.dev-router)').length;
+            if (firstRouter) firstRouter.insertAdjacentHTML('beforebegin', extraDeviceLineHtml({}, i)); // 키오스크 줄은 라우터 줄 위로
+            else box.insertAdjacentHTML('beforeend', extraDeviceLineHtml({}, i));
             renumberDevices();
-            const last = box.lastElementChild && box.lastElementChild.querySelector('.dx-model');
-            if (last) last.focus();
+            const line = firstRouter ? firstRouter.previousElementSibling : box.lastElementChild;
+            const inp = line && line.querySelector('.dx-model');
+            if (inp) inp.focus();
         }
         function removeExtraDevice(btn) {
             const line = btn.closest('.dev-extra');
             const filled = Array.from(line.querySelectorAll('input')).some(x => x.value);
-            if (filled && !confirm('이 기기 줄을 지울까요? (저장을 눌러야 실제로 반영돼요)')) return;
+            const msg = line.classList.contains('dev-router') ? '이 라우터 줄을 기록 없이 지울까요?\n(돌려받은 거면 [반납]을 누르면 기록이 남아요 · 저장을 눌러야 반영)' : '이 기기 줄을 지울까요? (저장을 눌러야 실제로 반영돼요)';
+            if (filled && !confirm(msg)) return;
             line.remove();
             renumberDevices();
         }
@@ -4689,7 +4839,7 @@ function generateUniqueId() {
             const _devOpenDetail = openDetailModal;
             openDetailModal = function(id) {
                 const r = _devOpenDetail.apply(this, arguments);
-                try { const it = (findItemLocation(id) || {}).item; renderExtraDevices(it ? (it.devices || []).slice(1) : []); } catch (e) { console.error(e); }
+                try { const it = (findItemLocation(id) || {}).item; renderExtraDevices(it ? (it.devices || []).filter(d => d !== firstDevice(it)) : []); /* 맨 위 줄 = 첫 키오스크, 나머지(키오스크·라우터)는 아래 줄 */ } catch (e) { console.error(e); }
                 return r;
             };
         }
@@ -4832,7 +4982,7 @@ function generateUniqueId() {
                 <div class="mc-card ${isAs ? 'is-as' : ''} ${isWait ? 'is-wait' : ''} ${isEndedItem(item) ? 'is-ended' : ''}">
                     <div class="mc-top">
                         ${isAs ? '<span class="mc-seal" title="AS 요청">!</span>' : ''}
-                        <div class="mc-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}${isNewSaleItem(item) ? '<span class="new-badge">NEW</span>' : ''}</div>
+                        <div class="mc-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}${isNewSaleItem(item) ? '<span class="new-badge">NEW</span>' : ''}${routerBadgeHtml(item)}</div>
                         ${mCardTag(item)}
                     </div>
                     <div class="mc-sub2">${escapeHtml(sub || '-')}</div>
@@ -7000,7 +7150,7 @@ function generateUniqueId() {
 
                 const counts = {};
                 parsed.forEach(x => { const lbl = x.item.division === '임대' ? '임대' : (groupNames[x.gk] || '-'); counts[lbl] = (counts[lbl] || 0) + 1; });
-                                const existingNames = new Set(getAllGroupsFlatData().map(i => xlNorm(i.placeName)));
+                const existingNames = new Set(getAllGroupsFlatData().map(i => xlNorm(i.placeName)));
                 const dupNames = parsed.filter(x => existingNames.has(xlNorm(x.item.placeName))).map(x => x.item.placeName);
                 const multiDevCos = parsed.filter(x => cleanDevices(x.item.devices).length > 1);
                 const mergedCos = parsed.filter(x => x.rowCount > 1).map(x => `${x.item.placeName} (${x.rowCount}줄 → ${cleanDevices(x.item.devices).length > 1 ? `기기 ${cleanDevices(x.item.devices).length}대` : '한 업체'})`);
@@ -7071,7 +7221,9 @@ function generateUniqueId() {
                     const setF = (k, v, lbl) => { if (v && String(v) !== String(nw[k] || '')) { changes.push(`${lbl || labelOf(k)}: ${short(nw[k])} → ${short(v)}`); nw[k] = v; } };
                     TEXT_KEYS.forEach(k => setF(k, src[k]));
                     // 기기: 순서대로 적힌 칸만
-                    const srcDevs = src.devices || []; // v250: 엑셀에 적힌 자리 그대로 (①②③…)
+                    const srcDevs = src.devices || []; // v250: 엑셀에 적힌 자리 그대로 (①②③…) · v252: 키오스크 자리만 (라우터는 그대로 뒤에)
+                    const nwRouters = nw.devices.filter(d => devKind(d) !== 'kiosk');
+                    nw.devices = nw.devices.filter(d => devKind(d) === 'kiosk');
                     const multi = srcDevs.length > 1 || nw.devices.length > 1;
                     srcDevs.forEach((d, i) => {
                         if (!devFilled(d)) return;
@@ -7082,6 +7234,7 @@ function generateUniqueId() {
                             if (d[f] && d[f] !== td[f]) { changes.push(`${num}${getLabel(lk)}: ${short(td[f])} → ${short(d[f])}`); td[f] = d[f]; }
                         });
                     });
+                    nw.devices = nw.devices.concat(nwRouters);
                     if (ex.division === '임대') {
                         setF('installDate', r.instD);
                         setF('rentalEndDate', r.endD);
