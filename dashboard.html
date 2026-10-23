@@ -976,6 +976,22 @@
             font-size: 12.5px; color: #3a3830; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
             background: transparent; border: none; outline: none; width: 100%; resize: none; font-family: inherit; overflow: hidden;
         }
+        /* v251: AS 메모 카드 보기 — "· "로 시작하는 줄은 넘어가는 줄이 · 뒤에 맞춰 들여쓰기 (누르면 고치는 칸으로) */
+        .as-entry .txt-view { font-size: 12.5px; color: #3a3830; line-height: 1.5; word-break: break-word; white-space: pre-wrap; cursor: text; min-height: 1.5em; }
+        .as-entry .txt-view .bl { display: flex; gap: .4em; }
+        .as-entry .txt-view .bl > i { font-style: normal; flex: none; font-weight: 800; color: var(--teal); }
+        /* v251: 도움말 ⓘ — 마우스 올리거나(폰은 탭) 하면 말풍선. 설명 글은 스크립트의 HELP_TEXT 한 곳에 모음 */
+        .help-tip { position: relative; display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 6px; vertical-align: 1px;
+            border-radius: 50%; border: 1px solid #c9c1ab; color: #8b8470; font-size: 10px; font-weight: 800; cursor: help; outline: none; }
+        .help-tip:hover, .help-tip:focus { border-color: var(--teal); color: var(--teal); }
+        .help-pop { position: absolute; left: -10px; top: calc(100% + 9px); width: 248px; z-index: 60; text-align: left; white-space: normal;
+            background: #2f2c25; color: #f3ead6; border-radius: 10px; padding: 10px 13px 11px; box-shadow: 0 10px 28px rgba(0,0,0,.28);
+            font-size: 11.5px; font-weight: 500; line-height: 1.5; opacity: 0; visibility: hidden; transform: translateY(-3px); transition: opacity .18s, transform .18s, visibility .18s; pointer-events: none; }
+        .help-pop::before { content: ''; position: absolute; left: 14px; top: -5px; width: 10px; height: 10px; background: #2f2c25; transform: rotate(45deg); }
+        .help-tip:hover .help-pop, .help-tip:focus .help-pop { opacity: 1; visibility: visible; transform: none; }
+        .help-pop b { display: block; font-size: 12px; margin-bottom: 6px; color: #fff; }
+        .help-pop .hk { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center; }
+        .help-pop kbd { font-family: inherit; font-size: 10.5px; font-weight: 700; line-height: 1; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 4px; padding: 3px 5px; white-space: nowrap; justify-self: start; }
         .as-empty { text-align: center; font-size: 12.5px; color: #c4beac; padding: 20px 0; }
         .as-input-wrap { border-top: 1px solid var(--border-warm); padding: 10px 16px 14px; flex-shrink: 0; }
         .as-input-row { display: flex; gap: 8px; }
@@ -2721,7 +2737,7 @@
                     </div>
                 </div>
                 <div class="detail-side">
-                    <div class="as-header">AS 이력 · 메모 <span class="as-count" id="detailMemoCount"></span></div>
+                    <div class="as-header"><span>AS 이력 · 메모<span class="help-tip" tabindex="0" data-help="memo" aria-label="입력 도움말">?</span></span> <span class="as-count" id="detailMemoCount"></span></div>
                     <div class="as-thread" id="detailMemoList"></div>
                     <div class="as-input-wrap">
                         <div class="as-input-row">
@@ -3229,9 +3245,6 @@ function showSyncStatus(msg, isError) {
                 managerContact: row.manager_contact || '',
                 managerEmail: row.manager_email || '',
                 managerNote: row.manager_note || '',
-                deviceModel: row.device_model || '',
-                deviceType: row.device_type || '',
-                deviceOption: row.device_option || '',
                 kioId: row.kio_id || '',
                 kioAdminId: row.kio_admin_id || '',
                 reaCode: row.rea_code || '',
@@ -3240,7 +3253,7 @@ function showSyncStatus(msg, isError) {
                 rentalPeriod: row.rental_period || '1개월',
                 rentalEndDate: row.rental_end_date || '',
                 memoList: (Array.isArray(row.memo_list) ? row.memo_list : []).map(m => m.id ? m : Object.assign({}, m, { id: generateUniqueId() })),
-                devices: Array.isArray(row.devices) ? row.devices : [], // 15차: 2대째부터의 추가 기기 [{model, type, date}] (1대째는 device_* 칸 그대로)
+                devices: Array.isArray(row.devices) ? row.devices : [], // v250: 기기 전부(1대째 포함) [{model, type, date}] — 옛 device_* 칸은 안 씀
                 status: row.status || '정상',
                 updatedAt: row.updated_at || null, // 동시편집 충돌 감지용 - 서버에 저장된 마지막 수정시각
                 checked: false // 체크 선택 상태는 항상 화면(브라우저)에서만 관리하고 DB에는 저장하지 않음
@@ -3263,9 +3276,6 @@ function showSyncStatus(msg, isError) {
                 manager_contact: item.managerContact || null,
                 manager_email: item.managerEmail || null,
                 manager_note: item.managerNote || null,
-                device_model: item.deviceModel || null,
-                device_type: item.deviceType || null,
-                device_option: item.deviceOption || null,
                 kio_id: item.kioId || null,
                 kio_admin_id: item.kioAdminId || null,
                 rea_code: item.reaCode || null,
@@ -3276,8 +3286,7 @@ function showSyncStatus(msg, isError) {
                 memo_list: item.memoList || [],
                 status: item.status || '정상',
                 updated_at: new Date().toISOString(),
-                // 15차: Supabase에 devices 칸이 있을 때만 같이 저장 (칸이 없는데 보내면 저장 자체가 실패하므로)
-                ...((devicesColumnReady && Array.isArray(item.devices)) ? { devices: item.devices } : {})
+                devices: cleanDevices(item.devices) // v250: 기기는 이 목록 하나에만 저장 (빈 줄은 빼고)
             };
         }
 
@@ -3454,7 +3463,6 @@ function showSyncStatus(msg, isError) {
             appInitStarted = true;
             try {
                 await loadAllDataFromSupabase();
-                await detectDevicesColumn(); // 15차: 기기 여러 대용 devices 칸이 Supabase에 있는지 확인
                 // 2026-10-03 12차: 임대 기간이 끝나도 자동으로 "종료" 처리하지 않음 → "회수대기" 단계로 보이고,
                 // 기기를 회수한 뒤 상세팝업에서 직접 "종료"로 바꾸는 방식 (syncExpiredRentalStatuses 호출 중단)
                 await migrateKioFieldsIfNeeded();
@@ -4330,6 +4338,7 @@ function generateUniqueId() {
         function getColumnSortValue(item, key) {
             if (key === 'division') return item.division || '판매'; // v224: 구분(판매/임대)
             if (key === 'rentalEnd') { const d = getRentalEndDateObj(item); return d ? formatDateYMD(d) : ''; } // v224: 임대만료일 (판매 = 빈칸)
+            if (devField(key)) return (firstDevice(item)[devField(key)] || '').toString(); // v250: 표의 기기 칸 = 1대째 기준
             if (key === 'memo') {
                 const list = item.memoList || [];
                 return list.length ? (list[list.length - 1].date || '') : '';
@@ -4377,7 +4386,7 @@ function generateUniqueId() {
                     item.installLocation, item.orgDept, item.orgName, item.orgTitle,
                     item.orgContact, item.orgEmail, item.managerContact, item.managerEmail, item.managerNote,
                     item.kioId, item.kioAdminId, item.reaCode,
-                    item.deviceModel, item.deviceType, (item.devices || []).map(d => [d.model, d.type].join(' ')).join(' '), // 15차
+                    (item.devices || []).map(d => [d.model, d.type].join(' ')).join(' '), // v250: 기기 전부
                     (item.memoList || []).map(m => m.text).join(' ')
                 ];
                 if (!fields.filter(Boolean).join(' ').toLowerCase().includes(f.search)) return false;
@@ -4521,9 +4530,9 @@ function generateUniqueId() {
                     <td class="org-group copy-cell org-email-cell"><span class="email-display">${formatEmailForDisplay(item.orgEmail || '-')}</span></td>
                     <td class="manager-group">${escapeHtml(item.managerContact || '-')}</td>
                     <td class="manager-group copy-cell manager-email-cell"><span class="email-display">${formatEmailForDisplay(item.managerEmail || '-')}</span></td>
-                    <td class="device-group" title="${escapeHtml(deviceListText(item))}">${(item.devices || []).length ? `<span class="dev-more">${item.devices.length + 1}대</span>` : ''}${escapeHtml(item.deviceModel || '-')}</td>
-                    <td class="device-group">${escapeHtml(item.deviceType || '-')}</td>
-                    <td class="device-group">${escapeHtml(item.deviceOption || '-')}</td>
+                    <td class="device-group" title="${escapeHtml(deviceListText(item))}">${(item.devices || []).length > 1 ? `<span class="dev-more">${item.devices.length}대</span>` : ''}${escapeHtml(firstDevice(item).model || '-')}</td>
+                    <td class="device-group">${escapeHtml(firstDevice(item).type || '-')}</td>
+                    <td class="device-group">${escapeHtml(firstDevice(item).date || '-')}</td>
                     <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.kioId || '-')}</span></td>
                     <td class="sys-group clamp-cell"><span class="clamp-inner">${escapeHtml(item.reaCode || '-')}</span></td>
                     <td class="rental-group">${renderDivisionBadge(item)}</td>
@@ -4588,23 +4597,20 @@ function generateUniqueId() {
            클릭 동작(상세보기/수정/AS이력)은 전부 기존 함수(openDetailModal 하나로 통합됨)를 그대로
            재사용 — 모바일 전용으로 새로 만든 로직이 아니라서 동작 방식이 PC와 항상 동일하게 유지됨. */
         /* ===================== 15차: 기기 여러 대 (2026-10-03) =====================
-           · 1대째 = 기존 칸(device_model / device_type / device_option) 그대로 → 표·엑셀 양식·예전 백업이 안 깨짐
-           · 2대째부터 = companies.devices (jsonb 목록) [{model, type, date}]
-           · Supabase에 devices 칸이 없으면(대장님이 SQL을 아직 안 돌렸으면) 추가 기기 저장을 막고 안내만 함
-             SQL: alter table companies add column devices jsonb not null default '[]'::jsonb;
+           · v250 서랍 정리: 기기는 1대째부터 전부 companies.devices (jsonb 목록) [{model, type, date}] 하나에만 저장
+             (옛 device_model / device_type / device_option 칸은 안 읽고 안 씀 — SQL로 목록 맨 앞에 옮긴 뒤 지울 예정)
+           · 화면은 그대로: 상세 팝업 맨 위 줄 = devices[0], 아래 + 줄들 = devices[1..]
            · 레아코드·키오에듀ID는 기기 순서대로 콤마로 적음 (대장님 결정) */
         // 15차-7: 로고(기사 엠블럼)·RHEAVISION 글자를 누르면 처음 화면으로 새로고침 (보통 웹사이트처럼).
         //  필터·검색이 다 풀리고 최신 데이터·최신 화면 파일을 다시 받음. 열린 팝업은 로고를 가리므로 입력 중 실수로 날아갈 일 없음
         function goHomeRefresh() { location.href = location.pathname; }
         document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('brand-home')) { e.preventDefault(); goHomeRefresh(); } });
-        let devicesColumnReady = false;
-        async function detectDevicesColumn() {
-            try { const { error } = await sb.from('companies').select('devices').limit(1); devicesColumnReady = !error; }
-            catch (e) { devicesColumnReady = false; }
-        }
-        function allDevices(item) {
-            return [{ model: item.deviceModel || '', type: item.deviceType || '', date: item.deviceOption || '' }].concat(item.devices || []);
-        }
+        // 표·엑셀 칸 이름 → 기기 목록 안 이름 (함수 선언이라 파일 어디서 불러도 안전)
+        function devField(key) { return { deviceModel: 'model', deviceType: 'type', deviceOption: 'date' }[key]; }
+        function devFilled(d) { return !!(d && (d.model || d.type || d.date)); }
+        function cleanDevices(list) { return (list || []).filter(devFilled).map(d => ({ model: d.model || '', type: d.type || '', date: d.date || '' })); }
+        function allDevices(item) { return item.devices || []; }
+        function firstDevice(item) { return (item.devices || [])[0] || {}; }
         function deviceListText(item) {
             const list = allDevices(item);
             if (list.length < 2) return '';
@@ -4665,10 +4671,6 @@ function generateUniqueId() {
             renderReaCodeView();
         }
         function addExtraDevice() {
-            if (!devicesColumnReady) {
-                alert('기기를 여러 대 저장하려면 Supabase에 "기기 목록" 칸을 먼저 만들어야 해요.\n\nSupabase → SQL Editor에서 아래 한 줄을 실행한 뒤 새로고침해주세요.\n\nalter table companies add column devices jsonb not null default \'[]\'::jsonb;');
-                return;
-            }
             const box = document.getElementById('detailExtraDevices');
             const i = box.querySelectorAll('.dev-extra').length;
             box.insertAdjacentHTML('beforeend', extraDeviceLineHtml({}, i));
@@ -4687,7 +4689,7 @@ function generateUniqueId() {
             const _devOpenDetail = openDetailModal;
             openDetailModal = function(id) {
                 const r = _devOpenDetail.apply(this, arguments);
-                try { const it = (findItemLocation(id) || {}).item; renderExtraDevices(it ? it.devices : []); } catch (e) { console.error(e); }
+                try { const it = (findItemLocation(id) || {}).item; renderExtraDevices(it ? (it.devices || []).slice(1) : []); } catch (e) { console.error(e); }
                 return r;
             };
         }
@@ -5578,8 +5580,9 @@ function generateUniqueId() {
                         <span class="del" title="삭제" onclick="deleteDetailMemoItem('${memo.id || ''}')">✕</span>
                         <div class="meta"><input type="text" class="date-edit" value="${escapeHtml(stripMemoTime(memo.date))}"
                             onblur="updateDetailMemoDate('${memo.id || ''}', this.value)"><span class="author">${authorLabel}</span></div>
-                        <textarea class="txt" rows="1" onfocus="autoGrowTextarea(this)" oninput="autoGrowTextarea(this)"
-                            onblur="updateDetailMemoItem('${memo.id || ''}', this.value)">${escapeHtml(memo.text || '')}</textarea>
+                        <div class="txt-view" onclick="memoEditOpen(this)">${memoViewHtml(memo.text)}</div>
+                        <textarea class="txt" rows="1" hidden onfocus="autoGrowTextarea(this)" oninput="autoGrowTextarea(this)"
+                            onblur="memoEditClose(this); updateDetailMemoItem('${memo.id || ''}', this.value)">${escapeHtml(memo.text || '')}</textarea>
                     </div>`;
             }).join('');
             // 렌더 직후 각 textarea 높이를 내용에 맞게 한 번씩 맞춰줌 + 맨 아래(최신) 기록이 보이도록 스크롤
@@ -5617,6 +5620,65 @@ function generateUniqueId() {
                 alert('이력 저장에 실패했습니다: ' + (err.message || err));
             }
         }
+
+        // v251: AS 메모 카드 — 평소엔 보기 칸(글머리표 들여쓰기), 누르면 고치는 칸, 다 쓰고 나가면 다시 보기 칸
+        function memoViewHtml(text) {
+            return String(text || '').split('\n').map(line => {
+                const m = line.match(/^·\s?(.*)$/);
+                return m ? `<div class="bl"><i>·</i><span>${escapeHtml(m[1]) || '&nbsp;'}</span></div>` : `<div>${escapeHtml(line) || '&nbsp;'}</div>`;
+            }).join('');
+        }
+        function memoEditOpen(view) {
+            const ta = view.nextElementSibling;
+            view.hidden = true; ta.hidden = false;
+            autoGrowTextarea(ta); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+        }
+        function memoEditClose(ta) {
+            const view = ta.previousElementSibling;
+            if (ta.value.trim()) view.innerHTML = memoViewHtml(ta.value.trim());
+            ta.hidden = true; view.hidden = false;
+        }
+
+        /* ===== v251: 여러 줄 칸 글머리표 "·" — 모든 textarea에 자동 (빼고 싶은 칸은 data-nobullet) =====
+           "- "+스페이스 → "· " · Enter → 다음 줄도 "· " · 빈 "· " 줄에서 Enter / "· " 바로 뒤 Backspace → 글머리표 끝
+           Shift+Enter → 그냥 줄바꿈 · Ctrl/⌘+Enter(AS 등록)는 안 건드림 · 한글 입력 중(조합 중) Enter는 무시 */
+        const BULLET = '· ';
+        function taReplace(ta, s, e, txt) { // 되돌리기(Ctrl+Z)가 되도록 execCommand 먼저, 안 되면 직접 바꿈
+            ta.focus(); ta.setSelectionRange(s, e);
+            let ok = false;
+            try { ok = document.execCommand(txt ? 'insertText' : 'delete', false, txt); } catch (_) {}
+            if (!ok) { ta.setRangeText(txt, s, e, 'end'); ta.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+        const bulletTa = (t) => t && t.tagName === 'TEXTAREA' && !('nobullet' in t.dataset);
+        document.addEventListener('keydown', (e) => {
+            const ta = e.target;
+            if (!bulletTa(ta) || e.defaultPrevented || e.isComposing || e.keyCode === 229 || e.ctrlKey || e.metaKey || e.altKey) return;
+            const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value, ls = v.lastIndexOf('\n', s - 1) + 1, before = v.slice(ls, s);
+            if (e.key === 'Enter' && !e.shiftKey) {
+                if (!before.startsWith(BULLET)) return;
+                e.preventDefault();
+                let le = v.indexOf('\n', en); if (le < 0) le = v.length;
+                if (before === BULLET && s === en && !v.slice(en, le).trim()) taReplace(ta, ls, le, ''); // 빈 "· " 줄 → 글머리표 끝
+                else taReplace(ta, s, en, '\n' + BULLET);
+            } else if (e.key === 'Backspace' && s === en && before === BULLET) {
+                e.preventDefault(); taReplace(ta, ls, s, '');
+            }
+        });
+        document.addEventListener('input', (e) => {
+            const ta = e.target;
+            if (!bulletTa(ta) || e.isComposing || e.data !== ' ') return;
+            const s = ta.selectionStart, ls = ta.value.lastIndexOf('\n', s - 1) + 1;
+            if (ta.value.slice(ls, s) === '- ') taReplace(ta, ls, s, BULLET);
+        });
+
+        /* ===== v251: 도움말 말풍선 — 설명 글은 여기 한 곳에. 화면에는 <span class="help-tip" data-help="이름">?</span>만 붙이면 됨 ===== */
+        const HELP_TEXT = {
+            memo: { title: '✏️ 줄 구분하기', rows: [['- + 스페이스', '· 글머리표'], ['Enter', '다음 줄도 · 자동'], ['빈 · 줄에서 Enter', '글머리표 끝내기'], ['· 뒤에서 Backspace', '·만 지우기'], ['Shift+Enter', '· 없이 줄바꿈'], ['Ctrl+Enter', '등록']] }
+        };
+        document.querySelectorAll('.help-tip[data-help]').forEach(el => {
+            const h = HELP_TEXT[el.dataset.help]; if (!h) return;
+            el.insertAdjacentHTML('beforeend', `<span class="help-pop" role="tooltip"><b>${escapeHtml(h.title)}</b><span class="hk">${h.rows.map(([k, d]) => `<kbd>${escapeHtml(k)}</kbd><span>${escapeHtml(d)}</span>`).join('')}</span></span>`);
+        });
 
         async function updateDetailMemoItem(memoId, newText) {
             if (guestBlocked()) return; // 17차-2 게스트 읽기 전용
@@ -5829,9 +5891,10 @@ function generateUniqueId() {
             document.getElementById('detailManagerEmail').value = item.managerEmail || '';
             document.getElementById('detailManagerNote').value = item.managerNote || '';
 
-            document.getElementById('detailDeviceModel').value = item.deviceModel || '';
-            document.getElementById('detailDeviceType').value = item.deviceType || '';
-            document.getElementById('detailDeviceOption').value = item.deviceOption || '';
+            const d0 = firstDevice(item);
+            document.getElementById('detailDeviceModel').value = d0.model || '';
+            document.getElementById('detailDeviceType').value = d0.type || '';
+            document.getElementById('detailDeviceOption').value = d0.date || '';
 
             document.getElementById('detailKioId').value = item.kioId || '';
             document.getElementById('detailReaCode').value = item.reaCode || '';
@@ -5917,9 +5980,6 @@ function generateUniqueId() {
                 managerContact: document.getElementById('detailManagerContact').value,
                 managerEmail: document.getElementById('detailManagerEmail').value,
                 managerNote: document.getElementById('detailManagerNote').value,
-                deviceModel: document.getElementById('detailDeviceModel').value,
-                deviceType: document.getElementById('detailDeviceType').value,
-                deviceOption: document.getElementById('detailDeviceOption').value,
                 kioId: document.getElementById('detailKioId').value,
                 kioAdminId: document.getElementById('detailKioAdminId').value,
                 reaCode: document.getElementById('detailReaCode').value,
@@ -5927,7 +5987,7 @@ function generateUniqueId() {
                 installDate: document.getElementById('detailInstallDate').value,
                 rentalPeriod: readRentalPeriodValue('detailRentalPeriod', 'detailRentalPeriodCustomValue', 'detailRentalPeriodCustomUnit'),
                 rentalEndDate: document.getElementById('detailRentalEndDate').value,
-                devices: readExtraDevices(), // 15차: 2대째부터
+                devices: cleanDevices([{ model: document.getElementById('detailDeviceModel').value.trim(), type: document.getElementById('detailDeviceType').value.trim(), date: document.getElementById('detailDeviceOption').value }].concat(readExtraDevices())), // v250: 맨 위 줄 + 추가 줄 전부
                 memoList: targetItem.memoList || [], // AS이력은 이미 각자 즉시 저장되므로 현재 메모리 상태 그대로 실어보냄
                 status: document.getElementById('detailStatusValue').value,
                 checked: targetItem.checked
@@ -6123,9 +6183,7 @@ function generateUniqueId() {
                 managerContact: document.getElementById('managerContact').value,
                 managerEmail: document.getElementById('managerEmail').value,
                 managerNote: document.getElementById('managerNote').value,
-                deviceModel: document.getElementById('deviceModel').value,
-                deviceType: document.getElementById('deviceType').value,
-                deviceOption: document.getElementById('deviceOption').value,
+                devices: cleanDevices([{ model: document.getElementById('deviceModel').value.trim(), type: document.getElementById('deviceType').value.trim(), date: document.getElementById('deviceOption').value }]), // v250
                 kioId: document.getElementById('kioId').value,
                 kioAdminId: document.getElementById('kioAdminId').value,
                 reaCode: document.getElementById('reaCode').value,
@@ -6795,10 +6853,7 @@ function generateUniqueId() {
                     managerContact: txt('managerContact'),
                     managerEmail: txt('managerEmail'),
                     managerNote: txt('managerNote'),
-                    deviceModel: devs[0].model,
-                    deviceType: devs[0].type,
-                    deviceOption: devs[0].date,
-                    devices: devs.slice(1),
+                    devices: devs, // v250: 적힌 순서(자리) 그대로 — 빈 자리는 저장할 때 빠짐
                     kioId: txt('kioId'),
                     kioAdminId: txt('kioAdminId'),
                     reaCode: txt('reaCode'),
@@ -6846,18 +6901,14 @@ function generateUniqueId() {
             const sameRegion = (a, b) => (!a.regionSi || !b.regionSi || xlNorm(a.regionSi) === xlNorm(b.regionSi)) && (!a.regionGu || !b.regionGu || xlNorm(a.regionGu) === xlNorm(b.regionGu));
             const mergeInto = (co, r) => {
                 const t = co.item, src = r.item;
-                const srcDevs = [{ model: src.deviceModel, type: src.deviceType, date: src.deviceOption }].concat(src.devices || []).filter(d => d.model || d.type || d.date);
-                srcDevs.forEach(d => {
-                    if (!t.deviceModel && !t.deviceType && !t.deviceOption) { t.deviceModel = d.model; t.deviceType = d.type; t.deviceOption = d.date; }
-                    else t.devices.push(d);
-                });
+                t.devices = cleanDevices(t.devices).concat(cleanDevices(src.devices)); // v250: 다음 줄 기기를 뒤에 이어붙임
                 ['kioId', 'reaCode'].forEach(k => { // 기기별 코드 → 쉼표로 이어붙임 (같은 값 반복이면 한 번만)
                     const have = String(t[k] || '').split(',').map(x => x.trim()).filter(Boolean);
                     String(src[k] || '').split(',').map(x => x.trim()).filter(Boolean).forEach(c => { if (!have.includes(c)) have.push(c); });
                     t[k] = have.join(', ');
                 });
                 Object.keys(src).forEach(k => { // 나머지 칸은 비어 있을 때만 채움
-                    if (['devices', 'memoList', 'kioId', 'reaCode', 'deviceModel', 'deviceType', 'deviceOption', 'division', 'status', 'rentalPeriod', 'checked'].includes(k)) return;
+                    if (['devices', 'memoList', 'kioId', 'reaCode', 'division', 'status', 'rentalPeriod', 'checked'].includes(k)) return;
                     if (!t[k] && src[k]) t[k] = src[k];
                 });
                 if (src.status === '요청') t.status = '요청';
@@ -6949,11 +7000,10 @@ function generateUniqueId() {
 
                 const counts = {};
                 parsed.forEach(x => { const lbl = x.item.division === '임대' ? '임대' : (groupNames[x.gk] || '-'); counts[lbl] = (counts[lbl] || 0) + 1; });
-                const extraDevCount = parsed.reduce((s, x) => s + x.item.devices.length, 0);
-                const existingNames = new Set(getAllGroupsFlatData().map(i => xlNorm(i.placeName)));
+                                const existingNames = new Set(getAllGroupsFlatData().map(i => xlNorm(i.placeName)));
                 const dupNames = parsed.filter(x => existingNames.has(xlNorm(x.item.placeName))).map(x => x.item.placeName);
-                const multiDevCos = parsed.filter(x => x.item.devices.length > 0);
-                const mergedCos = parsed.filter(x => x.rowCount > 1).map(x => `${x.item.placeName} (${x.rowCount}줄 → ${x.item.devices.length ? `기기 ${1 + x.item.devices.length}대` : '한 업체'})`);
+                const multiDevCos = parsed.filter(x => cleanDevices(x.item.devices).length > 1);
+                const mergedCos = parsed.filter(x => x.rowCount > 1).map(x => `${x.item.placeName} (${x.rowCount}줄 → ${cleanDevices(x.item.devices).length > 1 ? `기기 ${cleanDevices(x.item.devices).length}대` : '한 업체'})`);
                 const summary = Object.entries(counts).map(([k, v]) => `${k} ${v}곳`).join(' · ');
                 const ok = confirm(`엑셀에서 새 업체 ${parsed.length}곳을 찾았어요.\n${summary}` +
                     (multiDevCos.length ? `\n(그중 기기 2대 이상인 업체 ${multiDevCos.length}곳)` : '') +
@@ -6962,7 +7012,6 @@ function generateUniqueId() {
                     xlBadDateText(p, '빈칸으로 들어가요') +
                     (dupNames.length ? `\n\n⚠ 이미 등록된 업체와 이름이 같은 곳 ${dupNames.length}곳 — 그대로 올리면 따로 하나 더 생겨요\n   (있는 업체를 고치려면 "엑셀 대량 수정"을 쓰세요)\n${xlListLines(dupNames)}` : '') +
                     (unknownGroups.size ? `\n\n※ 없는 그룹 이름(${[...unknownGroups].join(', ')})은 지금 고른 그룹으로 들어가요.` : '') +
-                    (extraDevCount && !devicesColumnReady ? '\n\n⚠ 서버에 기기 여러 대 칸이 아직 없어서 2대째부터는 저장되지 않아요.' : '') +
                     `\n\n등록할까요?`);
                 if (!ok) return;
 
@@ -7022,22 +7071,16 @@ function generateUniqueId() {
                     const setF = (k, v, lbl) => { if (v && String(v) !== String(nw[k] || '')) { changes.push(`${lbl || labelOf(k)}: ${short(nw[k])} → ${short(v)}`); nw[k] = v; } };
                     TEXT_KEYS.forEach(k => setF(k, src[k]));
                     // 기기: 순서대로 적힌 칸만
-                    const srcDevs = [{ model: src.deviceModel, type: src.deviceType, date: src.deviceOption }].concat(src.devices || []);
-                    const multi = srcDevs.length > 1 || (nw.devices || []).length > 0;
+                    const srcDevs = src.devices || []; // v250: 엑셀에 적힌 자리 그대로 (①②③…)
+                    const multi = srcDevs.length > 1 || nw.devices.length > 1;
                     srcDevs.forEach((d, i) => {
-                        if (!d.model && !d.type && !d.date) return;
+                        if (!devFilled(d)) return;
                         const num = multi ? (DEV_NUMS[i] || (i + 1)) + ' ' : '';
-                        if (i === 0) {
-                            setF('deviceModel', d.model, num + getLabel('deviceModel'));
-                            setF('deviceType', d.type, num + getLabel('deviceType'));
-                            setF('deviceOption', d.date, num + getLabel('deviceOption'));
-                        } else {
-                            while (nw.devices.length < i) nw.devices.push({ model: '', type: '', date: '' });
-                            const td = nw.devices[i - 1];
-                            [['model', 'deviceModel'], ['type', 'deviceType'], ['date', 'deviceOption']].forEach(([f, lk]) => {
-                                if (d[f] && d[f] !== td[f]) { changes.push(`${num}${getLabel(lk)}: ${short(td[f])} → ${short(d[f])}`); td[f] = d[f]; }
-                            });
-                        }
+                        while (nw.devices.length <= i) nw.devices.push({ model: '', type: '', date: '' });
+                        const td = nw.devices[i];
+                        [['model', 'deviceModel'], ['type', 'deviceType'], ['date', 'deviceOption']].forEach(([f, lk]) => {
+                            if (d[f] && d[f] !== td[f]) { changes.push(`${num}${getLabel(lk)}: ${short(td[f])} → ${short(d[f])}`); td[f] = d[f]; }
+                        });
                     });
                     if (ex.division === '임대') {
                         setF('installDate', r.instD);
