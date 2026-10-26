@@ -1005,10 +1005,12 @@
             font-size: 12.5px; color: #3a3830; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
             background: transparent; border: none; outline: none; width: 100%; resize: none; font-family: inherit; overflow: hidden;
         }
-        /* v251: AS 메모 카드 보기 — "· "로 시작하는 줄은 넘어가는 줄이 · 뒤에 맞춰 들여쓰기 (누르면 고치는 칸으로) */
+        /* AS 메모 카드 보기 — "• "·"  - "로 시작하는 줄은 넘어가는 줄이 글자 시작에 맞춰 들여쓰기 (누르면 고치는 칸으로) */
         .as-entry .txt-view { font-size: 12.5px; color: #3a3830; line-height: 1.5; word-break: break-word; white-space: pre-wrap; cursor: text; min-height: 1.5em; }
         .as-entry .txt-view .bl { display: flex; gap: .4em; }
         .as-entry .txt-view .bl > i { font-style: normal; flex: none; font-weight: 800; color: var(--teal); }
+        .as-entry .txt-view .bl.sub { padding-left: 1.1em; } /* v263: 하위 줄 */
+        .as-entry .txt-view .bl.sub > i { color: #8a8578; font-weight: 700; }
         /* v251: 도움말 ⓘ — 마우스 올리거나(폰은 탭) 하면 말풍선. 설명 글은 스크립트의 HELP_TEXT 한 곳에 모음 */
         .help-tip { position: relative; display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 6px; vertical-align: 1px;
             border-radius: 50%; border: 1px solid #c9c1ab; color: #8b8470; font-size: 10px; font-weight: 800; cursor: help; outline: none; }
@@ -5674,10 +5676,12 @@ function generateUniqueId() {
         }
 
         // v251: AS 메모 카드 — 평소엔 보기 칸(글머리표 들여쓰기), 누르면 고치는 칸, 다 쓰고 나가면 다시 보기 칸
-        function memoViewHtml(text) {
+        function memoViewHtml(text) { // v263: "• " = 글머리표 · "  - " = 하위 줄 (넘어가는 줄은 글자 시작에 맞춰 들여쓰기)
             return String(text || '').split('\n').map(line => {
-                const m = line.match(/^·\s?(.*)$/);
-                return m ? `<div class="bl"><i>·</i><span>${escapeHtml(m[1]) || '&nbsp;'}</span></div>` : `<div>${escapeHtml(line) || '&nbsp;'}</div>`;
+                let m = line.match(/^ {2}-\s?(.*)$/);
+                if (m) return `<div class="bl sub"><i>-</i><span>${escapeHtml(m[1]) || '&nbsp;'}</span></div>`;
+                m = line.match(/^•\s?(.*)$/);
+                return m ? `<div class="bl"><i>•</i><span>${escapeHtml(m[1]) || '&nbsp;'}</span></div>` : `<div>${escapeHtml(line) || '&nbsp;'}</div>`;
             }).join('');
         }
         function memoEditOpen(view) {
@@ -5691,10 +5695,12 @@ function generateUniqueId() {
             ta.hidden = true; view.hidden = false;
         }
 
-        /* ===== v251: 여러 줄 칸 글머리표 "·" — 모든 textarea에 자동 (빼고 싶은 칸은 data-nobullet) =====
-           "- "+스페이스 → "· " · Enter → 다음 줄도 "· " · 빈 "· " 줄에서 Enter / "· " 바로 뒤 Backspace → 글머리표 끝
+        /* ===== 여러 줄 칸 글머리표 — 모든 textarea에 자동 (빼고 싶은 칸은 data-nobullet) =====
+           v263: 글머리표 "·" → "•" (더 크게) + 하위 줄 "  - " (워드·구글문서·노션과 같은 방식)
+           "- "+스페이스 → "• " · Enter → 다음 줄도 같은 모양 · 빈 줄에서 Enter → 한 단계 위로(하위 → • → 끝)
+           Tab → 하위 줄로 · Shift+Tab → 위로 · • 뒤에서 "- "+스페이스 → 하위 줄 (폰용) · 글머리표 바로 뒤 Backspace → 한 단계 위로
            Shift+Enter → 그냥 줄바꿈 · Ctrl/⌘+Enter(AS 등록)는 안 건드림 · 한글 입력 중(조합 중) Enter는 무시 */
-        const BULLET = '· ';
+        const BULLET = '• ', SUB_BULLET = '  - ';
         function taReplace(ta, s, e, txt) { // 되돌리기(Ctrl+Z)가 되도록 execCommand 먼저, 안 되면 직접 바꿈
             ta.focus(); ta.setSelectionRange(s, e);
             let ok = false;
@@ -5702,30 +5708,43 @@ function generateUniqueId() {
             if (!ok) { ta.setRangeText(txt, s, e, 'end'); ta.dispatchEvent(new Event('input', { bubbles: true })); }
         }
         const bulletTa = (t) => t && t.tagName === 'TEXTAREA' && !('nobullet' in t.dataset);
+        const lineMark = (line) => line.startsWith(SUB_BULLET) ? SUB_BULLET : line.startsWith(BULLET) ? BULLET : ''; // 이 줄의 글머리표
+        const OUTDENT = { [SUB_BULLET]: BULLET, [BULLET]: '' }; // 한 단계 위로
+        function setLineMark(ta, ls, oldMark, newMark) { // 줄 앞 글머리표만 바꾸고 커서는 글자 기준 그대로
+            const s = ta.selectionStart, e = ta.selectionEnd, d = newMark.length - oldMark.length;
+            taReplace(ta, ls, ls + oldMark.length, newMark);
+            ta.setSelectionRange(Math.max(ls + newMark.length, s + d), Math.max(ls + newMark.length, e + d));
+        }
         document.addEventListener('keydown', (e) => {
             const ta = e.target;
             if (!bulletTa(ta) || e.defaultPrevented || e.isComposing || e.keyCode === 229 || e.ctrlKey || e.metaKey || e.altKey) return;
             const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value, ls = v.lastIndexOf('\n', s - 1) + 1, before = v.slice(ls, s);
+            let le = v.indexOf('\n', en); if (le < 0) le = v.length;
+            const mark = lineMark(v.slice(ls, le));
             if (e.key === 'Enter' && !e.shiftKey) {
-                if (!before.startsWith(BULLET)) return;
+                if (!mark || s < ls + mark.length) return;
                 e.preventDefault();
-                let le = v.indexOf('\n', en); if (le < 0) le = v.length;
-                if (before === BULLET && s === en && !v.slice(en, le).trim()) taReplace(ta, ls, le, ''); // 빈 "· " 줄 → 글머리표 끝
-                else taReplace(ta, s, en, '\n' + BULLET);
-            } else if (e.key === 'Backspace' && s === en && before === BULLET) {
-                e.preventDefault(); taReplace(ta, ls, s, '');
+                if (before === mark && s === en && !v.slice(en, le).trim()) setLineMark(ta, ls, mark, OUTDENT[mark]); // 빈 줄 → 한 단계 위로
+                else taReplace(ta, s, en, '\n' + mark);
+            } else if (e.key === 'Tab' && mark) { // 글머리표 줄에서만 Tab을 가로챔 (다른 줄은 원래대로 다음 칸 이동)
+                e.preventDefault();
+                if (e.shiftKey) setLineMark(ta, ls, mark, OUTDENT[mark]);
+                else if (mark === BULLET) setLineMark(ta, ls, mark, SUB_BULLET);
+            } else if (e.key === 'Backspace' && s === en && mark && before === mark) {
+                e.preventDefault(); setLineMark(ta, ls, mark, OUTDENT[mark]);
             }
         });
         document.addEventListener('input', (e) => {
             const ta = e.target;
             if (!bulletTa(ta) || e.isComposing || e.data !== ' ') return;
-            const s = ta.selectionStart, ls = ta.value.lastIndexOf('\n', s - 1) + 1;
-            if (ta.value.slice(ls, s) === '- ') taReplace(ta, ls, s, BULLET);
+            const s = ta.selectionStart, ls = ta.value.lastIndexOf('\n', s - 1) + 1, before = ta.value.slice(ls, s);
+            if (before === '- ') taReplace(ta, ls, s, BULLET);
+            else if (before === BULLET + '- ') taReplace(ta, ls, s, SUB_BULLET); // • 뒤에서 "- " → 하위 줄
         });
 
         /* ===== v251: 도움말 말풍선 — 설명 글은 여기 한 곳에. 화면에는 <span class="help-tip" data-help="이름">?</span>만 붙이면 됨 ===== */
         const HELP_TEXT = {
-            memo: { title: '✏️ 줄 구분하기', rows: [['- + 스페이스', '· 글머리표'], ['Enter', '다음 줄도 · 자동'], ['빈 · 줄에서 Enter', '글머리표 끝내기'], ['· 뒤에서 Backspace', '·만 지우기'], ['Shift+Enter', '· 없이 줄바꿈'], ['Ctrl+Enter', '등록']] }
+            memo: { title: '✏️ 줄 구분하기', rows: [['- + 스페이스', '• 글머리표'], ['Enter', '다음 줄도 같은 모양'], ['Tab', '하위 줄 ( - )'], ['Shift+Tab', '한 단계 위로'], ['빈 줄에서 Enter', '한 단계 위로 · 끝내기'], ['• 뒤에서 - + 스페이스', '하위 줄 (폰)'], ['Shift+Enter', '그냥 줄바꿈'], ['Ctrl+Enter', '등록']] }
         };
         document.querySelectorAll('.help-tip[data-help]').forEach(el => {
             const h = HELP_TEXT[el.dataset.help]; if (!h) return;
