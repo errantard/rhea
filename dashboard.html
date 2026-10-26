@@ -1026,8 +1026,13 @@
         .as-empty { text-align: center; font-size: 12.5px; color: #c4beac; padding: 20px 0; }
         .as-input-wrap { border-top: 1px solid var(--border-warm); padding: 10px 16px 14px; flex-shrink: 0; }
         .as-input-row { display: flex; gap: 8px; }
+        /* v264: 등록할 날짜 — 기본 오늘, 등록 전에 바꿀 수 있음 */
+        .as-date-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+        .as-date-row label { font-size: 11px; font-weight: 800; color: var(--muted); }
+        .as-date-row input { height: 26px; padding: 0 6px; border: 1px solid var(--border-warm); border-radius: 6px; background: #fff; color: #3a3830; font: 700 12px inherit; font-family: inherit; outline: none; }
+        .as-date-row input:focus { border-color: var(--teal); }
         .as-input-row textarea {
-            flex: 1; height: 42px; max-height: 90px; resize: vertical; background: #fff; border: 1px solid var(--border-warm); border-radius: 8px;
+            flex: 1; height: 96px; max-height: 240px; resize: vertical; line-height: 1.45; background: #fff; /* v264: 4.5줄 높이 */ border: 1px solid var(--border-warm); border-radius: 8px;
             color: #3a3830; font-size: 12.5px; padding: 8px 10px; outline: none; font-family: inherit;
         }
         .as-input-row textarea:focus { border-color: var(--teal); }
@@ -2731,6 +2736,7 @@
                     <div class="as-header"><span>AS 이력 · 메모<span class="help-tip" tabindex="0" data-help="memo" aria-label="입력 도움말">?</span></span> <span class="as-count" id="detailMemoCount"></span></div>
                     <div class="as-thread" id="detailMemoList"></div>
                     <div class="as-input-wrap">
+                        <div class="as-date-row"><label for="detailNewMemoDate">📅 날짜</label><input type="date" id="detailNewMemoDate" title="이 날짜로 등록돼요 (지난 일이면 먼저 바꾸고 등록)"></div>
                         <div class="as-input-row">
                             <textarea id="detailNewMemoInput" placeholder="새 메모/AS 이력 입력... (Ctrl+Enter로 등록)" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addDetailMemoItem();}"></textarea>
                             <button type="button" class="as-send" onclick="addDetailMemoItem()">등록</button>
@@ -5656,20 +5662,23 @@ function generateUniqueId() {
             const textVal = inputEl.value.trim();
             if (!textVal) return;
 
-            const now = new Date();
-            // 2026-09-19: 시간까지 기록하면 AS 이력 카드의 날짜 인풋(고정 폭)에서 문자열 길이가
-            // 들쭉날쭉해져 일부만 잘려 보이는 문제가 있었음 → 시간은 기록하지 않고 날짜까지만 저장
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            // v264: 날짜 = 입력칸 위 날짜칸 (기본 오늘, 지난 일이면 바꿔서 등록) · 날짜까지만 저장
+            const dateEl = document.getElementById('detailNewMemoDate');
+            const dateStr = dateEl.value || formatDateYMD(todayZero());
 
             if (!item.memoList) item.memoList = [];
-            item.memoList.push({ id: generateUniqueId(), date: dateStr, text: textVal, author: currentUserDisplayName(), authorIcon: window.RheaRPG ? RheaRPG.currentIcon() : undefined }); // 17차-4: 쓴 순간의 아이콘
+            // 오래된순 유지: 지난 날짜로 등록하면 그 날짜 자리에 끼워 넣음 (같은 날짜면 뒤에)
+            let at = item.memoList.findIndex(m => stripMemoTime(m.date) > dateStr);
+            if (at < 0) at = item.memoList.length;
+            item.memoList.splice(at, 0, { id: generateUniqueId(), date: dateStr, text: textVal, author: currentUserDisplayName(), authorIcon: window.RheaRPG ? RheaRPG.currentIcon() : undefined }); // 17차-4: 쓴 순간의 아이콘
 
             try {
                 await persistMemoList(item);
                 inputEl.value = '';
+                dateEl.value = formatDateYMD(todayZero());
                 renderDetailMemoThread(item.memoList);
             } catch (err) {
-                item.memoList.pop();
+                item.memoList.splice(at, 1);
                 console.error(err);
                 alert('이력 저장에 실패했습니다: ' + (err.message || err));
             }
@@ -5976,6 +5985,7 @@ function generateUniqueId() {
             document.getElementById('detailRentalEndDate').value = item.rentalEndDate || '';
 
             document.getElementById('detailNewMemoInput').value = '';
+            document.getElementById('detailNewMemoDate').value = formatDateYMD(todayZero()); // v264
             renderDetailMemoThread(item.memoList || []);
 
             document.getElementById('detailDeleteBtn').style.display = isAdminUser() ? 'inline-block' : 'none';
