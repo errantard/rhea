@@ -3422,31 +3422,6 @@ function showSyncStatus(msg, isError) {
             }
         }
 
-        /* 2026-08-31 추가: 임대 만료일이 지난 업체는 "상태"를 자동으로 "종료"로 동기화.
-           - 만료(expired) 카테고리인데 status가 아직 '종료'가 아닌 항목만 대상으로 함(수동으로 이미 다른 상태로
-             바꿔놓은 것도 만료되면 종료로 덮어씀 — 임대가 끝났으면 상태는 종료가 맞다는 게 요청 취지).
-           - 화면에는 먼저 즉시 반영(item.status = '종료')해서 사용자가 기다릴 필요 없게 하고,
-             DB 반영은 뒤에서 in() 절로 한 번에 묶어서 보냄. 실패해도 alert로 흐름을 막지 않고 조용히 재시도는
-             다음 새로고침 때 다시 일어남(멱등 처리라 여러 번 실행돼도 안전함). */
-        async function syncExpiredRentalStatuses() {
-            const idsToUpdate = [];
-            Object.keys(allGroupsData).forEach(groupId => {
-                (allGroupsData[groupId] || []).forEach(item => {
-                    if (item.division === '임대' && getRentalCategory(item) === 'expired' && item.status !== '종료') {
-                        item.status = '종료';
-                        idsToUpdate.push(item.id);
-                    }
-                });
-            });
-            if (idsToUpdate.length === 0) return;
-            try {
-                const { error } = await sb.from('companies').update({ status: '종료' }).in('id', idsToUpdate);
-                if (error) throw error;
-            } catch (err) {
-                console.error('임대만료 자동 종료 상태 동기화 실패:', err);
-            }
-        }
-
         // 로그인 화면을 거치지 않고 이미 로그인돼 있던 세션이 복구되는 경우와, 방금 로그인 버튼을 눌러 성공한 경우가
         // 거의 동시에 겹치면 초기화(initApp)가 두 번 실행돼서 기본 그룹이 중복 생성될 수 있었음 - 이를 막는 안전장치
         let appInitStarted = false;
@@ -3457,7 +3432,7 @@ function showSyncStatus(msg, isError) {
             try {
                 await loadAllDataFromSupabase();
                 // 2026-10-03 12차: 임대 기간이 끝나도 자동으로 "종료" 처리하지 않음 → "회수대기" 단계로 보이고,
-                // 기기를 회수한 뒤 상세팝업에서 직접 "종료"로 바꾸는 방식 (syncExpiredRentalStatuses 호출 중단)
+                // 기기를 회수한 뒤 상세팝업에서 직접 "종료"로 바꾸는 방식 (옛 자동 종료 함수는 v267에서 지움)
                 await migrateKioFieldsIfNeeded();
                 await resetStaleKioLabelsIfNeeded();
                 renderGroupTabs();
@@ -3873,16 +3848,21 @@ function showSyncStatus(msg, isError) {
         window.addEventListener('scroll', hidePopoverNow, true);
 
         // 회수대기 → [회수완료]: 상태를 "종료"로 바꿈 (상세팝업에서 종료로 바꾸는 것과 같은 결과)
+        // v267: 임대 업체를 종료(회수완료)할 때 AS 이력에 오늘 날짜로 "• 기기 회수 완료" 한 줄 (회수일 = 그 카드 날짜, 카드에서 고치기 가능)
+        function withReturnMemo(list) {
+            return (list || []).concat({ id: generateUniqueId(), date: formatDateYMD(todayZero()), text: '• 기기 회수 완료', author: currentUserDisplayName(), authorIcon: window.RheaRPG ? RheaRPG.currentIcon() : undefined });
+        }
         async function markLeaseReturned(id) {
             if (guestBlocked()) return; // 17차-2 게스트 읽기 전용
             const item = findItemLocation(id).item;
             if (!item) return;
-            if (!confirm(`'${item.placeName}' 기기 회수를 완료했나요?\n상태가 "종료"로 바뀌고 목록에서 숨겨져요. (종료 보기에서 다시 볼 수 있어요)`)) return;
+            if (!confirm(`'${item.placeName}' 기기 회수를 완료했나요?\n상태가 "종료"로 바뀌고 목록에서 숨겨져요. (종료 보기에서 다시 볼 수 있어요)\nAS 이력에 오늘 날짜로 "기기 회수 완료"가 남아요.`)) return;
             try {
                 const nowIso = new Date().toISOString();
-                const { data, error } = await sb.from('companies').update({ status: '종료', updated_at: nowIso }).eq('id', id).select().single();
+                const memoList = withReturnMemo(item.memoList);
+                const { data, error } = await sb.from('companies').update({ status: '종료', memo_list: memoList, updated_at: nowIso }).eq('id', id).select().single();
                 if (error) throw error;
-                item.status = '종료';
+                item.status = '종료'; item.memoList = memoList;
                 item.updatedAt = (data && data.updated_at) || nowIso;
                 hidePopoverNow();
                 renderTable();
@@ -6082,6 +6062,8 @@ function generateUniqueId() {
                 checked: targetItem.checked
             };
             if (!formItem.placeName.trim()) { alert('장소명을 입력해주세요.'); return; }
+            // v267: 임대 업체를 이번 저장으로 종료하면(상세 [종료]) AS 이력에 회수 기록
+            if (isLeaseItem(formItem) && targetItem.status !== '종료' && formItem.status === '종료') formItem.memoList = withReturnMemo(formItem.memoList);
 
             const saveBtn = document.getElementById('detailSaveBtn');
             saveBtn.disabled = true; saveBtn.textContent = '저장 중...';
