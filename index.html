@@ -52,6 +52,9 @@ body{height:100vh;height:100dvh}
 /* ── 시네마틱 오프닝: 검은 화면 → 밝아짐 · 영화 띠 · 가운데 문구 → 띠 걷힘 ── */
 .fadeBlack{position:fixed;inset:0;z-index:40;background:#000;pointer-events:none;animation:unblack 3.2s ease .2s forwards}
 @keyframes unblack{to{opacity:0}}
+/* v266: 첫 접속에 배경 그림이 다 받아지기 전엔 검은 화면 그대로 (기사 망토 효과만 먼저 보이며 깍두기처럼 끊겨 나오던 것 방지)
+   배경이 준비되면 html에 bgReady → 그때부터 밝아짐·줌인·오프닝 문구 시작 */
+html:not(.bgReady) .fadeBlack,html:not(.bgReady) #scene{animation-play-state:paused}
 .bar{position:fixed;left:0;right:0;z-index:35;height:11vh;background:#000;pointer-events:none;transition:transform 1.5s cubic-bezier(.6,0,.2,1)}
 .bar.top{top:0}.bar.bot{bottom:0}
 body.open .bar.top{transform:translateY(-100%)}body.open .bar.bot{transform:translateY(100%)}
@@ -202,6 +205,12 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 <div id="scene">
   <div class="bgBlur"></div>
   <img id="bgimg" src="assets/login/bg.webp?v=247" alt="">
+  <script>/* v266: 배경 그림이 받아지고 그려질 준비(decode)까지 끝나면 bgReady (못 받아도 8초 뒤엔 그냥 시작) */
+  window.BG_READY=new Promise(res=>{const im=document.getElementById('bgimg');let done=false;
+    const go=()=>{if(done)return;done=true;document.documentElement.classList.add('bgReady');res()};
+    const dec=()=>(im.decode?im.decode().catch(()=>{}):Promise.resolve()).then(go);
+    if(im.complete&&im.naturalWidth)dec();else{im.addEventListener('load',dec,{once:true});im.addEventListener('error',go,{once:true})}
+    setTimeout(go,8000)});</script>
   <canvas id="fxFlag" class="fx"></canvas>
   <canvas id="fxCape" class="fx"></canvas>
   <canvas id="bBack" class="lay"></canvas>
@@ -687,7 +696,7 @@ function burnQuote(done){
     return true;
   }catch(e){console.warn(e);return false}
 }
-tm=setTimeout(()=>type(1),2000);
+window.BG_READY.then(()=>{if(!opened)tm=setTimeout(()=>type(1),2000)}); // v266: 배경 준비된 뒤부터 문구 시작
 addEventListener('keydown',open,{once:true});addEventListener('pointerdown',open,{once:true});
 })();
 </script>
