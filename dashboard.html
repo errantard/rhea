@@ -1997,6 +1997,14 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
             .mc-tag.t-warn { background: #FDE5DF; color: #B4442F; }
             .mc-tag.t-ended { background: #E4E2DC; color: #5D5A52; }
             .mc-sub2 { font-size: 12px; color: #6F6A5C; margin-top: 4px; }
+            /* v270: 주소 줄 오른쪽 = 카카오내비 바로 안내 (태그 바로 아래, 태그 크기에 맞춤) */
+            .mc-row2 { display: flex; align-items: flex-start; gap: 8px; }
+            .mc-row2 .mc-sub2 { flex: 1; min-width: 0; }
+            .mc-navi { flex-shrink: 0; margin-top: 3px; width: 32px; height: 22px; border-radius: 6px; border: 0; padding: 0; display: grid; place-items: center;
+                background: #FEE500; color: #1E1E1E; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); cursor: var(--cur-hand); }
+            .mc-navi svg { width: 13px; height: 13px; transform: rotate(45deg) translate(-1px, 1px); }
+            .mc-navi:active { transform: scale(.94); }
+            .mc-navi.busy { opacity: .55; pointer-events: none; }
             .mc-memo { margin-top: 8px; font-size: 12.5px; color: #4A4638; background: #F5EFE0; border-radius: 8px; padding: 7px 9px; display: flex; gap: 8px; align-items: baseline; cursor: var(--cur-hand); }
             .mc-memo.red { background: #FBECE8; color: #7A2A1E; }
             .mc-memo span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4802,6 +4810,7 @@ function generateUniqueId() {
            · 아래 시트(openMobileSheet): PC 말풍선(봉화·임대 여정) 대신. 같은 필터(passesHeaderFilters)로 목록을 만듦
            · 이 구역 코드는 880px 이하에서만 화면에 보이고, PC 동작은 바꾸지 않음 */
         const M_ICON = {
+            navi: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5 20 21l-8-4.2L4 21z"/></svg>', // v270 카카오내비 (길 안내 화살표)
             call: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>',
             map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'
         };
@@ -4926,10 +4935,13 @@ function generateUniqueId() {
                 const sub = [mRegion(item), item.installLocation].filter(Boolean).join(' · ');
                 const callBtn = mCallBtnHtml(item, 'card');
                 const addr = (item.installAddress || '').trim();
-                const midBtn = isWait
+                const midBtn = addr ? `<a class="mc-ab" href="https://map.naver.com/p/search/${encodeURIComponent(addr)}" target="_blank" rel="noopener">${M_ICON.map}길찾기</a>`
+                                    : `<span class="mc-ab off">${M_ICON.map}주소 없음</span>`;
+                // v270: 회수대기면 [상세] 자리에 [회수완료] (길찾기는 그대로 — 회수하러 갈 때 필요) · 상세는 이름·메모 눌러서 · 게스트는 회수 못 하니 상세 그대로
+                const lastBtn = (isWait && !document.body.classList.contains('is-guest'))
                     ? `<button type="button" class="mc-ab done" onclick="mMarkReturned('${item.id}')">회수완료</button>`
-                    : (addr ? `<a class="mc-ab" href="https://map.naver.com/p/search/${encodeURIComponent(addr)}" target="_blank" rel="noopener">${M_ICON.map}길찾기</a>`
-                            : `<span class="mc-ab off">${M_ICON.map}주소 없음</span>`);
+                    : `<button type="button" class="mc-ab" onclick="openDetailModal('${item.id}')">상세 ›</button>`;
+                const naviBtn = (addr && KAKAO_JS_KEY) ? `<button type="button" class="mc-navi" onclick="startKakaoNavi('${item.id}', this)" aria-label="카카오내비 안내" title="카카오내비 안내">${M_ICON.navi}</button>` : '';
                 return `
                 <div class="mc-card ${isAs ? 'is-as' : ''} ${isWait ? 'is-wait' : ''} ${isEndedItem(item) ? 'is-ended' : ''}">
                     <div class="mc-top">
@@ -4937,9 +4949,9 @@ function generateUniqueId() {
                         <div class="mc-name" onclick="openDetailModal('${item.id}')">${escapeHtml(item.placeName || '-')}${nameBadgesHtml(item)}</div>
                         ${mCardTag(item)}
                     </div>
-                    <div class="mc-sub2">${escapeHtml(sub || '-')}</div>
+                    <div class="mc-row2"><div class="mc-sub2">${escapeHtml(sub || '-')}</div>${naviBtn}</div>
                     <div class="mc-memo ${isAs ? 'red' : ''}" onclick="openDetailModal('${item.id}')"><span>${escapeHtml(memo ? memo.text : 'AS 이력 없음')}</span>${memo ? `<em>${mAgoText(memo.ago)}</em>` : ''}</div>
-                    <div class="mc-acts">${callBtn}${midBtn}<button type="button" class="mc-ab" onclick="openDetailModal('${item.id}')">상세 ›</button></div>
+                    <div class="mc-acts">${callBtn}${midBtn}${lastBtn}</div>
                 </div>`;
             }).join('');
         }
@@ -5030,6 +5042,52 @@ function generateUniqueId() {
             setTimeout(() => { const on = document.querySelector('#headerFilterRow .way.active'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' }); }, 60);
         }
         // 회수완료: PC와 같은 markLeaseReturned(확인창 → 상태 "종료") 후 시트가 열려 있으면 새로 그림
+        /* ===== v270: 카카오내비 바로 안내 (폰 카드 전용 · PC/길찾기 버튼은 네이버지도 그대로) =====
+           카카오내비는 주소만으로 못 열고 좌표가 필요 → 카카오 지도 SDK로 주소 → 좌표 바꾼 뒤 Kakao.Navi.start
+           KAKAO_JS_KEY = 카카오 개발자 앱의 JavaScript 키 (사이트 주소 errantard.github.io 등록해야 작동) · 비어 있으면 버튼 안 보임
+           SDK 두 개는 버튼 처음 누를 때만 받음 · 바꾼 좌표는 이 폰에 기억(같은 주소 다시 누르면 바로) */
+        const KAKAO_JS_KEY = 'dc47619ab0bf7366511471a5b830c14c';
+        const KAKAO_SDK_URL = 'https://t1.kakaocdn.net/kakao_js_sdk/2.8.4/kakao.min.js';
+        let kakaoReady = null;
+        function loadScriptOnce(src) {
+            return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('불러오기 실패: ' + src)); document.head.appendChild(s); });
+        }
+        function ensureKakao() {
+            if (!kakaoReady) kakaoReady = Promise.all([
+                loadScriptOnce(KAKAO_SDK_URL).then(() => { if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY); }),
+                loadScriptOnce(`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&libraries=services&autoload=false`).then(() => new Promise(r => window.kakao.maps.load(r)))
+            ]).catch(e => { kakaoReady = null; throw e; });
+            return kakaoReady;
+        }
+        function kakaoFindXY(addr, name) {
+            const key = 'rhea-navi-xy:' + addr;
+            try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c) return Promise.resolve(c); } catch (e) {}
+            const S = window.kakao.maps.services;
+            const save = (c) => { try { localStorage.setItem(key, JSON.stringify(c)); } catch (e) {} return c; };
+            return new Promise((res, rej) => {
+                new S.Geocoder().addressSearch(addr, (r, st) => {
+                    if (st === S.Status.OK && r[0]) return res(save({ x: +r[0].x, y: +r[0].y }));
+                    new S.Places().keywordSearch(name || addr, (r2, st2) => {   // 주소가 이상하면 장소명으로 한 번 더
+                        if (st2 === S.Status.OK && r2[0]) return res(save({ x: +r2[0].x, y: +r2[0].y }));
+                        rej(new Error('위치를 못 찾음'));
+                    });
+                });
+            });
+        }
+        async function startKakaoNavi(id, btn) {
+            const item = (findItemLocation(id) || {}).item; if (!item) return;
+            const addr = (item.installAddress || '').trim(); if (!addr) return;
+            if (btn) btn.classList.add('busy');
+            try {
+                await ensureKakao();
+                const c = await kakaoFindXY(addr, item.placeName);
+                window.Kakao.Navi.start({ name: item.placeName || addr, x: c.x, y: c.y, coordType: 'wgs84' });
+            } catch (e) {
+                console.error(e);
+                alert('카카오내비를 못 열었어요. 주소를 확인하거나 [길찾기]를 써주세요.\n(' + e.message + ')');
+            } finally { if (btn) btn.classList.remove('busy'); }
+        }
+
         async function mMarkReturned(id) {
             if (guestBlocked()) return; // 17차-2 게스트 읽기 전용
             await markLeaseReturned(id);
