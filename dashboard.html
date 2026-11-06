@@ -29,7 +29,10 @@
   document.documentElement.classList.add('authWait');
   setTimeout(function(){document.documentElement.classList.remove('authWait')},8000);   // 혹시 확인이 멈춰도 8초 뒤엔 보이게
 })();</script>
-<style>html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
+<style>
+/* v269 커서: 누르는 곳 = 철 화살표(--cur-hand) · 정보 아이콘 = 금 물음표(--cur-help) · 2x 화면은 64px 그림 · image-set 안 되는 옛 브라우저는 그냥 화살표 */
+:root { --cur-hand: image-set(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAEVElEQVR42u2WW2wUZRTH/9/s7MzOzG7pStnSO9BS2lqEqrQNXqIVIm1MICFIFF9IDC+YGBKiMUQTDfqiiU8+Gd98EB+AFBMCXqoiIHKpWAoipIWWUtbS7bKX2enOd87nw5bGF2OgF33gn0zmYb7k/PI75zsZ4P8Qy3J2OU7kzf8MoLqirPezj3aoyrLYAQCh+aytAUBROBSQkvDBG5s2tbWsOGfbdtm8AjAUDMNEItiKLZ0tDR1rGy/Ytt0ybwBQDCaJNWtasbRtu1i5oqr4xa5HT9l2ZOM8AShB0odh6KiurkJd+yuaEynWd25rP2Db4T1zDqCUApMEMSOdyaKkZBFaOraL266Dd197dq/jhL8EYMyhAYClD2ZGKp2BY1sABNrWvSz648X4ZM+GLXVLyk4BkYVzYwAKzBLMDDeXg4KCHghASsKq9vX44VoFdmxetXptS+yiYUQa5mQIacoAScadO2k4jg1iAklCfWMzBvKr8GRLecmGJyp7bdvumoMZoAIAERKJJCJhB1ISiBgkCaXlVXCjHdqihUXG1vXLv3IcZ/fsGYCamgEFIkJe+shksnBsC1JKEBFISkQiRbCXdGoZP4Sdm5s+dJzw5wD0mQNw4RbcNUBSYnwiiQWRCIgJ8m92goaB0qZO0Tdi4J3tK7fFFkaPAYjOcBMCRIUZkFTQPpG8AzNkABDTxe++BYCa5mfw9eUIdm+tbW+uLe0zTbPufgB0ABBKKSKeLlDoPcH3CUIANGVndGQI3uQkmArfTacEX5xOoas9VnGiP3j+zO/JFzwv03PPAKwAKXnaACtG44o69F+6Atd1wcxIjI+BR45idU0YmiYQmHr8GINYx8a1pXbvleRbAO4dQIEhiUHMCGgaGupr0dPzIwZ/O4LKpg5YtgMnHEbc09A3kM5/33v7bY9UhoiyzCInhPCE4Fw2q/XeVwugACkJAgJVleU4fPgIhs/u4+XlpjYxdBxm/TooBaT0WrTW3DAOnaSruVxm/6zuASLGzVtxHOruRvzXfUoXNHrw+Ni5qLilXDcLZsay+kac/iOFpx+J7p3lVVww0PPtN0hfPqhSbv5K9/Gh5vhE/vV4Iicmrp8pXMGggTG5GA0VVqNlWa2zB8BAOpWGPnoEw2O5k9+dHVkNIOl56Z/6rmX6LW9QERGIJCqWPozhMQ+P1RW/P2sAPrFyTOD8QHb/z/3xpwDk7h4YGPXeA/tibLgfzAzLdjCcCaMmFnzOsqyqmQIEAECyHhyMexev3ki8OtWR6UiZvxQIBHc+ZGQtPVormAgSJkL5ESFEYMGthNs9cwCZ/yWdnTz6D2dU0hX8+LLg8+P5IuiGBTNkYejaIJaXas0Xrqc+BpCfEcC/RUr/ohk0d4VERp+c9IHxs6ha4OPYpYzmc+Cg7/s35xQAwGTK02JNi7lN5f7E1Zuud+Ky+2nazb/ked6Fefl/D4VC1YuikWOW5ewCUIQHeZBZyl9iFFSTqmKWMwAAAABJRU5ErkJggg==) 1x, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAL00lEQVR42u2be3RV1Z3HP+c+cu855557b14IhAAJkAACCfISLBl84AspFabYdhB1UaPOVBejTnX5mGI7FSuFOs6MVbBaK6a1Qlm1I61YEEEYMCSApIEgCIEkFvLOzX3k3nP2nj/uvSEk0Hamq3B5/P7Z5+5z1r5rf9d3f3/f3z77wOW4tMPe84eqGs+npaVNjcWiu4DYJYWErhuP6bohdd2QmubZrapqzqUwb1vyQko5DODHz97JfQtmFNts9gpN0666ZBigaZ5XdN2QovYNKWrfkC8/t0hqmieoqp65lwQDAAVAWCa7q47yzfnTWPvy/ZpHd63RdePxSwEACSCFxep39/KPT5cxY8pwNpUtVgYNSF+qacYbFzsAAFiWSW5uLiOnzGf+g6/TP0vnw7ceonh0zkJN82wF/Bc1AFKYSCkYM7aIryx4hL9/sIxAZ5D1r5Yy+7oxX9I0o8Llco24iDXAQgqBJQT5ecN4dsWr3Pe9jeyuPs5Plt7BP99Tku9wpJW73Z4ZFyUDhGUihMTQdTLSfXgNL99+ainPrz7Mmt/u5vHSGbz83Xk+V5rt95pmfPOiBEAisNtt2Ow2hBT4fV7uKf0Wmw7oPPMfG5g9o5A1L95p93vdq3TdWJ5kz0WiAfElIAEpIRgKo7rd2Gw2bp71ZWz9SrjnibWMGZHNb1feRX5uxsOaZrwLqBcPA4RECAlI2ts7UADDoyOFZMy4YiZefxfzH15DmkPhNy99g8njcm7Tdc8OTdMGXvgACAspBVJKpJR0BkPETBOfz4sQ8f4BOYOY8w+LWfj0B9TWt/KLZfOYN3P0OEWxVV5o9rkvAKaZAEAgJViWoK2jA4fDjlt1YQmBFBKv18+dpY/w+EtVbNxxmB8+ej2PLbrmCkWxbVNV4/YLXgOQdLOguaUNJPgNL1JKLCEQUuJwOPn63Q/ws81R/v3Nndw3r4hXl8xyu122tZpmPHHhaoCUSClASoQQxGIxgqEQhuEB4qAIYSFE/Prm275CbbSQB5duYFpRf365bI6Sna5+X9c9PwccF5wGiAT9kwwQQtDa0oaigM97Sgt6tkXjJ5E18lYWPvU+A7NU1q34MoVDM7+maZ4PU9k+n4EBMRAJDYDuNd/a3o4QknS/t8/kk1kjd0geE2+4kwX/+hGBYIS3n7uF6eNzUto+99UAy0JIiejFAMsStLa2oaoqTqezu1/0AsPnz+CmuYt48IV9VFR/wStPzOCu20amrH0+YzXYnQWge3KWEDQ2t4KUZGX448zoMXlLWAkmCFxulVnz7mL5umZ++ptqHltYxJLSiT6nQ0k5+3x2JyjiVjA5+bgnCBKJdOH3+0DS3d+7FUJgs9m44Za5bK/N4smXdnJ7yWBWPVli11XHKl33/OhM/51STlDSV+iklJxsasZhd+D1GvF+68zPJdviiVOJ+qdQunQbo4Z4Wb2khAGZ2mJN86wH9NR1giKhAeL0STU2tSCkIDvDf9ZJCyHi6VIIJJLBQ4eRWzSLu7+/E5dToeyZ6Ywbnn6Trns+Od/2+aw+QEgR14Re9I7FYrS1tuP1GjjsjlOTTjBB9gSDU216RhaTrv0qD6yo4tDxdlY9NpnrJvQffb7t8590gqJHFkgyQUjJiaZmQCEr09+dBUSPSSdrCSHiZioJisutUnLzfL77ixOs317PD+4fy72zh10B588+n6UWSDBAxrOAEKdPsqW1ja5olCuys7vvSxmvHpOMkPE82n1PSIkE7HY7M2bO5p2KNF54u4ZFtw7m2XvHuNOcylpN8zyVGk6wVy3Q1/QITjQ2keZyYhh6j/sSKen1uy8TpITxE6dxKDKCh178lKlX+nnlkWLFqzu/l7DPzvMGgGkl1m48D55x8lJKwuEISMjMyEgAd0oD4stHdDOpp5/ofk4K8vIL0HOv4d7lVaR7HLz27fHk9tO+pmnGVjAyzwUAPQsVEZ9InL7ybAyQkqzMDIblDaEzFOLYsbrT7ydAazzxBUcOfwY99haklHGNEIk20Rd1ZHH3D3az7L7RrHx4HE/85MCUyoPtu6RUS8Lh8PFzBYACYJoWllBO7QeIuDVOZoGcgf0ZlNOfjo4Ae6v2E43G+lSPDfXHKN/0DjdN6odEoqAk3rv0bbvvF/anvKaNwf3crHhgNKXLPx16sK7zfuDJcwWATDJA9GRAD9rn5w0hKzOdlpY2qvbXYCYFU/Sgu5REo10MyHSz4IaBdMUEXTFBtFfbFRNETXmq3xR0RQXrPv4jwbBFQ3MERZE153IJdGuA0sPExPcGoXB4Pn6flxONzezdt4+d2z5CSsnVX7q2j/rnDs5jywcm9U1hKg928MKvjtSDUgnSVBRMICalYgImyBiQ6FdiQghTURQTlF2hUPDX5xKAxIsRgSkk8VJAYrPZKCzIR1dV6v94kr1797Gm7DUMezuzpmTz8eYPmDr9uu6UmWTEyLHjefvDGr41ZzA/3VDnaTjZegcQTvlq0LTiap9U89Ejh+PRNI4eq6OiooK3Xn+JHKOT5xaN4MYJmbiCB4iEw92pM7kMCkaN4cNP22gJRLllcrZPVfXSC+PlaMLwJBVadbv57PARdpWXs/q1/2LCUIXvLMhn54E29hxq57bJGVTvq+xOnUnT43K5yR1ayHs7G7l1YiaKYlt8Qbwet8yEmidErbrmEDt27KDsZyu59SoP/zQ7h19vP8nyNbWs2XqSkYNUWus+7eUDEstgTDHrP2nC5VS4cULG0FQ8bGHrfR3PAAJLWFTtr2H7ti2sKXuVRTOzmD89m5Xr63l9Q8Mqy6Jk7+cBjjdGuLlY41BN9WmFEEg8hg89PYdNe1qYc3UWdkV59ALQgPhu79HaOj7atJH3frWaR+cOYuoog2VrjvF+RfOSUKizNBIJbJVS7n13RyOTCwxqa8p7maZ4bVAwaizv7mgk3WPnqgJjqqZpk1J7CVjxtf/R73/Hxx+s4+mvD2H4ADf/VlZL+cFAaSjU+cypukE+v7WqnUAoxtR8SUP98cS2+SkQ+vXPISR0Kg8FuGVCOopi+5cU3xMUHKs9wv7dm/nONwbjU20seauWmrrw3FAosKrns5FIsCxmiob3K1spudLL4f0VfQoiKQUFo8bx3ifNjBiokpvl/qrb7R6csgckLCHp77Px9B2DiEQtlpQd6zzeGLwmHA6sO9MAiqK8uHFPK04H5BstdLS39an+cgbn8Xmj5HBDiFmT0rHbnYtTEQARzwIWN47380VrlKW/PN7Y2hmdHg6Ht59tgGAw8HJ70AxtqWrnhmIfNdV7elSBcU1QFIXhBaP5XWUrxfkafo+jFDBSMgtEohblBwM890790UA4OikYDO75M2O0A69tqGzDcNvwmbVEuyJ99gGGDitg16EwLR0xZhZ5dVXV7yWVzgo7HM4RiqLcVHE4xNbqjn2hENNNM9TwFw1itx3ojMiH8q5wKQUDXXxyuIuMzH6nZQUUiERCtLY0cf04H1v3B8aFwl0rUgYA04ztdzrTjoe6xJZgsPMBiLb+pYOYptnmdKYVBSPWqGvHGpRXNZCdO6r7pElye03TdP6n4g/83ZUeYibGsWb5B9OMVqfKafFILBYtj8Wi24Do/3kge9oXLQHrnqvyVNJ1qDnpwOtPP61AcjrTaG5uRsaCXF2osXV/cGg0Gl2VUmnw/xuRSOcWIWXFxn0BRg5Mo7muuocGnNpZGpJfwM7PgmhpCsVD1Umqqk5Lme8F/ura2uEMnGy35l1doILVRVMsHZdbRUpJW1sLHfX7GK4e5fYpXqIxQeXnEZoCoi4Wi24+XwAof4NT53U3Fnlypo/UWLnNSdaAQejhI4wdaJKb6aApYLHjszCVRyJ0xWSHZck5kUjn5ouCAQBpaS7HyXZr5rQCN1lqF+Oy2hg1UKGuOcZ/V3ayfneQuubYCdOSy0IhFppm53kVwb/FAUefpnka5kz0aIUDnFQc6aLiSBftIYGUco+iyBXBYPBNuKg/v/H8KPn5TeITnLVut6eESygMXTfe1DTPf7rd7iFcjstxOS7H5bgcl+NypGD8L348OnzvQAd4AAAAAElFTkSuQmCC) 2x) 2 2, pointer; --cur-help: image-set(url(data:image/png;base64,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) 1x, url(data:image/png;base64,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) 2x) 2 2, help; }
+html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
     <!-- 디자인 유지 엑셀 내보내기용 ExcelJS + FileSaver -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -175,7 +178,7 @@
             color: var(--mint);
             font-size: 14px;
             line-height: 1;
-            cursor: pointer;
+            cursor: var(--cur-hand);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -185,7 +188,7 @@
         .group-add-btn:hover { background: var(--ink2); color: #fff; border-color: var(--amber); }
 
         .navbar-right { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; justify-content: flex-end; }
-        .user-profile { font-size: 12.5px; font-weight: 700; color: var(--ink); background: var(--amber); padding: 6px 14px; border-radius: var(--r-pill); cursor: pointer; transition: filter 0.15s, transform 0.1s; user-select: none; }
+        .user-profile { font-size: 12.5px; font-weight: 700; color: var(--ink); background: var(--amber); padding: 6px 14px; border-radius: var(--r-pill); cursor: var(--cur-hand); transition: filter 0.15s, transform 0.1s; user-select: none; }
         .user-profile:hover { filter: brightness(0.94); }
         .user-profile:active { transform: scale(0.97); }
 
@@ -201,7 +204,7 @@
             border-radius: var(--r-pill);
             font-size: 12px;
             font-weight: 600;
-            cursor: pointer;
+            cursor: var(--cur-hand);
             transition: all 0.2s ease;
         }
         .action-btn:hover {
@@ -244,7 +247,7 @@
         .backup-actions { display: flex; align-items: center; gap: var(--sp-2); }
         .backup-link-btn {
             background: none; border: none; padding: 0; font-size: 11px; font-weight: 700;
-            color: var(--teal); cursor: pointer; font-family: inherit;
+            color: var(--teal); cursor: var(--cur-hand); font-family: inherit;
         }
         .backup-link-btn:hover { text-decoration: underline; }
         .backup-divider { color: #D8D2C0; }
@@ -271,7 +274,7 @@
         .rental-mini {
             display: flex; align-items: baseline; gap: var(--sp-1);
             background: transparent; border: none; border-radius: 0;
-            padding: 2px 4px; cursor: pointer; transition: 0.15s; font-family: inherit;
+            padding: 2px 4px; cursor: var(--cur-hand); transition: 0.15s; font-family: inherit;
         }
         .rental-mini:hover { color: var(--amber); }
         .rental-mini:hover .rental-mini-label, .rental-mini:hover .rental-mini-value { color: var(--amber); }
@@ -292,11 +295,11 @@
         .rental-expiry-cell .dday-expired { background: #F7E2D8; color: var(--coral-text); }
 
         .division-toggle-group { display: flex; gap: var(--sp-6); align-items: center; padding: 6px 0; }
-        .division-toggle-group label { display: flex; align-items: center; gap: var(--sp-1); font-size: 13px; cursor: pointer; }
+        .division-toggle-group label { display: flex; align-items: center; gap: var(--sp-1); font-size: 13px; cursor: var(--cur-hand); }
 
         /* 항목/그룹 이름 - 등록/수정 팝업 안에서만(관리자 한정) 클릭해서 이름을 바꿀 수 있음 */
         /* (테이블 헤더/항목그룹 표시 토글 라벨은 label-inert가 붙어 클릭 힌트가 제거되고, 정렬(sortable-th)에 자리를 내줌) */
-        .reg-modal-body [data-field-label]:not(.label-inert), .reg-modal-body [data-group-label]:not(.label-inert) { cursor: pointer; }
+        .reg-modal-body [data-field-label]:not(.label-inert), .reg-modal-body [data-group-label]:not(.label-inert) { cursor: var(--cur-hand); }
         [data-field-label].label-inert, [data-group-label].label-inert { cursor: default; }
         .reg-modal-body [data-field-label]:not(.label-inert):hover,
         .reg-modal-body [data-group-label]:not(.label-inert):hover {
@@ -304,7 +307,7 @@
         }
 
         /* 테이블 헤더 클릭 정렬 */
-        th.sortable-th { cursor: pointer; user-select: none; }
+        th.sortable-th { cursor: var(--cur-hand); user-select: none; }
         th.sortable-th:hover { text-decoration: underline dotted; }
         .sort-arrow { font-size: 10px; margin-left: 3px; opacity: 0.75; }
 
@@ -328,7 +331,7 @@
         .filter-controls input[type="checkbox"] { width: auto; padding: 0; border: none; background: none; accent-color: var(--teal); }
         /* "항목그룹 표시" 체크박스 묶음 — 원래 .toggles 바에 있던 걸 검색줄 안으로 옮겨온 것 */
         .col-toggle-group { display: inline-flex; align-items: center; gap: var(--sp-5); flex-wrap: wrap; font-size: 12.5px; color: #C3D6E6; }
-        .col-toggle-group label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+        .col-toggle-group label { display: inline-flex; align-items: center; gap: 4px; cursor: var(--cur-hand); white-space: nowrap; }
         .col-toggle-title { white-space: nowrap; }
         /* 상태필터/정렬 드롭다운 — 화면에는 안 보이지만 값은 그대로 살아있어야 상단 상태카드 클릭, 표 헤더 클릭 정렬이 계속 동작함 */
         .visually-hidden-controls { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -336,8 +339,8 @@
         .btn-group { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
         /* 검색줄 오른쪽으로 옮겨온 그룹이동/종료업체표시/행간격 묶음 */
         .filter-side-tools { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; flex-shrink: 0; }
-        .terminated-toggle-label { display: inline-flex; align-items: center; gap: 4px; color: #EAF1F8; font-weight: bold; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
-        .btn { border: none; padding: 10px 16px; border-radius: var(--r-sm); cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13.5px;}
+        .terminated-toggle-label { display: inline-flex; align-items: center; gap: 4px; color: #EAF1F8; font-weight: bold; font-size: 12.5px; cursor: var(--cur-hand); white-space: nowrap; }
+        .btn { border: none; padding: 10px 16px; border-radius: var(--r-sm); cursor: var(--cur-hand); font-weight: bold; transition: 0.2s; font-size: 13.5px;}
 
         .btn-primary { background: var(--teal); color: #fff; }
         .btn-primary:hover { background: var(--teal-dark); color: #fff; }
@@ -360,7 +363,7 @@
         .density-switch .density-label { color: #C3D6E6; }
         .density-btn {
             font-size: 12px; color: #C3D6E6; background: var(--ink2); border: 1px solid rgba(255,255,255,0.22);
-            border-radius: var(--r-sm); padding: 3px 10px; cursor: pointer; transition: background .15s, color .15s;
+            border-radius: var(--r-sm); padding: 3px 10px; cursor: var(--cur-hand); transition: background .15s, color .15s;
         }
         .density-btn:hover { background: #22405F; }
         .density-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 700; }
@@ -373,7 +376,7 @@
             display: flex; align-items: center; gap: var(--sp-2);
             background: var(--ink2); color: #EAF1F8; border: 1px solid rgba(255,255,255,0.22);
             padding: 6px 12px; border-radius: var(--r-lg); font-size: 12px; font-weight: bold;
-            cursor: pointer; transition: 0.2s;
+            cursor: var(--cur-hand); transition: 0.2s;
         }
         .icon-btn-move:hover { background: var(--amber); color: var(--ink); border-color: var(--amber); }
         .group-move-menu {
@@ -390,7 +393,7 @@
         }
         .group-move-menu.open { display: block; }
         .group-move-item {
-            padding: 10px 16px; font-size: 13px; color: #2d3436; cursor: pointer; white-space: nowrap;
+            padding: 10px 16px; font-size: 13px; color: #2d3436; cursor: var(--cur-hand); white-space: nowrap;
         }
         .group-move-item:hover { background: #E9F2EF; color: var(--teal); }
         .group-move-empty { padding: 10px 16px; font-size: 12px; color: #b2bec3; white-space: nowrap; }
@@ -398,15 +401,15 @@
         /* 그룹편집 팝업 — 그룹별 행(색상/이름/삭제) + 새 그룹 추가 행 */
         .group-edit-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid #eef1f2; }
         .group-edit-row:last-child { border-bottom: none; }
-        .group-edit-swatch { width: 28px; height: 28px; min-width: 28px; border: 1px solid #dfe6e9; padding: 0; border-radius: 7px; cursor: pointer; background: none; }
-        .group-edit-name { flex: 1; font-size: 13px; color: #2d3436; cursor: pointer; padding: 4px 6px; border-radius: var(--r-xs); }
+        .group-edit-swatch { width: 28px; height: 28px; min-width: 28px; border: 1px solid #dfe6e9; padding: 0; border-radius: 7px; cursor: var(--cur-hand); background: none; }
+        .group-edit-name { flex: 1; font-size: 13px; color: #2d3436; cursor: var(--cur-hand); padding: 4px 6px; border-radius: var(--r-xs); }
         .group-edit-name:hover { background: #f1f3f5; }
-        .group-edit-del { background: none; border: none; color: var(--coral-text, #C1552C); cursor: pointer; font-size: 15px; padding: 4px 8px; border-radius: var(--r-xs); }
+        .group-edit-del { background: none; border: none; color: var(--coral-text, #C1552C); cursor: var(--cur-hand); font-size: 15px; padding: 4px 8px; border-radius: var(--r-xs); }
         .group-edit-del:hover { background: #F7E2D8; }
         .group-edit-order { display: flex; flex-direction: column; gap: 1px; }
         .group-edit-order-btn {
             width: 22px; height: 17px; line-height: 1; border: 1px solid #dfe6e9; background: #fafbfc; color: #636e72;
-            cursor: pointer; font-size: 9px; padding: 0; border-radius: 3px; display: flex; align-items: center; justify-content: center;
+            cursor: var(--cur-hand); font-size: 9px; padding: 0; border-radius: 3px; display: flex; align-items: center; justify-content: center;
         }
         .group-edit-order-btn:hover:not(:disabled) { background: #eef1f2; color: #2d3436; }
         .group-edit-order-btn:disabled { opacity: 0.3; cursor: default; }
@@ -542,7 +545,7 @@
         .badge-dark { background: #EFEAE0; color: #6b6656; }
 
         .btn-icon-edit {
-            background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 4px; border-radius: var(--r-xs); transition: 0.2s; display: inline-flex; align-items: center; justify-content: center;
+            background: transparent; border: none; cursor: var(--cur-hand); font-size: 16px; padding: 4px; border-radius: var(--r-xs); transition: 0.2s; display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-icon-edit:hover { background: #dfe6e9; }
 
@@ -554,7 +557,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            cursor: pointer;
+            cursor: var(--cur-hand);
             color: var(--teal);
             font-weight: 500;
             transition: color 0.15s;
@@ -570,7 +573,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            cursor: pointer;
+            cursor: var(--cur-hand);
             color: var(--teal);
             font-weight: 500;
             transition: color 0.15s;
@@ -584,12 +587,12 @@
            2026-09-20 라운드14: 글자만 클릭/hover되던 걸 셀 전체(td.sticky-col-3)로 확장 — 글자 위에
            있을 때뿐 아니라 셀 어디에 마우스를 올려도 같은 빨간색 hover 효과가 나오도록 셀 hover에서도
            안쪽 텍스트 색이 바뀌게 처리, 클릭도 td에서 받도록 이동(대장님 요청) */
-        .place-name-link { cursor: pointer; transition: color 0.12s; }
+        .place-name-link { cursor: var(--cur-hand); transition: color 0.12s; }
         td.sticky-col-3:hover .place-name-link,
         .place-name-link:hover {
             color: var(--coral); font-weight: 800; text-decoration: underline;
         }
-        td.sticky-col-3 { cursor: pointer; }
+        td.sticky-col-3 { cursor: var(--cur-hand); }
         /* 2026-09-20 라운드12: 라운드11의 No.·그룹 칸 빨간배경 방식은 "안 이쁘다"는 피드백으로 폐기,
            그룹 칸은 완전히 원래대로(강조 없음), No. 칸은 배경색 대신 번호 자리에 사용자가 직접 만든
            경고 아이콘(assets/urgent-request-icon.webp)을 넣는 방식으로 교체.
@@ -648,7 +651,7 @@
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
         .modal-content { background: #ffffff; padding: 30px; border-radius: var(--r-sm); width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; color: #2d3436; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; }
-        .close { cursor: pointer; color: #b2bec3; font-size: 24px; }
+        .close { cursor: var(--cur-hand); color: #b2bec3; font-size: 24px; }
         /* 2026-08-29: 원래 <span>이라 Tab 키로 아예 이동이 안 되던 닫기(×) 버튼 — role/tabindex 추가해서
            키보드로도 접근 가능해졌으니, 포커스 표시도 같이 넣어줌 */
         .close:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
@@ -660,8 +663,8 @@
 
         .division-switch { display: inline-flex; background: #f1f2f6; border-radius: var(--r-pill); padding: 3px; gap: var(--sp-0); }
         .division-switch label { position: relative; margin: 0; }
-        .division-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-        .division-switch span { display: block; padding: 7px 20px; border-radius: var(--r-lg); font-size: 14px; font-weight: bold; color: #636e72; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .division-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: var(--cur-hand); }
+        .division-switch span { display: block; padding: 7px 20px; border-radius: var(--r-lg); font-size: 14px; font-weight: bold; color: #636e72; cursor: var(--cur-hand); transition: 0.15s; white-space: nowrap; }
         .division-switch input:checked + span { background: #2d3436; color: #ffffff; }
         .division-switch input[value="임대"]:checked + span { background: #6c5ce7; color: #ffffff; }
 
@@ -727,7 +730,7 @@
         .detail-close {
             display: flex; align-items: center; justify-content: center;
             width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-            color: #ffffff; cursor: pointer;
+            color: #ffffff; cursor: var(--cur-hand);
             background: linear-gradient(145deg, #f0565b, #c1272d);
             border: 1px solid rgba(255,255,255,0.25);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 8px rgba(150,20,20,0.45);
@@ -766,7 +769,7 @@
         .detail-pick-opt {
             display: flex; align-items: center; gap: 5px;
             font-size: 13px; font-weight: 700; padding: 7px 14px; border-radius: 9px;
-            cursor: pointer; color: #8ea0b4; background: rgba(15,18,26,0.45);
+            cursor: var(--cur-hand); color: #8ea0b4; background: rgba(15,18,26,0.45);
             border: 1px solid rgba(255,255,255,0.12);
             transition: .15s; user-select: none; white-space: nowrap;
         }
@@ -856,7 +859,7 @@
         .dev-line .dev-date { flex: 0 0 120px; }
         /* 15차-6: [+]는 첫 줄 맨 끝(설치날짜 뒤), 아이콘은 SVG라 원 정중앙. 왼쪽 ①②… 번호 칸은 기기가 2대 이상일 때만 */
         .dev-add, .dev-num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2px; box-sizing: border-box; }
-        .dev-add { border: 1px solid #3f8f4a; background: linear-gradient(180deg, #62c473, #3f8f4a); color: #fff; cursor: pointer;
+        .dev-add { border: 1px solid #3f8f4a; background: linear-gradient(180deg, #62c473, #3f8f4a); color: #fff; cursor: var(--cur-hand);
             box-shadow: 0 2px 6px rgba(63,143,74,.35); padding: 0; }
         .dev-add svg, .dev-del svg { display: block; }
         .dev-num1 { display: none; }
@@ -864,11 +867,11 @@
         .dev-add:hover { filter: brightness(1.08); }
         .dev-num { background: #E9F4EA; color: #2a6532; font: 800 14px/1 'Public Sans', sans-serif; }
         .dev-no { color: #2a6532; font-weight: 800; }
-        .dev-del { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; border: none; background: #F3EEE4; color: #8a8578; cursor: pointer; margin-bottom: 2px; padding: 0;
+        .dev-del { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; border: none; background: #F3EEE4; color: #8a8578; cursor: var(--cur-hand); margin-bottom: 2px; padding: 0;
             display: inline-flex; align-items: center; justify-content: center; }
         .dev-del:hover { background: #F7E2D8; color: #A54823; }
         .dev-br { display: none; }
-        .brand-home { cursor: pointer; }
+        .brand-home { cursor: var(--cur-hand); }
         /* 15차-8: 로고에 마우스를 올리면 — 금빛 고리가 엠블럼 둘레를 돌고, 엠블럼이 은은하게 빛남 (RHEAVISION 글자에 올려도 같이) */
         .brand-logo-wrap.brand-home { overflow: visible; }
         .brand-logo-wrap.brand-home::after {
@@ -905,7 +908,7 @@
         .dev-add-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; display: none; flex-direction: column; min-width: 112px; padding: 5px;
             background: #fff; border: 1px solid #E3D8BE; border-radius: 10px; box-shadow: 0 10px 24px rgba(60,50,30,.16); }
         .dev-add-menu.open { display: flex; }
-        .dev-add-menu button { border: 0; background: none; text-align: left; padding: 7px 10px; border-radius: 7px; font: 700 12.5px inherit; font-family: inherit; color: #3a3830; cursor: pointer; white-space: nowrap; }
+        .dev-add-menu button { border: 0; background: none; text-align: left; padding: 7px 10px; border-radius: 7px; font: 700 12.5px inherit; font-family: inherit; color: #3a3830; cursor: var(--cur-hand); white-space: nowrap; }
         .dev-add-menu button:hover { background: #F4EFE3; }
         .dev-router .dev-num { background: #E6F0FA; color: #2F6FB0; font-size: 13px; }
         .dev-router { flex-wrap: nowrap; }
@@ -922,7 +925,7 @@
         .dev-router input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         .dev-router input[type="number"]::-webkit-inner-spin-button, .dev-router input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .rx-termbox select { width: auto; flex: none; }
-        .rx-return { flex: 0 0 auto; height: 28px; margin-bottom: 1px; padding: 0 10px; border-radius: 8px; border: 1px solid #9DBEDF; background: #EEF5FC; color: #2F6FB0; font: 800 11.5px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
+        .rx-return { flex: 0 0 auto; height: 28px; margin-bottom: 1px; padding: 0 10px; border-radius: 8px; border: 1px solid #9DBEDF; background: #EEF5FC; color: #2F6FB0; font: 800 11.5px inherit; font-family: inherit; cursor: var(--cur-hand); white-space: nowrap; }
         .rx-return:hover { background: #2F6FB0; color: #fff; }
         .dev-router.returned .dfield { opacity: .45; } /* 회수 끝난 줄 = 회색 (비활성 느낌) */
         .rx-retwrap { position: relative; flex: 0 0 auto; display: inline-flex; }
@@ -936,10 +939,10 @@
         .rx-retwrap:hover .rx-retpop, .rx-retwrap:focus-within .rx-retpop { display: flex; }
         .rx-retpop b { font-size: 11.5px; font-weight: 800; color: #d9c9a3; }
         .rx-retpop input { width: 118px; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; background: rgba(255,255,255,.08); color: #fff; font: 700 12.5px inherit; font-family: inherit; padding: 3px 6px; color-scheme: dark; }
-        .rx-unret { border: 0; background: rgba(255,255,255,.1); cursor: pointer; color: #e6dcc6; font: 700 11px inherit; font-family: inherit; padding: 4px 8px; border-radius: 6px; }
+        .rx-unret { border: 0; background: rgba(255,255,255,.1); cursor: var(--cur-hand); color: #e6dcc6; font: 700 11px inherit; font-family: inherit; padding: 4px 8px; border-radius: 6px; }
         .rx-unret:hover { background: rgba(255,255,255,.2); color: #fff; }
         /* v253: 라우터 표시 = 기기정보 칸 모델명 앞 작은 📶 (글씨 없음 · 마우스 올리면 "라우터 · 3개월째 · 무상") · 급하면 주황 점 */
-        .rt-ic { position: relative; display: inline-block; margin-right: 5px; font-size: 11px; line-height: 1; opacity: .75; cursor: help; vertical-align: 0; }
+        .rt-ic { position: relative; display: inline-block; margin-right: 5px; font-size: 11px; line-height: 1; opacity: .75; cursor: var(--cur-help); vertical-align: 0; }
         .rt-ic:hover { opacity: 1; }
         .rt-ic.warn { opacity: 1; }
         .rt-ic.warn::after { content: ''; position: absolute; right: -3px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #E8892B; box-shadow: 0 0 0 1.5px #fff; }
@@ -999,7 +1002,7 @@
         .as-entry .date-edit:focus { border-bottom-color: var(--teal); color: #3a3830; }
         .as-entry .date-edit::-webkit-calendar-picker-indicator { width: 10px; height: 10px; padding: 0; margin-left: 2px; opacity: .45; }
         .as-entry .author { font-size: 10.5px; color: var(--coral-text); }
-        .as-entry .del { position: absolute; top: 6px; right: 8px; font-size: 12px; color: #c7c2b3; cursor: pointer; opacity: 0; transition: opacity .15s; }
+        .as-entry .del { position: absolute; top: 6px; right: 8px; font-size: 12px; color: #c7c2b3; cursor: var(--cur-hand); opacity: 0; transition: opacity .15s; }
         .as-entry:hover .del { opacity: 1; }
         .as-entry .del:hover { color: var(--coral-text); }
         .as-entry .txt {
@@ -1014,7 +1017,7 @@
         .as-entry .txt-view .bl.sub > i { color: #8a8578; font-weight: 700; }
         /* v251: 도움말 ⓘ — 마우스 올리거나(폰은 탭) 하면 말풍선. 설명 글은 스크립트의 HELP_TEXT 한 곳에 모음 */
         .help-tip { position: relative; display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 6px; vertical-align: 1px;
-            border-radius: 50%; border: 1px solid #c9c1ab; color: #8b8470; font-size: 10px; font-weight: 800; cursor: help; outline: none; }
+            border-radius: 50%; border: 1px solid #c9c1ab; color: #8b8470; font-size: 10px; font-weight: 800; cursor: var(--cur-help); outline: none; }
         .help-tip:hover, .help-tip:focus { border-color: var(--teal); color: var(--teal); }
         .help-pop { position: absolute; left: -10px; top: calc(100% + 9px); width: 248px; z-index: 60; text-align: left; white-space: normal;
             background: #2f2c25; color: #f3ead6; border-radius: 10px; padding: 10px 13px 11px; box-shadow: 0 10px 28px rgba(0,0,0,.28);
@@ -1037,7 +1040,7 @@
             color: #3a3830; font-size: 12.5px; padding: 8px 10px; outline: none; font-family: inherit;
         }
         .as-input-row textarea:focus { border-color: var(--teal); }
-        .as-send { align-self: flex-end; background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 0 16px; height: 42px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+        .as-send { align-self: flex-end; background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 0 16px; height: 42px; font-size: 12.5px; font-weight: 800; cursor: var(--cur-hand); }
         .as-send:hover { background: var(--teal-dark); }
 
         .detail-footer {
@@ -1078,10 +1081,10 @@
             font-size: 13px;
             font-weight: normal;
             color: #2d3436;
-            cursor: pointer;
+            cursor: var(--cur-hand);
             margin-bottom: 0;
         }
-        .checkbox-group input[type="checkbox"] { width: auto; cursor: pointer; }
+        .checkbox-group input[type="checkbox"] { width: auto; cursor: var(--cur-hand); }
 
         .modal-footer { margin-top: 20px; text-align: right; display: flex; justify-content: space-between; grid-column: span 2; }
 
@@ -1094,9 +1097,9 @@
         .memo-author-tag.unknown { color: #b2bec3; background: #f1f2f4; font-weight: normal; }
         .memo-text-input { width: 100%; padding: 6px 8px; border: 1px solid #ced4da; border-radius: var(--r-xs); font-size: 12px; color: #2d3436; resize: vertical; min-height: 65px; }
         .memo-btn-group { display: flex; gap: var(--sp-1); }
-        .btn-memo-action { background: #edf2f7; border: 1px solid #cbd5e0; color: #4a5568; cursor: pointer; font-size: 11px; padding: 3px 8px; border-radius: var(--r-xs); transition: 0.2s; font-weight: bold; }
+        .btn-memo-action { background: #edf2f7; border: 1px solid #cbd5e0; color: #4a5568; cursor: var(--cur-hand); font-size: 11px; padding: 3px 8px; border-radius: var(--r-xs); transition: 0.2s; font-weight: bold; }
         .btn-memo-action:hover { background: #cbd5e0; }
-        .btn-memo-del { background: #fff5f5; border: 1px solid #feb2b2; color: #e53e3e; cursor: pointer; font-size: 11px; padding: 3px 8px; border-radius: var(--r-xs); transition: 0.2s; font-weight: bold; }
+        .btn-memo-del { background: #fff5f5; border: 1px solid #feb2b2; color: #e53e3e; cursor: var(--cur-hand); font-size: 11px; padding: 3px 8px; border-radius: var(--r-xs); transition: 0.2s; font-weight: bold; }
         .btn-memo-del:hover { background: #fed7d7; }
 
         #printArea {
@@ -1292,7 +1295,7 @@
         .navbar-left-stack { gap: 8px; }
         .navbar-line-top { gap: 20px; }
         .div-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.28); padding: 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.10); }
-        .div-tab { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px 0 12px; border: none; border-radius: 9px; cursor: pointer;
+        .div-tab { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px 0 12px; border: none; border-radius: 9px; cursor: var(--cur-hand);
             background: transparent; color: #DCE9E2; font: 700 15px 'Public Sans', sans-serif; white-space: nowrap; transition: background .15s, color .15s; }
         .div-tab:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .div-tab:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
@@ -1302,7 +1305,7 @@
         .div-tab.active { background: #F2C94C; color: #0F1B2A; }
         .div-tab.active .dt-cnt { opacity: 1; }
 
-        .as-panel { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 8px 0 12px; border-radius: 12px; cursor: pointer; transition: .15s;
+        .as-panel { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 8px 0 12px; border-radius: 12px; cursor: var(--cur-hand); transition: .15s;
             border: 1px solid rgba(255,140,120,0.55); background: rgba(40,14,14,0.55); box-shadow: 0 0 14px rgba(255,120,100,0.18); }
         .as-panel:hover { border-color: #FF9F8A; }
         .as-panel:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
@@ -1369,7 +1372,7 @@
         .hf-pop-sec.over { color: #FF8A7E; } .hf-pop-sec.over b { color: #FF8A7E; } /* v259 종료 지남 */
         .hf-pop-sec + .hf-pop-row { border-top: 0; }
         .hf-pop-row + .hf-pop-sec { margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
-        .hf-pop-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer; }
+        .hf-pop-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: var(--cur-hand); }
         .hf-pop-row + .hf-pop-row { border-top: 1px solid rgba(255,255,255,0.06); }
         .hf-pop-row:hover { background: rgba(255,255,255,0.06); }
         .hf-pop-main { flex: 1; min-width: 0; }
@@ -1377,7 +1380,7 @@
         .hf-pop-sub { font-size: 11.5px; color: #8EA3B8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hf-pop-tag { font: 700 11px 'IBM Plex Mono', monospace; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.08); color: #C3D6E6; white-space: nowrap; }
         .hf-pop-tag.warn { background: rgba(232,96,76,0.22); color: #FF9F8A; }
-        .hf-pop-btn { border: none; border-radius: 8px; padding: 6px 10px; font: 700 12px 'Public Sans', sans-serif; background: #1F7A63; color: #fff; cursor: pointer; white-space: nowrap; }
+        .hf-pop-btn { border: none; border-radius: 8px; padding: 6px 10px; font: 700 12px 'Public Sans', sans-serif; background: #1F7A63; color: #fff; cursor: var(--cur-hand); white-space: nowrap; }
         .hf-pop-btn:hover { background: #26957A; }
         .hf-pop-foot { padding: 8px 16px 12px; font-size: 11px; color: #6F849A; border-top: 1px solid rgba(255,255,255,0.06); text-align: center; }
         .hf-pop-empty { padding: 14px 16px 18px; color: #8EA3B8; font-size: 12.5px; }
@@ -1385,7 +1388,7 @@
         .group-name-pill.group-pill-lease { background-color: #8E7CF0; color: #fff; }
         .reg-group-select { height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #D8D2C0; background: #fff; font-weight: 700; font-size: 13px; color: #1B2A3A; }
         .hf-lbl { font: 700 11px 'Public Sans', sans-serif; color: #9FB3C6; letter-spacing: .5px; margin-right: 2px; white-space: nowrap; }
-        .hf-chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; cursor: pointer;
+        .hf-chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; cursor: var(--cur-hand);
             border: 1px solid rgba(255,255,255,0.20); background: rgba(255,255,255,0.05); color: #E6EEF4; font: 600 12.5px 'Public Sans', sans-serif; white-space: nowrap; transition: .15s; }
         .hf-chip b { font: 700 12.5px 'IBM Plex Mono', monospace; color: #FBF6E8; }
         .hf-chip:hover { border-color: #F2C94C; }
@@ -1402,7 +1405,7 @@
         .hf-chip.hf-new.active b { color: #BFF3EC; }
         .hf-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.18); margin: 0 2px; }
         .hf-step { display: flex; background: rgba(0,0,0,0.22); border-radius: 999px; padding: 3px; border: 1px solid rgba(255,255,255,0.10); }
-        .hf-step button { height: 22px; display: flex; align-items: center; gap: 5px; padding: 0 11px; border: none; border-radius: 999px; background: transparent; cursor: pointer;
+        .hf-step button { height: 22px; display: flex; align-items: center; gap: 5px; padding: 0 11px; border: none; border-radius: 999px; background: transparent; cursor: var(--cur-hand);
             font: 600 12.5px 'Public Sans', sans-serif; color: #C3D6E6; white-space: nowrap; transition: .15s; }
         .hf-step button b { font-family: 'IBM Plex Mono', monospace; color: #FBF6E8; }
         .hf-step button:hover { background: rgba(255,255,255,0.08); }
@@ -1426,7 +1429,7 @@
         .dl-menu .dl-sec { font: 700 10.5px 'Public Sans', sans-serif; color: #8EA3B8; letter-spacing: .4px; padding: 10px 14px 4px; }
         .dl-menu .dl-sec b { color: #F7D874; font-family: 'IBM Plex Mono', monospace; }
         .dl-menu button.dl-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: calc(100% - 12px); margin: 0 6px; padding: 8px 10px;
-            border: none; background: transparent; border-radius: 8px; cursor: pointer; font: 600 12.5px 'Public Sans', sans-serif; color: #E6EEF4; white-space: nowrap; text-align: left; }
+            border: none; background: transparent; border-radius: 8px; cursor: var(--cur-hand); font: 600 12.5px 'Public Sans', sans-serif; color: #E6EEF4; white-space: nowrap; text-align: left; }
         .dl-menu button.dl-item:hover { background: rgba(242,201,76,0.16); color: #F7D874; }
         /* 16차-2: 데이터 메뉴 — 구역 제목 아이콘 + 엑셀/PDF 알약 버튼 줄 */
         .dl-menu { min-width: 272px; }
@@ -1437,7 +1440,7 @@
         .dl-menu .dl-lbl { font: 600 12.5px 'Public Sans', sans-serif; color: #E6EEF4; white-space: nowrap; }
         .dl-menu .dl-lbl b { color: #F7D874; font-family: 'IBM Plex Mono', monospace; }
         .dl-menu .dl-pills { display: inline-flex; gap: 4px; flex: none; }
-        .dl-menu .dl-pills button { padding: 4px 10px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.05); border-radius: 999px; cursor: pointer;
+        .dl-menu .dl-pills button { padding: 4px 10px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.05); border-radius: 999px; cursor: var(--cur-hand);
             font: 700 11px 'Public Sans', sans-serif; color: #CFDAE4; letter-spacing: .2px; transition: background .15s, color .15s, border-color .15s; }
         .dl-menu .dl-pills button:hover { background: rgba(242,201,76,0.18); border-color: rgba(242,201,76,0.55); color: #F7D874; }
         .dl-menu small { color: #8EA3B8; font-size: 11px; font-weight: 500; }
@@ -1456,7 +1459,7 @@
         .mig-step li { margin: 3px 0; }
         .mig-warn { color: #B4442F; font-weight: 700; }
         .mig-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
-        .mig-actions button { border: none; border-radius: 8px; padding: 9px 14px; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .mig-actions button { border: none; border-radius: 8px; padding: 9px 14px; font-weight: 700; cursor: var(--cur-hand); font-size: 13px; }
         .mig-btn-ghost { background: #EEE9DC; color: #3A4A5A; }
         .mig-btn-backup { background: #1F4E79; color: #fff; }
         .mig-btn-run { background: #E0B83F; color: #1B2A3A; }
@@ -1535,12 +1538,12 @@
             .mc-row:first-of-type { border-top: none; }
             .mc-row-label { color: var(--muted-light); flex-shrink: 0; width: 54px; font-weight: 600; }
             .mc-row-value { color: #3a362c; word-break: break-word; }
-            .mc-memo-box { margin-top: 10px; background: var(--paper2); border-radius: var(--r-md); padding: 10px 12px; cursor: pointer; }
+            .mc-memo-box { margin-top: 10px; background: var(--paper2); border-radius: var(--r-md); padding: 10px 12px; cursor: var(--cur-hand); }
             .mc-memo-head { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--teal-dark); margin-bottom: 3px; }
             .mc-memo-date { font-size: 10.5px; color: var(--muted-light); font-weight: 600; }
             .mc-memo-text { font-size: 12.5px; color: #4a4638; line-height: 1.42; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
             .mc-actions { display: flex; gap: var(--sp-3); margin-top: 12px; }
-            .mc-btn { flex: 1; border: none; border-radius: var(--r-md); padding: 11px 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+            .mc-btn { flex: 1; border: none; border-radius: var(--r-md); padding: 11px 6px; font-size: 12.5px; font-weight: 700; cursor: var(--cur-hand); }
             .mc-btn-detail { background: var(--teal); color: #fff; } /* 2026-09-18: 상세/수정/AS이력이 한 팝업으로 합쳐지면서
                모바일 카드 버튼도 3개(mc-btn-memo/mc-btn-detail/mc-btn-edit) → 1개로 정리, 나머지 두 클래스는 삭제 */
 
@@ -1613,7 +1616,7 @@
 
         /* 깃발: 전체 / 판매 / 임대 */
         .div-tabs { background: none; border: none; padding: 0; gap: 10px; }
-        .standard { position: relative; display: flex; align-items: center; gap: 12px; width: 164px; height: 62px; padding: 0 18px 0 16px; cursor: pointer;
+        .standard { position: relative; display: flex; align-items: center; gap: 12px; width: 164px; height: 62px; padding: 0 18px 0 16px; cursor: var(--cur-hand);
             border: 1px solid rgba(214,180,106,.22); border-radius: 10px; color: #CFD8E2; font-family: inherit;
             background: linear-gradient(180deg, rgba(21,40,64,.72), rgba(9,20,35,.72)); backdrop-filter: blur(3px);
             box-shadow: inset 0 1px 0 rgba(255,255,255,.05); transition: border-color .2s, box-shadow .2s; }
@@ -1671,7 +1674,7 @@
 
         /* 판매 그룹 = 문장 배너 */
         .banners { display: flex; gap: 8px; flex-wrap: wrap; }
-        .banner { height: 40px; min-width: 88px; padding: 0 16px 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
+        .banner { height: 40px; min-width: 88px; padding: 0 16px 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; cursor: var(--cur-hand);
             border-radius: 8px; border: 1px solid rgba(255,255,255,.14); color: #D9E1EA; font: 700 14px 'Public Sans', sans-serif;
             background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); transition: .15s; }
         .banner:hover { border-color: rgba(214,180,106,.7); }
@@ -1687,7 +1690,7 @@
         .journey { position: relative; display: inline-flex; align-self: flex-start; align-items: center; }
         .journey::before { content: ''; position: absolute; left: 20px; right: 20px; top: 50%; height: 2px; transform: translateY(-50%);
             background: repeating-linear-gradient(90deg, rgba(214,180,106,.55) 0 6px, transparent 6px 12px); }
-        .way { position: relative; display: flex; align-items: center; gap: 9px; height: 40px; padding: 0 16px 0 4px; margin-right: 18px; cursor: pointer;
+        .way { position: relative; display: flex; align-items: center; gap: 9px; height: 40px; padding: 0 16px 0 4px; margin-right: 18px; cursor: var(--cur-hand);
             border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, #132A44, #0C1D31); color: #CBD6E1; font-family: inherit; transition: .15s; }
         .way:last-child { margin-right: 0; }
         .way:hover { border-color: rgba(214,180,106,.7); }
@@ -1707,7 +1710,7 @@
 
         /* 보관소 */
         .vault { display: flex; gap: 8px; }
-        .tome { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 9px; cursor: pointer; border-radius: 8px;
+        .tome { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 9px; cursor: var(--cur-hand); border-radius: 8px;
             border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #CBD6E1; font: 700 13.5px 'Public Sans', sans-serif; white-space: nowrap; transition: .15s; }
         .tome:hover { border-color: rgba(214,180,106,.7); }
         .tome svg { width: 17px; height: 17px; }
@@ -1734,7 +1737,7 @@
 
         .hidden-by-filter-row td { background: #FFF6DC !important; color: #7B6334; font-size: 12.5px; padding: 10px 14px !important; text-align: left; }
         .hidden-by-filter-row .hbf-inner { position: sticky; left: 14px; display: inline-flex; align-items: center; gap: 12px; }
-        .hidden-by-filter-row button { border: 1px solid #D6B46A; background: #fff; color: #5A4520; border-radius: 6px; padding: 4px 10px; font-weight: 700; font-size: 12px; cursor: pointer; }
+        .hidden-by-filter-row button { border: 1px solid #D6B46A; background: #fff; color: #5A4520; border-radius: 6px; padding: 4px 10px; font-weight: 700; font-size: 12px; cursor: var(--cur-hand); }
         .hidden-by-filter-row button:hover { background: #F3D68C; }
         /* AS 요청 업체 = 붉은 밀랍 봉인 */
         .wax-seal { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 900; font-size: 12px; color: #fff; line-height: 1;
@@ -1817,7 +1820,7 @@
         .crest-motto { padding-right: 3px; }
 
         /* ===== 13차-6: 반응형 정리 ===== */
-        #hfGroupBox, #hfStageBox { cursor: pointer; }
+        #hfGroupBox, #hfStageBox { cursor: var(--cur-hand); }
 
         /* 17차-2: 게스트(읽기 전용) — 쓰기·다운로드 버튼 숨김 (함수 쪽 guestBlocked 가드 + DB 정책이 이중으로 막음) */
         body.is-guest #dlWrap, body.is-guest .m-add, body.is-guest .filter-side-tools button[onclick="openModalForAdd()"],
@@ -1987,21 +1990,21 @@
             .mc-top { display: flex; align-items: flex-start; gap: 8px; }
             .mc-seal { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #E0574A, #9E1F17); color: #fff; font: 800 11px 'Public Sans', sans-serif;
                 display: grid; place-items: center; flex-shrink: 0; margin-top: 1px; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
-            .mc-name { flex: 1; min-width: 0; font: 700 15.5px 'Public Sans', 'Noto Sans KR', sans-serif; line-height: 1.3; letter-spacing: -.2px; color: #1C2A39; cursor: pointer; }
+            .mc-name { flex: 1; min-width: 0; font: 700 15.5px 'Public Sans', 'Noto Sans KR', sans-serif; line-height: 1.3; letter-spacing: -.2px; color: #1C2A39; cursor: var(--cur-hand); }
             .mc-tag { flex-shrink: 0; font: 700 10.5px 'Public Sans', sans-serif; padding: 3px 7px; border-radius: 6px; white-space: nowrap; }
             .mc-tag.t-sale { background: #EEE7D6; color: #6B5A33; }
             .mc-tag.t-lease { background: #ECE8FF; color: #5B4BC4; }
             .mc-tag.t-warn { background: #FDE5DF; color: #B4442F; }
             .mc-tag.t-ended { background: #E4E2DC; color: #5D5A52; }
             .mc-sub2 { font-size: 12px; color: #6F6A5C; margin-top: 4px; }
-            .mc-memo { margin-top: 8px; font-size: 12.5px; color: #4A4638; background: #F5EFE0; border-radius: 8px; padding: 7px 9px; display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+            .mc-memo { margin-top: 8px; font-size: 12.5px; color: #4A4638; background: #F5EFE0; border-radius: 8px; padding: 7px 9px; display: flex; gap: 8px; align-items: baseline; cursor: var(--cur-hand); }
             .mc-memo.red { background: #FBECE8; color: #7A2A1E; }
             .mc-memo span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .mc-memo em { font-style: normal; font-size: 11px; color: #9A8F76; flex-shrink: 0; }
             .mc-memo.red em { color: #C0392B; font-weight: 700; }
             .mc-acts { display: grid; grid-template-columns: 1.25fr 1fr .9fr; gap: 6px; margin-top: 9px; }
             .mc-ab { height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; gap: 6px; font: 700 13px 'Public Sans', sans-serif;
-                border: 1px solid #E3D8BE; background: #fff; color: #2B3A4A; text-decoration: none; cursor: pointer; white-space: nowrap; min-width: 0; padding: 0 6px; }
+                border: 1px solid #E3D8BE; background: #fff; color: #2B3A4A; text-decoration: none; cursor: var(--cur-hand); white-space: nowrap; min-width: 0; padding: 0 6px; }
             .mc-ab svg { width: 15px; height: 15px; flex-shrink: 0; }
             .mc-ab small { font-weight: 600; opacity: .85; font-size: 11px; }
             .mc-ab.call { background: #1F7A63; border-color: #1F7A63; color: #fff; }
@@ -2038,7 +2041,7 @@
             .m-rows { overflow-y: auto; padding: 0 10px; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch; }
             .m-r { display: flex; align-items: center; gap: 10px; padding: 11px 8px; border-top: 1px solid rgba(255,255,255,.07); }
             .m-r:first-child { border-top: none; }
-            .m-rm { flex: 1; min-width: 0; cursor: pointer; }
+            .m-rm { flex: 1; min-width: 0; cursor: var(--cur-hand); }
             .m-rn { font: 700 14.5px 'Public Sans', sans-serif; color: #FBF6E8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .m-rs { font-size: 11.5px; color: #8EA3B8; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .m-rt { font: 700 11px 'Public Sans', sans-serif; padding: 3px 7px; border-radius: 6px; background: rgba(255,255,255,.08); color: #C3D6E6; white-space: nowrap; flex-shrink: 0; }
@@ -2071,7 +2074,7 @@
 
         /* ===== 📱 14차-3: + 버튼을 로고줄로 · COMMAND LEDGER 문구 복원 ===== */
         @media (max-width: 880px) {
-            .m-add { width: 34px; height: 34px; padding: 0; border-radius: 50%; display: inline-flex !important; align-items: center; justify-content: center; cursor: pointer;
+            .m-add { width: 34px; height: 34px; padding: 0; border-radius: 50%; display: inline-flex !important; align-items: center; justify-content: center; cursor: var(--cur-hand);
                 border: 1px solid #E6C674; color: #1A1206; background: linear-gradient(180deg, #F3D68C, #D2AA55);
                 box-shadow: 0 3px 10px rgba(190,150,70,.35), inset 0 1px 0 rgba(255,255,255,.6); }
             .m-add svg { width: 17px; height: 17px; }
@@ -2091,10 +2094,10 @@
 
         /* ===== 📱 14차-6: 전화 버튼에 이름 · 번호 여러 개면 고르는 창 · 상세팝업 번호 바로 걸기 ===== */
         @media (max-width: 880px) {
-            .mc-ab.call { font-family: inherit; cursor: pointer; }
+            .mc-ab.call { font-family: inherit; cursor: var(--cur-hand); }
             .mc-call-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .mc-call-more { font-size: 10px; opacity: .8; margin-left: -2px; }
-            button.m-rc { border: none; cursor: pointer; }
+            button.m-rc { border: none; cursor: var(--cur-hand); }
             .m-call-r { text-decoration: none; color: inherit; }
             .m-call-r .m-rs { font: 600 13px 'Public Sans', sans-serif; color: #C3D6E6; letter-spacing: .3px; }
             .m-rank { flex-shrink: 0; min-width: 44px; text-align: center; font: 700 11px 'Public Sans', sans-serif; padding: 4px 7px; border-radius: 6px;
@@ -3957,7 +3960,7 @@ function showSyncStatus(msg, isError) {
                 <div class="mig-step"><h4>2. 확인할 업체 <span class="mig-warn">${p.rentMismatch.length}곳</span></h4>
                     "임대" 그룹에 있는데 구분이 <b>판매</b>로 되어 있어요. 이대로 두면 정리 후 <b>판매</b> 탭에 나와요.
                     <ul>${p.rentMismatch.map(i => `<li>${escapeHtml(i.placeName || '-')} <span style="color:#7A8794">(${escapeHtml(((i.regionSi || '') + ' ' + (i.regionGu || '')).trim())})</span></li>`).join('')}</ul>
-                    <label style="display:flex;gap:6px;align-items:center;margin-top:8px;cursor:pointer;"><input type="checkbox" id="migFixDivision"> 이 업체들의 구분을 <b>임대</b>로 바꾸기 (매입한 업체면 체크하지 마세요)</label>
+                    <label style="display:flex;gap:6px;align-items:center;margin-top:8px;cursor:var(--cur-hand);"><input type="checkbox" id="migFixDivision"> 이 업체들의 구분을 <b>임대</b>로 바꾸기 (매입한 업체면 체크하지 마세요)</label>
                 </div>` : `<div class="mig-step"><h4>2. 확인할 업체</h4>"임대" 그룹 업체는 모두 구분이 임대로 맞게 되어 있어요 ✓</div>`;
             let modal = document.getElementById('groupMigrationModal');
             if (!modal) {
