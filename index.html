@@ -202,6 +202,7 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
 </style>
 </head>
 <body>
+<div class="fadeBlack"></div><!-- v268: 맨 위로 — HTML이 다 받아지기 전에 배경 조각(깍두기)이 먼저 보이던 것 막음 -->
 <div id="scene">
   <div class="bgBlur"></div>
   <img id="bgimg" src="assets/login/bg.webp?v=247" alt="">
@@ -241,7 +242,6 @@ body.formOn .title h1 .nm::after{animation:sweep 17s cubic-bezier(.45,0,.25,1) 2
   <div class="err" id="loginError"></div></div>
 </form>
 
-<div class="fadeBlack"></div>
 <audio id="bgm" src="assets/login/bgm.mp3?v=247" loop preload="auto"></audio>
 <div class="bar top"></div><div class="bar bot"></div>
 <div class="quote"><span id="qt"></span><span class="c"></span></div>
