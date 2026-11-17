@@ -2396,6 +2396,7 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
                     <!-- v224 (대장님): 정렬 고르기 — 기본 = AS 요청·회수대기·종료임박 맨 위 + 지역 가나다 -->
                     <select id="sortSelect" title="정렬">
                         <option value="region">기본정렬</option>
+                        <option value="updated">수정 최신</option> <!-- v287: 마지막 수정(updated_at) 최근 순 -->
                         <option value="latest">등록 최신</option>
                         <option value="first">등록 오래</option>
                         <option value="install">설치 최신</option>
@@ -4554,6 +4555,10 @@ function generateUniqueId() {
                     if (sortType === 'latest' || sortType === 'first') { // 등록한 순서(불러올 때 created_at 순) · 최근등록 = 거꾸로
                         const d = currentData.findIndex(x => x.id === a.id) - currentData.findIndex(x => x.id === b.id);
                         return sortType === 'latest' ? -d : d;
+                    } else if (sortType === 'updated') { // v287: 수정 최신 = 마지막 수정 시각(updated_at: 상세 저장·AS 메모·설치위치·회수완료 등) 최근 순 · 시각 없으면 맨 아래
+                        const ta = a.updatedAt ? Date.parse(a.updatedAt) || 0 : 0, tb = b.updatedAt ? Date.parse(b.updatedAt) || 0 : 0;
+                        if (ta !== tb) return !ta ? 1 : !tb ? -1 : tb - ta;
+                        return (a.placeName || '').localeCompare(b.placeName || '', 'ko');
                     } else if (sortType === 'install' || sortType === 'installOld') { // v224: 설치날짜(기기 여러 대면 가장 최근, 15차 getLatestInstallDate) · 날짜 없으면 맨 아래
                         const da = getLatestInstallDate(a), db = getLatestInstallDate(b), ta = da ? da.getTime() : 0, tb = db ? db.getTime() : 0;
                         if (ta !== tb) return !ta ? 1 : !tb ? -1 : (sortType === 'install' ? tb - ta : ta - tb);
