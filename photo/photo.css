@@ -64,3 +64,10 @@ body.is-guest .as-entry .rp-add { display: none; }
 
 /* 터치 기기 = 마우스 올리기가 없으니 📷 넣기 늘 보이게 */
 @media (hover: none) { .as-entry .rp-add { opacity: .65; font-size: 15px; top: 4px; right: 30px; } }
+
+/* v289: PC 더블클릭 = 화면 가득 (다시 더블클릭·Esc = 옆 창) */
+.rp-panel.big { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; z-index: 3000; background: rgba(12,13,16,.97); }
+.rp-panel.big .rp-stage { padding: 16px 70px; cursor: zoom-out; }
+.rp-panel.big .rp-nav { width: 52px; height: 90px; font-size: 36px; }
+.rp-panel:not(.big):not(.full) .rp-stage { cursor: zoom-in; }
+.rp-panel.big .rp-img { width: 100%; height: 100%; object-fit: contain; border-radius: 0; }

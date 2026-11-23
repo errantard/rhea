@@ -377,7 +377,7 @@
                     <button type="button" class="rp-x" title="닫기 (Esc)">✕</button>
                 </span>
             </div>
-            <div class="rp-stage">
+            <div class="rp-stage" title="더블클릭 = 화면 가득">
                 <img class="rp-img" alt="">
                 <button type="button" class="rp-nav prev" title="이전 (←)">‹</button>
                 <button type="button" class="rp-nav next" title="다음 (→)">›</button>
@@ -394,6 +394,8 @@
         // 폰: 옆으로 밀어 넘기기
         let sx = null;
         const st = p.querySelector('.rp-stage');
+        // v289: PC에서 사진 더블클릭 = 화면 가득 ↔ 다시 더블클릭/Esc = 옆 창으로 (← → 넘기기 그대로)
+        st.addEventListener('dblclick', (e) => { if (!e.target.closest('.rp-nav')) toggleBig(); });
         st.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
         st.addEventListener('touchend', e => {
             if (sx === null) return;
@@ -411,6 +413,7 @@
         const p = ensurePanel();
         p.hidden = false;
         p.classList.toggle('full', isMobile());
+        p.classList.remove('big');
         const ext = p.querySelector('.rp-ext');
         ext.hidden = isMobile() || !(window.screen && screen.isExtended);
         p.querySelector('.rp-del').hidden = !!(window.isGuestUser && window.isGuestUser());
@@ -461,17 +464,27 @@
     }
     function closePanel() {
         const p = $('#rpPanel');
-        if (p) { p.hidden = true; const img = p.querySelector('.rp-img'); img.removeAttribute('src'); img.dataset.pid = ''; }
+        if (p) { p.hidden = true; p.classList.remove('big'); const img = p.querySelector('.rp-img'); img.removeAttribute('src'); img.dataset.pid = ''; }
         panelState = null;
         cancelAnimationFrame(followRaf); followRaf = 0;
         unshift();
     }
 
     // 상세창 옆 자리: 오른쪽 → 왼쪽 → (좁으면) 화면 오른쪽 위에 겹치기. 상세창 끌면 따라감
+    function toggleBig(on) {
+        const p = $('#rpPanel');
+        if (!p || p.hidden || isMobile()) return;
+        const big = (on === undefined) ? !p.classList.contains('big') : on;
+        p.classList.toggle('big', big);
+        p.querySelector('.rp-stage').title = big ? '더블클릭 = 옆 창으로' : '더블클릭 = 화면 가득';
+        lastRect = '';
+        if (!big) place();
+    }
     function place() {
         const p = $('#rpPanel');
         if (!p || p.hidden) return;
-        if (isMobile()) { p.classList.add('full'); p.style.cssText = ''; return; }
+        if (isMobile()) { p.classList.add('full'); p.classList.remove('big'); p.style.cssText = ''; return; }
+        if (p.classList.contains('big')) return;   // 화면 가득일 땐 자리 계산 안 함
         p.classList.remove('full');
         const m = $('#detailModal .detail-modal-content');
         const vw = window.innerWidth, vh = window.innerHeight, gap = 12, pad = 10;
@@ -567,7 +580,7 @@
         const p = $('#rpPanel');
         if (!p || p.hidden) return;
         if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
-        if (e.key === 'Escape') { e.stopImmediatePropagation(); e.preventDefault(); closePanel(); }
+        if (e.key === 'Escape') { e.stopImmediatePropagation(); e.preventDefault(); if (p.classList.contains('big')) toggleBig(false); else closePanel(); }
         else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
         else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     }, true);
