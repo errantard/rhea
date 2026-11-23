@@ -1,0 +1,66 @@
+/* ═══ [PHOTO] 30차 v288 사진 (AS 카드 사진 줄 · 입력칸 고른 사진 · 옆 패널 · 폰 화면 가득) ═══ */
+
+/* AS 카드: 📷 넣기 = ✕ 왼쪽, 마우스 올릴 때만 */
+.as-entry .rp-add { position: absolute; top: 5px; right: 26px; font-size: 12px; cursor: var(--cur-hand, pointer); opacity: 0; filter: grayscale(1); transition: opacity .15s, filter .15s; }
+.as-entry:hover .rp-add { opacity: .7; }
+.as-entry .rp-add:hover { opacity: 1; filter: none; }
+body.is-guest .as-entry .rp-add { display: none; }
+
+.rp-strip { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+.rp-th { width: 46px; height: 46px; padding: 0; border: 1px solid var(--border-warm, #e4dccb); border-radius: 6px; background: #efebe2 center / cover no-repeat; cursor: zoom-in; transition: transform .12s, border-color .12s; }
+.rp-th:hover { transform: translateY(-1px); border-color: var(--teal, #2a8c82); }
+
+/* 새 AS 입력칸: 날짜 줄 오른쪽 📷 0/5 + 고른 사진 미리보기 */
+.as-date-row .rp-stage-btn { margin-left: auto; height: 26px; padding: 0 9px; border: 1px solid var(--border-warm, #e4dccb); border-radius: 6px; background: #fff; color: var(--muted, #8a8578); font: 700 11.5px inherit; font-family: inherit; cursor: var(--cur-hand, pointer); }
+.as-date-row .rp-stage-btn:hover { border-color: var(--teal, #2a8c82); color: var(--teal, #2a8c82); }
+.as-date-row .rp-stage-btn.on { border-color: var(--teal, #2a8c82); color: var(--teal, #2a8c82); background: #f2f8f6; }
+.rp-staged { display: flex; gap: 5px; margin-bottom: 6px; flex-wrap: wrap; }
+.rp-st { position: relative; width: 42px; height: 42px; border-radius: 6px; background: #efebe2 center / cover no-repeat; border: 1px solid var(--border-warm, #e4dccb); }
+.rp-st b { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; background: #3a3830; color: #fff; font: 700 9px/16px sans-serif; text-align: center; cursor: var(--cur-hand, pointer); }
+
+/* 폰 카드 메모 줄 📷N */
+.rp-badge { font-style: normal; font-size: 10.5px; color: var(--muted, #8a8578); margin-left: 4px; flex: none; }
+.rp-badge:empty { display: none; }
+
+/* ⇅ 데이터 메뉴 사용량 */
+.dl-menu .rp-usage { padding: 2px 14px 4px; font-size: 11px; color: #8EA3B8; }
+.dl-menu .rp-usage:empty { display: none; }
+.rp-u-bar { display: block; height: 3px; margin-top: 4px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden; }
+.rp-u-bar i { display: block; height: 100%; background: #8EA3B8; }
+.rp-usage.warn { color: #F0A35E; }
+.rp-usage.warn .rp-u-bar i { background: #F0A35E; }
+
+/* 옆 패널 (상세창 옆) */
+.rp-panel { position: fixed; z-index: 120; display: flex; flex-direction: column; background: #16181c; color: #e9e6dc; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.35); overflow: hidden; }
+.rp-panel[hidden] { display: none; }
+.rp-panel.over { box-shadow: 0 18px 60px rgba(0,0,0,.55); }
+.rp-head { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 8px 0 14px; border-bottom: 1px solid rgba(255,255,255,.07); flex: none; }
+.rp-title { flex: 1; min-width: 0; font-weight: 800; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-tools { display: flex; gap: 4px; flex: none; }
+.rp-tools button { height: 30px; min-width: 30px; padding: 0 8px; border: 1px solid transparent; border-radius: 8px; background: none; color: #c9c5ba; font: 700 12px inherit; font-family: inherit; cursor: pointer; }
+.rp-tools button:hover { border-color: rgba(230,198,116,.5); color: #E6C674; }
+.rp-tools button[hidden] { display: none; }
+.rp-tools .rp-ext { border-color: rgba(255,255,255,.12); }
+.rp-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 10px; }
+.rp-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
+.rp-img:not([src]) { display: none; }
+.rp-load { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #8b8f98; background: rgba(0,0,0,.45); padding: 3px 10px; border-radius: 10px; }
+.rp-load[hidden] { display: none; }
+.rp-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 64px; border: 0; border-radius: 9px; background: rgba(255,255,255,.05); color: #e9e6dc; font-size: 28px; cursor: pointer; }
+.rp-nav:hover { background: rgba(255,255,255,.12); }
+.rp-nav[hidden] { display: none; }
+.rp-nav.prev { left: 8px; } .rp-nav.next { right: 8px; }
+.rp-foot { display: flex; align-items: center; justify-content: space-between; height: 34px; padding: 0 14px; font-size: 11.5px; color: #8b8f98; border-top: 1px solid rgba(255,255,255,.07); flex: none; }
+.rp-dots { display: flex; gap: 5px; }
+.rp-dots i { width: 6px; height: 6px; border-radius: 50%; background: #3a3e46; }
+.rp-dots i.on { background: #E6C674; }
+
+/* 폰 = 화면 가득 */
+.rp-panel.full { inset: 0; left: 0 !important; top: 0 !important; width: 100% !important; height: 100% !important; border-radius: 0; z-index: 3000; background: #0f1013; }
+.rp-panel.full .rp-head { height: 52px; padding-top: env(safe-area-inset-top); }
+.rp-panel.full .rp-foot { padding-bottom: env(safe-area-inset-bottom); height: 44px; }
+.rp-panel.full .rp-tools button { min-width: 38px; height: 36px; font-size: 15px; }
+.rp-panel.full .rp-nav { display: none; }
+
+/* 터치 기기 = 마우스 올리기가 없으니 📷 넣기 늘 보이게 */
+@media (hover: none) { .as-entry .rp-add { opacity: .65; font-size: 15px; top: 4px; right: 30px; } }

@@ -2270,6 +2270,7 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
     </style>
     <!-- 17차-5: 모험가(RPG) 모듈 — 업무 기능과 분리. 없어도 업체관리는 정상 -->
     <link rel="stylesheet" href="rpg/rpg.css?v=224">
+    <link rel="stylesheet" href="photo/photo.css?v=288">
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════
@@ -2335,6 +2336,7 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
                         <div class="dl-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg>백업</div>
                         <button type="button" class="dl-item" onclick="closeDownloadMenu(); backupData()">데이터 백업 받기<small>JSON</small></button>
                         <button type="button" class="dl-item" id="restoreLinkBtn" onclick="closeDownloadMenu(); triggerRestoreUpload()">백업 불러오기<small>관리자</small></button>
+                        <div class="rp-usage" id="photoUsage"></div>
                         <div class="dl-foot"><span class="dl-dot" title="Supabase 클라우드 저장소"></span><span id="lastBackupNotice" class="backup-notice"></span></div>
                         <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="handleRestoreFile(this)">
                     </div>
@@ -2833,7 +2835,8 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
                     <div class="as-header"><span>AS 이력 · 메모<span class="help-tip" tabindex="0" data-help="memo" aria-label="입력 도움말">?</span></span> <span class="as-count" id="detailMemoCount"></span></div>
                     <div class="as-thread" id="detailMemoList"></div>
                     <div class="as-input-wrap">
-                        <div class="as-date-row"><label for="detailNewMemoDate">📅 날짜</label><input type="date" id="detailNewMemoDate" max="9999-12-31" title="이 날짜로 등록돼요 (지난 일이면 먼저 바꾸고 등록)"></div>
+                        <div class="as-date-row"><label for="detailNewMemoDate">📅 날짜</label><input type="date" id="detailNewMemoDate" max="9999-12-31" title="이 날짜로 등록돼요 (지난 일이면 먼저 바꾸고 등록)"><button type="button" class="rp-stage-btn" id="rpStageBtn" onclick="RheaPhoto.stagePick()" title="사진 같이 등록 (카드당 5장)">📷 0/5</button></div>
+                        <div class="rp-staged" id="rpStaged" hidden></div>
                         <div class="as-input-row">
                             <textarea id="detailNewMemoInput" placeholder="새 메모/AS 이력 입력... (Ctrl+Enter로 등록)" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();addDetailMemoItem();}"></textarea>
                             <button type="button" class="as-send" onclick="addDetailMemoItem()">등록</button>
@@ -2890,6 +2893,7 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
     <script src="rpg/rpg-data.js?v=224"></script>
     <script src="rpg/rpg-core.js?v=224"></script>
     <script src="rpg/rpg-armory.js?v=224"></script>
+    <script src="photo/photo.js?v=288"></script>
     <script>
         /* ═══════════════════════════════════════════════════════════════
            [DASHBOARD] dashboard.html 전용 스크립트 (업체관리 앱 로직)
@@ -3542,6 +3546,8 @@ function showSyncStatus(msg, isError) {
                 updateStats();
                 updateBackupNotice();
                 maybeOfferGroupMigration();
+                // v288 사진 목록 (기다리지 않음 — 받는 대로 사진 칸·📷N·사용량 채움)
+                if (window.RheaPhoto) RheaPhoto.init({ sb, getItem: (cid) => findItemLocation(cid).item, userName: currentUserDisplayName, isGuest: isGuestUser });
                 document.getElementById('searchInput').addEventListener('input', renderTable);
                 document.getElementById('searchInput').addEventListener('keydown', handleSearchEnter); // 25차: 엔터 = [전체에서 보기]
                 document.getElementById('filterRegion').addEventListener('change', renderTable);
@@ -5040,7 +5046,7 @@ function generateUniqueId() {
                         ${mCardTag(item)}
                     </div>
                     <div class="mc-mid${naviBtn ? ' has-navi' : ''}"><div class="mc-sub2">${escapeHtml(sub || '-')}</div>
-                    <div class="mc-memo ${isAs ? 'red' : ''}" onclick="openDetailModal('${item.id}')"><span>${escapeHtml(memo ? memo.text : 'AS 이력 없음')}</span>${memo ? `<em>${mAgoText(memo.ago)}</em>` : ''}</div>${naviBtn}</div>
+                    <div class="mc-memo ${isAs ? 'red' : ''}" onclick="openDetailModal('${item.id}')"><span>${escapeHtml(memo ? memo.text : 'AS 이력 없음')}</span>${window.RheaPhoto ? RheaPhoto.badge(item.id) : ''}${memo ? `<em>${mAgoText(memo.ago)}</em>` : ''}</div>${naviBtn}</div>
                     <div class="mc-acts">${callBtn}${midBtn}${lastBtn}</div>
                 </div>`;
             }).join('');
@@ -5875,6 +5881,8 @@ function generateUniqueId() {
             const listEl = document.getElementById('detailMemoList');
             const countEl = document.getElementById('detailMemoCount');
             const list = memoList || [];
+            const cid = document.getElementById('detailTargetId').value; // v288 사진 줄
+            const ph = window.RheaPhoto;
             countEl.textContent = list.length ? `${list.length}건 · 오래된순` : '';
 
             if (!list.length) {
@@ -5895,6 +5903,7 @@ function generateUniqueId() {
                         <div class="txt-view" onclick="memoEditOpen(this)">${memoViewHtml(memo.text)}</div>
                         <textarea class="txt" rows="1" hidden onfocus="autoGrowTextarea(this)" oninput="autoGrowTextarea(this)"
                             onblur="memoEditClose(this); updateDetailMemoItem('${memo.id || ''}', this.value)">${escapeHtml(memo.text || '')}</textarea>
+                        ${ph ? ph.entryHtml(cid, memo.id) : ''}
                     </div>`;
             }).join('');
             // 렌더 직후 각 textarea 높이를 내용에 맞게 한 번씩 맞춰줌 + 맨 아래(최신) 기록이 보이도록 스크롤
@@ -5902,6 +5911,7 @@ function generateUniqueId() {
                 listEl.querySelectorAll('.txt').forEach(autoGrowTextarea);
                 listEl.scrollTop = listEl.scrollHeight;
             });
+            if (ph) ph.fillThread();
         }
 
         async function addDetailMemoItem() {
@@ -5911,7 +5921,8 @@ function generateUniqueId() {
             if (!item) return;
 
             const inputEl = document.getElementById('detailNewMemoInput');
-            const textVal = inputEl.value.trim();
+            const hasPhoto = !!(window.RheaPhoto && RheaPhoto.hasStaged()); // v288: 사진만 있으면 글 없이도 등록
+            const textVal = inputEl.value.trim() || (hasPhoto ? '• 사진' : '');
             if (!textVal) return;
 
             // v264: 날짜 = 입력칸 위 날짜칸 (기본 오늘, 지난 일이면 바꿔서 등록) · 날짜까지만 저장
@@ -5922,13 +5933,15 @@ function generateUniqueId() {
             // 오래된순 유지: 지난 날짜로 등록하면 그 날짜 자리에 끼워 넣음 (같은 날짜면 뒤에)
             let at = item.memoList.findIndex(m => stripMemoTime(m.date) > dateStr);
             if (at < 0) at = item.memoList.length;
-            item.memoList.splice(at, 0, { id: generateUniqueId(), date: dateStr, text: textVal, author: currentUserDisplayName(), authorIcon: window.RheaRPG ? RheaRPG.currentIcon() : undefined }); // 17차-4: 쓴 순간의 아이콘
+            const newMemoId = generateUniqueId();
+            item.memoList.splice(at, 0, { id: newMemoId, date: dateStr, text: textVal, author: currentUserDisplayName(), authorIcon: window.RheaRPG ? RheaRPG.currentIcon() : undefined }); // 17차-4: 쓴 순간의 아이콘
 
             try {
                 await persistMemoList(item);
                 inputEl.value = '';
                 dateEl.value = formatDateYMD(todayZero());
                 renderDetailMemoThread(item.memoList);
+                if (hasPhoto) await RheaPhoto.commitStaged(id, newMemoId); // 메모 저장된 뒤 사진 올림
             } catch (err) {
                 item.memoList.splice(at, 1);
                 console.error(err);
@@ -6083,6 +6096,7 @@ function generateUniqueId() {
             try {
                 await persistMemoList(item);
                 renderDetailMemoThread(item.memoList);
+                if (window.RheaPhoto) RheaPhoto.removeMemo(id, memoId); // v288: 그 카드 사진도 같이
             } catch (err) {
                 item.memoList.splice(memoIndex, 0, removed[0]);
                 console.error(err);
@@ -6204,6 +6218,7 @@ function generateUniqueId() {
             const loc = findItemLocation(id);
             const item = loc.item;
             if (!item) return;
+            if (window.RheaPhoto && document.getElementById('detailTargetId').value !== id) { RheaPhoto.closePanel(); RheaPhoto.clearStaged(); } // v288
 
             document.getElementById('detailTargetId').value = id;
             document.getElementById('detailGroupTag').textContent = isLeaseItem(item) ? '임대' : (groupNames[loc.groupKey] || '-');
@@ -6402,6 +6417,7 @@ function generateUniqueId() {
                 }
                 const delLoc = findItemLocation(id);
                 if (delLoc.index !== -1) delLoc.arr.splice(delLoc.index, 1);
+                if (window.RheaPhoto) RheaPhoto.removeCompany(id); // v288: 그 업체 사진도 같이
                 closeDetailModal();
                 renderTable();
                 showSyncStatus('☁️ 삭제 완료');
@@ -6422,6 +6438,7 @@ function generateUniqueId() {
             document.getElementById('detailModal').style.display = 'none';
             resetDetailModalPosition();
             clearDetailOpenRow();
+            if (window.RheaPhoto) { RheaPhoto.closePanel(); RheaPhoto.clearStaged(); } // v288
         }
 
         function resetDetailModalPosition() {

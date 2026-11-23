@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RheaOps 사진</title>
+<!-- 30차 v288: 보조 모니터용 사진 창 (대시보드가 postMessage로 사진 주소를 보내줌 · 창 이름 rheaPhotoWin 하나만 계속 씀) -->
+<style>
+    :root { --bg: #14161a; --ink: #e9e6dc; --muted: #8b8f98; --line: rgba(255,255,255,.08); --gold: #E6C674; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 13px/1.4 'Pretendard', 'Malgun Gothic', system-ui, sans-serif; overflow: hidden; }
+    .head { position: fixed; inset: 0 0 auto 0; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--line); background: rgba(20,22,26,.92); z-index: 2; }
+    .head b { font-size: 15px; font-weight: 800; }
+    .head span { color: var(--muted); }
+    .head .sp { flex: 1; }
+    .head button { background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 8px; height: 30px; padding: 0 12px; cursor: pointer; font: inherit; }
+    .head button:hover { border-color: var(--gold); color: var(--gold); }
+    .stage { position: fixed; inset: 48px 0 0 0; display: flex; align-items: center; justify-content: center; }
+    img { max-width: calc(100% - 120px); max-height: calc(100% - 40px); object-fit: contain; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+    .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 80px; border: 0; border-radius: 10px; background: rgba(255,255,255,.04); color: var(--ink); font-size: 34px; cursor: pointer; }
+    .nav:hover { background: rgba(255,255,255,.1); }
+    .prev { left: 16px; } .next { right: 16px; }
+    .empty { color: var(--muted); }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 7px; height: 7px; border-radius: 50%; background: #3a3e46; }
+    .dots i.on { background: var(--gold); }
+</style>
+</head>
+<body>
+    <div class="head"><b id="t">사진</b><span id="s"></span><span class="dots" id="d"></span><span class="sp"></span><span id="n"></span><button type="button" id="dl" title="이 사진 받기">⬇ 받기</button></div>
+    <div class="stage"><span class="empty" id="e">대시보드에서 사진을 누르면 여기 떠요</span><img id="i" alt="" hidden>
+        <button type="button" class="nav prev" id="p" hidden>‹</button><button type="button" class="nav next" id="x" hidden>›</button></div>
+<script>
+(function () {
+    let st = { items: [], idx: 0 };
+    const $ = (id) => document.getElementById(id);
+    function draw() {
+        const n = st.items.length, it = st.items[st.idx];
+        $('t').textContent = st.title || '사진';
+        $('s').textContent = st.sub || '';
+        $('n').textContent = n ? `${st.idx + 1} / ${n}` : '';
+        $('d').innerHTML = st.items.map((_, i) => `<i class="${i === st.idx ? 'on' : ''}"></i>`).join('');
+        $('p').hidden = $('x').hidden = n < 2;
+        $('e').hidden = !!it; $('i').hidden = !it;
+        if (it) $('i').src = it.url;
+        document.title = (st.title ? st.title + ' · ' : '') + 'RheaOps 사진';
+    }
+    function step(d) {
+        const n = st.items.length; if (n < 2) return;
+        st.idx = (st.idx + d + n) % n; draw();
+        if (window.opener) window.opener.postMessage({ type: 'rp-idx', idx: st.idx }, location.origin);
+    }
+    window.addEventListener('message', (e) => {
+        if (e.origin !== location.origin || !e.data || e.data.type !== 'show') return;
+        st = e.data; draw();
+    });
+    $('p').onclick = () => step(-1); $('x').onclick = () => step(1);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') step(-1);
+        else if (e.key === 'ArrowRight') step(1);
+    });
+    $('dl').onclick = async () => {
+        const it = st.items[st.idx]; if (!it) return;
+        const b = await (await fetch(it.url)).blob();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = it.name || 'photo.webp';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    };
+    draw();
+    if (window.opener) window.opener.postMessage({ type: 'rp-ready' }, location.origin);
+})();
+</script>
+</body>
+</html>
