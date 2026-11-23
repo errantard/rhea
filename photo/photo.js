@@ -13,7 +13,7 @@
     'use strict';
 
     const BUCKET = 'photos';
-    const LIMIT = { as: 5, device: 3 };            // 카드(메모)당 / 기기당 최대 장수
+    const LIMIT = { as: 5, device: 6 };            // AS 카드당 / 업체당 기기 사진 최대 장수 (v290: 기기 = 업체 묶음 B안)
     const EDGE = { as: 1280, device: 1600 };       // 긴 변 px
     const THUMB_EDGE = 320;
     const QUALITY = 0.8, THUMB_Q = 0.7;
@@ -39,6 +39,9 @@
     const ofMemo = (cid, mid) => rows.filter(r => r.company_id === cid && r.kind === 'as' && r.memo_id === mid)
         .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
     const ofCompany = (cid) => rows.filter(r => r.company_id === cid);
+    const DEV = '__dev';     // 보기 창에서 "기기 사진 묶음"을 뜻하는 표시 (AS 카드 id 자리에 씀)
+    const ofDevice = (cid) => rows.filter(r => r.company_id === cid && r.kind === 'device')
+        .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
 
     /* ───────── 1. 시작 · 목록 ───────── */
     async function init(options) {
@@ -60,6 +63,7 @@
         if (open && open.style.display !== 'none' && typeof window.renderDetailMemoThread === 'function') {
             const it = cfg.getItem($('#detailTargetId').value);
             if (it) window.renderDetailMemoThread(it.memoList || []);
+            renderDevice();
         }
     }
 
@@ -235,6 +239,41 @@
         } catch (e) { console.warn('[photo] 작은 그림 주소 실패', e); }
     }
 
+    // v290 기기 사진 (업체 하나에 묶음 · 6장) — 초록 "기기" 태그 아래 알약 #rpDevPill
+    //   0장 = 흐린 📷 (누르면 사진 고르기) · N장 = 📷 N (누르면 옆 사진 창 → 위 [+ 추가])
+    function renderDevice(cid) {
+        const pill = $('#rpDevPill');
+        if (!pill) return;
+        cid = cid || $('#detailTargetId').value;
+        const n = loaded ? ofDevice(cid).length : 0;
+        const guest = !!(cfg && cfg.isGuest && cfg.isGuest());
+        pill.hidden = !loaded || (guest && !n);
+        pill.classList.toggle('on', n > 0);
+        pill.textContent = n ? '📷 ' + n : '📷';
+        pill.title = n ? `기기 사진 ${n}장 보기` : `기기 사진 넣기 (명판·설치 모습 · ${LIMIT.device}장까지)`;
+    }
+    function devPill() {
+        const cid = $('#detailTargetId').value;
+        if (ofDevice(cid).length) open(cid, DEV, 0); else addDevice();
+    }
+    function addDevice() {
+        if (window.guestBlocked && window.guestBlocked()) return;
+        if (busy) return;
+        const cid = $('#detailTargetId').value;
+        const left = LIMIT.device - ofDevice(cid).length;
+        if (left <= 0) { toast(`📷 기기 사진은 ${LIMIT.device}장까지예요`, true); return; }
+        pickFiles(async (files) => {
+            if (files.length > left) { toast(`📷 ${left}장만 더 넣을 수 있어서 앞의 ${left}장만 올려요`, true); files = files.slice(0, left); }
+            busy = true;
+            try { await uploadMany(files, cid, 'device', null); }
+            finally {
+                busy = false;
+                if (panelState && panelState.mid === DEV) panelState.idx = ofDevice(cid).length - 1; // 사진 창에서 넣었으면 새 사진 보여주기
+                rerender(cid);
+            }
+        });
+    }
+
     // 이미 등록된 카드에 사진 더 넣기
     function addTo(mid) {
         if (window.guestBlocked && window.guestBlocked()) return;
@@ -255,6 +294,7 @@
             const keep = $('#detailMemoList') ? $('#detailMemoList').scrollTop : 0;
             window.renderDetailMemoThread(it.memoList || []);
             requestAnimationFrame(() => requestAnimationFrame(() => { const b = $('#detailMemoList'); if (b) b.scrollTop = keep; }));
+            renderDevice(cid);
         }
         if (panelState) refreshPanel();
     }
@@ -371,6 +411,7 @@
             <div class="rp-head">
                 <span class="rp-title"></span>
                 <span class="rp-tools">
+                    <button type="button" class="rp-more" title="기기 사진 더 넣기" hidden>＋ 추가</button>
                     <button type="button" class="rp-ext" title="보조 모니터에 크게 띄우기" hidden>🖥 보조 모니터로</button>
                     <button type="button" class="rp-dl" title="이 사진 받기">⬇</button>
                     <button type="button" class="rp-del" title="이 사진 지우기">🗑</button>
@@ -391,6 +432,7 @@
         p.querySelector('.rp-dl').onclick = () => { const r = cur(); if (r) download(r); };
         p.querySelector('.rp-del').onclick = delCurrent;
         p.querySelector('.rp-ext').onclick = () => openExternal();
+        p.querySelector('.rp-more').onclick = () => addDevice();
         // 폰: 옆으로 밀어 넘기기
         let sx = null;
         const st = p.querySelector('.rp-stage');
@@ -404,7 +446,15 @@
         });
         return p;
     }
-    function list() { return panelState ? ofMemo(panelState.cid, panelState.mid) : []; }
+    function list() { return !panelState ? [] : panelState.mid === DEV ? ofDevice(panelState.cid) : ofMemo(panelState.cid, panelState.mid); }
+    // 아래 줄 글자: AS = "AS 2026-11-20" · 기기 = "기기 사진"
+    function capText() {
+        if (panelState.mid === DEV) return '기기 사진';
+        const it = cfg.getItem(panelState.cid) || {};
+        const memo = (it.memoList || []).find(m => m.id === panelState.mid) || {};
+        const r = cur() || {};
+        return `AS ${String(memo.date || r.taken_at || '').slice(0, 10)}`;
+    }
     function cur() { const l = list(); return l[panelState ? panelState.idx : 0]; }
 
     function open(cid, mid, idx) {
@@ -429,11 +479,11 @@
         if (panelState.idx < 0) panelState.idx = 0;
         const r = l[panelState.idx];
         const it = cfg.getItem(panelState.cid) || {};
-        const memo = (it.memoList || []).find(m => m.id === panelState.mid) || {};
         p.querySelector('.rp-title').textContent = it.placeName || '';
-        p.querySelector('.rp-cap').textContent = `AS ${String(memo.date || r.taken_at || '').slice(0, 10)} · ${panelState.idx + 1}/${l.length}`;
+        p.querySelector('.rp-cap').textContent = `${capText()} · ${panelState.idx + 1}/${l.length}`;
         p.querySelector('.rp-dots').innerHTML = l.map((_, i) => `<i class="${i === panelState.idx ? 'on' : ''}"></i>`).join('');
         p.querySelector('.prev').hidden = p.querySelector('.next').hidden = l.length < 2;
+        p.querySelector('.rp-more').hidden = panelState.mid !== DEV || l.length >= LIMIT.device || !!(cfg.isGuest && cfg.isGuest());
         const img = p.querySelector('.rp-img');
         const load = p.querySelector('.rp-load');
         load.hidden = false; load.textContent = '불러오는 중…';
@@ -545,7 +595,7 @@
         if (!panelState) return;
         if (!extAlive()) {
             const feat = await placeWindowFeatures();
-            extWin = window.open('photo/viewer.html?v=288', 'rheaPhotoWin', feat);
+            extWin = window.open('photo/viewer.html?v=290', 'rheaPhotoWin', feat);
             if (!extWin) { toast('🖥 팝업이 막혔어요 — 주소창 오른쪽에서 팝업 허용해 주세요', true); return; }
         } else extWin.focus();
         const p = $('#rpPanel');
@@ -558,11 +608,10 @@
         const l = list();
         if (!l.length) return;
         const it = cfg.getItem(panelState.cid) || {};
-        const memo = (it.memoList || []).find(m => m.id === panelState.mid) || {};
         let urls = [];
         try { urls = await signed(l.map(r => r.path)); } catch (e) { console.warn(e); }
         const msg = {
-            type: 'show', title: it.placeName || '', sub: `AS ${String(memo.date || '').slice(0, 10)}`,
+            type: 'show', title: it.placeName || '', sub: capText(),
             idx: panelState.idx, items: l.map((r, i) => ({ url: urls[i], name: fileName(r) }))
         };
         try { extWin.postMessage(msg, location.origin); } catch (e) { /* 아직 로딩 중이면 ready 때 다시 */ }
@@ -587,7 +636,7 @@
     window.addEventListener('resize', () => { lastRect = ''; place(); });
 
     window.RheaPhoto = {
-        init, entryHtml, fillThread, addTo, open, closePanel, badge,
+        init, entryHtml, fillThread, addTo, open, closePanel, badge, renderDevice, addDevice, devPill,
         stagePick, unstage, clearStaged, hasStaged, commitStaged,
         removeMemo, removeCompany, usage, fileName,
         _rows: () => rows

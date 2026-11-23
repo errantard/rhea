@@ -71,3 +71,10 @@ body.is-guest .as-entry .rp-add { display: none; }
 .rp-panel.big .rp-nav { width: 52px; height: 90px; font-size: 36px; }
 .rp-panel:not(.big):not(.full) .rp-stage { cursor: zoom-in; }
 .rp-panel.big .rp-img { width: 100%; height: 100%; object-fit: contain; border-radius: 0; }
+
+/* v290 기기 사진 = 초록 "기기" 태그 아래 작은 알약 (0장 흐리게 · N장 청록) */
+.rp-dtag-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.rp-dev-pill { display: inline-flex; align-items: center; justify-content: center; gap: 3px; height: 22px; min-width: 34px; padding: 0 7px; border: 1px dashed var(--border-warm, #e4dccb); border-radius: 11px; background: #fff; color: var(--muted, #8a8578); font: 800 10.5px/1 inherit; font-family: inherit; cursor: var(--cur-hand, pointer); filter: grayscale(1); opacity: .6; transition: opacity .15s, filter .15s, border-color .15s; }
+.rp-dev-pill:hover { opacity: 1; filter: none; border-color: var(--teal, #2a8c82); }
+.rp-dev-pill.on { filter: none; opacity: 1; border-style: solid; border-color: var(--teal, #2a8c82); color: var(--teal, #2a8c82); }
+.rp-dev-pill[hidden] { display: none; }
