@@ -58,6 +58,7 @@
         }
         refreshUsage(true);
         fillBadges();
+        setTimeout(retryQueue, 2500);
         // 상세창이 이미 열려 있으면 사진 칸 다시 채우기
         const open = $('#detailModal');
         if (open && open.style.display !== 'none' && typeof window.renderDetailMemoThread === 'function') {
@@ -148,7 +149,14 @@
 
     /* ───────── 3. 올리기 · 지우기 ───────── */
     async function uploadOne(file, cid, kind, ref) {
-        const { full, thumb, ext } = await compress(file, kind);
+        const { full, thumb, ext } = await compress(file, kind);   // 여기서 실패 = 사진 문제 (다시 올려도 안 됨)
+        try { return await putPhoto(cid, kind, ref, full, thumb, ext); }
+        catch (e) {                                                 // 여기서 실패 = 인터넷·서버 문제 → 폰에 보관해 두고 나중에 다시
+            if (await queueAdd({ cid, kind, ref, full, thumb, ext, name: file.name || '', at: Date.now(), tries: 0 })) e.queued = true;
+            throw e;
+        }
+    }
+    async function putPhoto(cid, kind, ref, full, thumb, ext) {
         const id = uuid();
         const path = `${cid}/${kind}/${id}.${ext}`;
         const tpath = `${cid}/${kind}/${id}_t.${ext}`;
@@ -184,13 +192,68 @@
         for (let i = 0; i < files.length; i++) {
             toast(`📷 사진 올리는 중… ${i + 1}/${files.length}`);
             try { await uploadOne(files[i], cid, kind, ref); ok++; }
-            catch (e) { console.error('[photo] 올리기 실패', e); fails.push((files[i].name || `${i + 1}번째`) + ' — ' + (e.message || e)); }
+            catch (e) { console.error('[photo] 올리기 실패', e); fails.push((files[i].name || `${i + 1}번째`) + ' — ' + (e.queued ? '인터넷이 되면 자동으로 다시 올려요' : (e.message || e))); }
         }
         refreshUsage(); fillBadges();
         if (fails.length) alert('사진 ' + fails.length + '장 못 올렸어요\n\n' + fails.join('\n'));
         else if (ok) toast(`📷 사진 ${ok}장 올림`);
         return ok;
     }
+
+    /* ───────── 3-1. 못 올린 사진 보관함 (IndexedDB) ─────────
+       인터넷이 끊겨 못 올린 사진(줄인 그림)을 이 기기에 보관 → 다음에 대시보드 열 때 / 인터넷 돌아올 때 자동으로 다시 올림
+       · 5번 실패하면 버리고 알림 · AS 카드가 지워졌으면 버림 */
+    const QDB = 'rhea-photo-queue', QST = 'q';
+    function qOpen() {
+        return new Promise((res, rej) => {
+            if (!window.indexedDB) { rej(new Error('no idb')); return; }
+            const r = indexedDB.open(QDB, 1);
+            r.onupgradeneeded = () => r.result.createObjectStore(QST, { keyPath: 'k', autoIncrement: true });
+            r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+        });
+    }
+    async function qTx(mode, fn) {
+        const db = await qOpen();
+        return new Promise((res, rej) => {
+            const tx = db.transaction(QST, mode); const st = tx.objectStore(QST);
+            const out = fn(st);
+            tx.oncomplete = () => { db.close(); res(out && 'result' in out ? out.result : out); };
+            tx.onerror = () => { db.close(); rej(tx.error); };
+        });
+    }
+    async function queueAdd(item) { try { await qTx('readwrite', st => st.add(item)); return true; } catch (e) { console.warn('[photo] 보관 실패', e); return false; } }
+    async function queueAll() { try { return await qTx('readonly', st => st.getAll()) || []; } catch (e) { return []; } }
+    let retrying = false;
+    async function retryQueue() {
+        if (retrying || !cfg || !loaded || (cfg.isGuest && cfg.isGuest()) || navigator.onLine === false) return;
+        const list = await queueAll();
+        if (!list.length) return;
+        retrying = true;
+        let ok = 0, dropped = 0;
+        try {
+            for (const q of list) {
+                const it = cfg.getItem(q.cid);
+                const memoGone = q.kind === 'as' && !(it && (it.memoList || []).some(m => m.id === q.ref));
+                if (!it || memoGone) { await qTx('readwrite', st => st.delete(q.k)); dropped++; continue; }
+                try {
+                    await putPhoto(q.cid, q.kind, q.ref, q.full, q.thumb, q.ext);
+                    await qTx('readwrite', st => st.delete(q.k)); ok++;
+                } catch (e) {
+                    q.tries = (q.tries || 0) + 1;
+                    if (q.tries >= 5) { await qTx('readwrite', st => st.delete(q.k)); dropped++; }
+                    else await qTx('readwrite', st => st.put(q));
+                    if (navigator.onLine === false) break;
+                }
+            }
+        } finally { retrying = false; }
+        if (ok || dropped) {
+            refreshUsage(); fillBadges();
+            const cid = $('#detailTargetId') && $('#detailTargetId').value;
+            if (cid) rerender(cid);
+            toast(ok ? `📷 못 올렸던 사진 ${ok}장 다시 올림${dropped ? ` · ${dropped}장은 버림` : ''}` : `📷 못 올린 사진 ${dropped}장은 다시 올릴 수 없어서 버렸어요`, !ok);
+        }
+    }
+    window.addEventListener('online', () => setTimeout(retryQueue, 1500));
 
     async function removeRows(list) {
         if (!list.length) return;
@@ -367,7 +430,7 @@
        장소명_AS01_251120.webp (같은 날 사진은 01·02… 차례) / 장소명_기기01.webp */
     function fileName(r) {
         const it = cfg.getItem(r.company_id) || {};
-        const place = String(it.placeName || '장소').replace(/[\\/:*?"<>|]+/g, '_').trim();
+        const place = placeOf(r.company_id) || '장소';
         const ext = (r.path.match(/\.(\w+)$/) || [, 'webp'])[1];
         if (r.kind === 'device') {
             const n = rows.filter(x => x.company_id === r.company_id && x.kind === 'device')
@@ -595,7 +658,7 @@
         if (!panelState) return;
         if (!extAlive()) {
             const feat = await placeWindowFeatures();
-            extWin = window.open('photo/viewer.html?v=290', 'rheaPhotoWin', feat);
+            extWin = window.open('photo/viewer.html?v=291', 'rheaPhotoWin', feat);
             if (!extWin) { toast('🖥 팝업이 막혔어요 — 주소창 오른쪽에서 팝업 허용해 주세요', true); return; }
         } else extWin.focus();
         const p = $('#rpPanel');
@@ -635,10 +698,29 @@
     }, true);
     window.addEventListener('resize', () => { lastRect = ''; place(); });
 
+    /* ───────── 11. ZIP 백업 · 정리하기 = photo-backup.js (누를 때만 불러옴) ───────── */
+    let bkLoad = null;
+    function backup() {
+        if (window.guestBlocked && window.guestBlocked()) return;
+        if (!loaded) { toast('📷 사진 목록을 아직 못 받았어요 — 잠시 뒤 다시', true); return; }
+        if (!bkLoad) bkLoad = new Promise((res, rej) => {
+            const sc = document.createElement('script'); sc.src = 'photo/photo-backup.js?v=291';
+            sc.onload = res; sc.onerror = () => { bkLoad = null; rej(new Error('photo-backup.js 불러오기 실패')); };
+            document.head.appendChild(sc);
+        });
+        bkLoad.then(() => window.RheaPhotoBackup.open()).catch(e => toast('📷 ' + e.message, true));
+    }
+    function placeOf(cid) {
+        const it = cfg.getItem(cid) || {};
+        return String(it.placeName || '').replace(/[\\/:*?"<>|]+/g, '_').trim();
+    }
+
     window.RheaPhoto = {
         init, entryHtml, fillThread, addTo, open, closePanel, badge, renderDevice, addDevice, devPill,
         stagePick, unstage, clearStaged, hasStaged, commitStaged,
-        removeMemo, removeCompany, usage, fileName,
+        removeMemo, removeCompany, usage, fileName, backup,
+        // photo-backup.js 가 쓰는 안쪽 도구
+        _api: { rows: () => rows, cfg: () => cfg, signed, fileName, placeOf, removeRows, BUCKET, refreshUsage, fillBadges, ofCompany },
         _rows: () => rows
     };
 })();

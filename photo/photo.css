@@ -78,3 +78,30 @@ body.is-guest .as-entry .rp-add { display: none; }
 .rp-dev-pill:hover { opacity: 1; filter: none; border-color: var(--teal, #2a8c82); }
 .rp-dev-pill.on { filter: none; opacity: 1; border-style: solid; border-color: var(--teal, #2a8c82); color: var(--teal, #2a8c82); }
 .rp-dev-pill[hidden] { display: none; }
+
+/* v291 사진 ZIP 백업 창 (가운데 작은 카드) */
+.rp-bk { position: fixed; inset: 0; z-index: 3200; display: flex; align-items: center; justify-content: center; background: rgba(10,12,16,.45); }
+.rp-bk[hidden] { display: none; }
+.rp-bk-card { width: min(360px, calc(100vw - 32px)); background: #16181c; color: #e9e6dc; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.45); overflow: hidden; }
+.rp-bk-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 14px; }
+.rp-bk-x { cursor: pointer; color: #8b8f98; padding: 2px 6px; }
+.rp-bk-x:hover { color: #E6C674; }
+.rp-bk-body { padding: 14px 16px 6px; display: flex; flex-direction: column; gap: 8px; }
+.rp-bk-row { display: flex; justify-content: space-between; font-size: 12px; color: #8b8f98; margin-bottom: 2px; }
+.rp-bk-row b { color: #e9e6dc; }
+.rp-bk-btn { display: flex; align-items: center; justify-content: space-between; height: 40px; padding: 0 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: rgba(255,255,255,.03); color: #e9e6dc; font: 700 13px inherit; font-family: inherit; cursor: pointer; }
+.rp-bk-btn small { font-weight: 600; font-size: 11.5px; color: #8b8f98; }
+.rp-bk-btn:hover:not(:disabled) { border-color: rgba(230,198,116,.6); color: #E6C674; }
+.rp-bk-btn.main { border-color: rgba(230,198,116,.45); }
+.rp-bk-btn.ghost { background: none; border-style: dashed; }
+.rp-bk-btn:disabled { opacity: .4; cursor: default; }
+.rp-bk-tip { margin: 4px 0 0; font-size: 11px; line-height: 1.5; color: #6f747d; }
+.rp-bk-msg { padding: 0 16px 12px; min-height: 18px; font-size: 12px; color: #c9c5ba; }
+.rp-bk-msg.err { color: #F0A35E; }
+.rp-bk-bar { height: 3px; background: rgba(255,255,255,.06); }
+.rp-bk-bar[hidden] { display: none; }
+.rp-bk-bar i { display: block; height: 100%; width: 0; background: #E6C674; transition: width .2s; }
+.rp-bk-btn span { display: inline-flex; align-items: center; gap: 6px; }
+.rp-bk-btn em { font-style: normal; font-size: 10px; font-weight: 800; color: #E6C674; border: 1px solid rgba(230,198,116,.4); border-radius: 8px; padding: 1px 6px; }
+.rp-bk-sep { height: 1px; background: rgba(255,255,255,.07); margin: 2px 0; }
+.rp-bk-body { max-height: min(60vh, 520px); overflow-y: auto; }

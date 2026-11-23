@@ -2270,7 +2270,7 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
     </style>
     <!-- 17차-5: 모험가(RPG) 모듈 — 업무 기능과 분리. 없어도 업체관리는 정상 -->
     <link rel="stylesheet" href="rpg/rpg.css?v=224">
-    <link rel="stylesheet" href="photo/photo.css?v=290">
+    <link rel="stylesheet" href="photo/photo.css?v=291">
 </head>
 <body>
     <!-- ═══════════════════════════════════════════════════════════════
@@ -2335,6 +2335,7 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
                         <hr>
                         <div class="dl-sec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/></svg>백업</div>
                         <button type="button" class="dl-item" onclick="closeDownloadMenu(); backupData()">데이터 백업 받기<small>JSON</small></button>
+                        <button type="button" class="dl-item" onclick="closeDownloadMenu(); RheaPhoto.backup()" title="사진을 장소명 폴더로 묶어 ZIP으로 받기 (v291)">사진 백업 받기<small>ZIP</small></button>
                         <button type="button" class="dl-item" id="restoreLinkBtn" onclick="closeDownloadMenu(); triggerRestoreUpload()">백업 불러오기<small>관리자</small></button>
                         <div class="rp-usage" id="photoUsage"></div>
                         <div class="dl-foot"><span class="dl-dot" title="Supabase 클라우드 저장소"></span><span id="lastBackupNotice" class="backup-notice"></span></div>
@@ -2893,7 +2894,7 @@ html.authWait{background:#0A1626}html.authWait body{visibility:hidden}</style>
     <script src="rpg/rpg-data.js?v=224"></script>
     <script src="rpg/rpg-core.js?v=224"></script>
     <script src="rpg/rpg-armory.js?v=224"></script>
-    <script src="photo/photo.js?v=290"></script>
+    <script src="photo/photo.js?v=291"></script>
     <script>
         /* ═══════════════════════════════════════════════════════════════
            [DASHBOARD] dashboard.html 전용 스크립트 (업체관리 앱 로직)
@@ -3547,7 +3548,7 @@ function showSyncStatus(msg, isError) {
                 updateBackupNotice();
                 maybeOfferGroupMigration();
                 // v288 사진 목록 (기다리지 않음 — 받는 대로 사진 칸·📷N·사용량 채움)
-                if (window.RheaPhoto) RheaPhoto.init({ sb, getItem: (cid) => findItemLocation(cid).item, userName: currentUserDisplayName, isGuest: isGuestUser });
+                if (window.RheaPhoto) RheaPhoto.init({ sb, getItem: (cid) => findItemLocation(cid).item, userName: currentUserDisplayName, isGuest: isGuestUser, isAdmin: isAdminUser });
                 document.getElementById('searchInput').addEventListener('input', renderTable);
                 document.getElementById('searchInput').addEventListener('keydown', handleSearchEnter); // 25차: 엔터 = [전체에서 보기]
                 document.getElementById('filterRegion').addEventListener('change', renderTable);
@@ -4662,7 +4663,7 @@ function generateUniqueId() {
                     msg = `${why} 때문에 <b>${hiddenByText}곳</b>이 숨겨져 있어요`;
                 }
                 const btnWide = widerCount > 0 ? `<button type="button" class="hbf-wide" onclick="widenSearchToAll()" title="검색어는 그대로, 전체에서 찾기 (엔터)">전체에서 보기 <kbd class="hbf-kbd">⏎</kbd></button>` : '';
-                const btnClear = hiddenByText > 0 ? `<button type="button" onclick="clearTextFilters()">필터 풀고 모두 보기</button>` : '';
+                const btnClear = hiddenByText > 0 ? `<button type="button" onclick="clearTextFilters()">필터 풀기</button>` : '';
                 const tr = document.createElement('tr');
                 tr.className = 'hidden-by-filter-row';
                 tr.innerHTML = `<td colspan="99"><div class="hbf-inner"><span>🔎 ${msg}</span><span class="hbf-btns">${btnWide}${btnClear}</span></div></td>`;
@@ -5019,7 +5020,7 @@ function generateUniqueId() {
             const list = filteredData || [];
             const head = `<div class="mc-meta"><span><b>${list.length}곳</b>${endedOnly ? ' · 종료 업체' : ''}</span><span>${asOnly ? 'AS 요청만' : (leaseStage ? M_STAGE_LABEL[leaseStage] + '만' : '')}</span></div>`;
             const hidden = (hiddenByText > 0 || widerCount > 0) // 25차: 다른 곳에 더 있으면 [전체에서 보기]
-                ? `<div class="mc-hidden"><span>🔎 ${widerCount > 0 ? `다른 곳에 <b>${widerCount}곳</b> 더 있어요` : `검색·지역필터로 <b>${hiddenByText}곳</b> 숨겨짐`}</span><span class="hbf-btns">${widerCount > 0 ? `<button type="button" class="hbf-wide" onclick="widenSearchToAll()">전체에서 보기</button>` : ''}${hiddenByText > 0 ? `<button type="button" onclick="clearTextFilters()">모두 보기</button>` : ''}</span></div>` : '';
+                ? `<div class="mc-hidden"><span>🔎 ${widerCount > 0 ? `다른 곳에 <b>${widerCount}곳</b> 더 있어요` : `검색·지역필터로 <b>${hiddenByText}곳</b> 숨겨짐`}</span><span class="hbf-btns">${widerCount > 0 ? `<button type="button" class="hbf-wide" onclick="widenSearchToAll()">전체에서 보기</button>` : ''}${hiddenByText > 0 ? `<button type="button" onclick="clearTextFilters()">필터 풀기</button>` : ''}</span></div>` : '';
             if (!list.length) {
                 wrap.innerHTML = head + hidden + `<div class="mc-empty">표시할 업체가 없습니다.</div>`;
                 return;
